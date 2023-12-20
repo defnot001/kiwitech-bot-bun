@@ -5,6 +5,7 @@ import { createSplitter } from './splitter';
 import { PromiseQueue } from './queue';
 import { EventEmitter } from 'events';
 import { RconEmitter } from './EventEmitter';
+import { ERROR_MESSAGES, RconError } from './errors';
 
 export interface RconOptions {
   host: string;
@@ -53,65 +54,34 @@ export class Rcon {
     this.config = { ...DEFAULT_RCON_OPTIONS, ...config };
     this.sendQueue = new PromiseQueue(this.config.maxPending);
 
-    if (config.maxPending) {
-      this.emitter.setMaxListeners(config.maxPending);
-    }
+    this.emitter.setMaxListeners(
+      config.maxPending ?? DEFAULT_RCON_OPTIONS.maxPending,
+    );
   }
 
   public async connect() {
     if (this.socket) {
-      throw new Error('Already connected or connecting');
+      return Promise.reject(new RconError(ERROR_MESSAGES.ALREADY_CONNECTED));
     }
 
-    const socket = (this.socket = connect({
-      host: this.config.host,
-      port: this.config.port,
-    }));
+    this.setupSocket();
 
     try {
-      await new Promise<void>((resolve, reject) => {
-        socket.once('error', reject);
-        socket.on('connect', () => {
-          socket.off('error', reject);
-          resolve();
-        });
-      });
-    } catch (error) {
-      this.socket = null;
-      throw error;
+      await this.waitForConnection();
+    } catch (err) {
+      this.handleError(err, ERROR_MESSAGES.CONNECTION_FAILED);
+      throw err;
     }
 
-    socket.setNoDelay(true);
-    socket.on('error', (error) => this.emitter.emit('error', error));
+    this.setupSocketEvents();
 
-    this.emitter.emit('connect');
-
-    this.socket.on('close', () => {
-      this.emitter.emit('end');
-      this.sendQueue.pause();
-      this.socket = null;
-      this.authenticated = false;
-    });
-
-    this.socket.pipe(createSplitter()).on('data', this.handlePacket.bind(this));
-
-    const id = this.requestId;
-    const packet = await this.sendPacket(
-      'Auth',
-      Buffer.from(this.config.password),
-    );
-
-    this.sendQueue.resume();
-
-    if (packet.id != id || packet.id == -1) {
-      this.sendQueue.pause();
-      this.socket.destroy();
-      this.socket = null;
-      throw new Error('Authentication failed');
+    try {
+      await this.authenticate();
+    } catch (err) {
+      this.handleError(err, ERROR_MESSAGES.AUTH_FAILED);
+      throw err;
     }
 
-    this.authenticated = true;
-    this.emitter.emit('authenticated');
     return this;
   }
 
@@ -120,12 +90,16 @@ export class Rcon {
     */
   public async end() {
     if (!this.socket || this.socket.connecting) {
-      throw new Error('Not connected');
+      throw new RconError(ERROR_MESSAGES.NOT_CONNECTED);
     }
-    if (!this.socket.writable) throw new Error('End called twice');
+
+    if (!this.socket.writable) {
+      throw new RconError(ERROR_MESSAGES.END_CALLED_TWICE);
+    }
+
     this.sendQueue.pause();
     this.socket.end();
-    await new Promise<void>((resolve) => this.on('end', () => resolve()));
+    await new Promise<void>((resolve) => this.once('end', () => resolve()));
   }
 
   /**
@@ -141,11 +115,91 @@ export class Rcon {
 
   public async sendRaw(buffer: Buffer) {
     if (!this.authenticated || !this.socket) {
-      throw new Error('Not connected');
+      throw new RconError(ERROR_MESSAGES.NOT_CONNECTED);
     }
 
-    const packet = await this.sendPacket('Command', buffer);
-    return packet.payload;
+    try {
+      const packet = await this.sendPacket('Command', buffer);
+
+      return packet.payload;
+    } catch (err) {
+      this.handleError(err, 'Failed to send command');
+      throw err;
+    }
+  }
+
+  private setupSocket(): void {
+    this.socket = connect({
+      host: this.config.host,
+      port: this.config.port,
+    });
+  }
+
+  private async waitForConnection(): Promise<void> {
+    if (!this.socket) {
+      throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+    }
+
+    const errorHandler = (err: Error) => {
+      this.socket?.off('error', errorHandler);
+      this.socket?.off('connect', connectHandler);
+      throw err;
+    };
+
+    const connectHandler = () => {
+      this.socket?.off('error', errorHandler);
+    };
+
+    this.socket.once('error', errorHandler);
+    await new Promise<void>((resolve) => {
+      this.socket?.once('connect', () => {
+        resolve();
+      });
+    });
+  }
+
+  private setupSocketEvents(): void {
+    if (!this.socket) {
+      throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+    }
+
+    this.socket.setNoDelay(true);
+    this.socket.on('error', (error) => this.emitter.emit('error', error));
+
+    this.emitter.emit('connect');
+
+    this.socket.on('close', () => {
+      this.emitter.emit('end');
+      this.sendQueue.pause();
+      this.socket = null;
+      this.authenticated = false;
+    });
+
+    this.socket.pipe(createSplitter()).on('data', this.handlePacket.bind(this));
+  }
+
+  private async authenticate(): Promise<void> {
+    if (!this.socket) {
+      throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+    }
+
+    const id = this.requestId;
+    const packet = await this.sendPacket(
+      'Auth',
+      Buffer.from(this.config.password),
+    );
+
+    this.sendQueue.resume();
+
+    if (packet.id != id || packet.id == -1) {
+      this.sendQueue.pause();
+      this.socket.destroy();
+      this.socket = null;
+      throw new RconError(ERROR_MESSAGES.AUTH_FAILED);
+    }
+
+    this.authenticated = true;
+    this.emitter.emit('authenticated');
   }
 
   private async sendPacket(
@@ -155,27 +209,23 @@ export class Rcon {
     const id = this.requestId++;
 
     const createSendPromise = (): Promise<Packet> => {
-      this.socket!.write(
-        PacketUtils.encodePacket({ id, payload, type: PacketType[type] }),
-      );
+      if (!this.socket) {
+        throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+      }
 
-      return new Promise<Packet>((resolve, reject) => {
-        const onEnd = () => (
-          reject(new Error('Connection closed')), clearTimeout(timeout)
+      try {
+        this.socket.write(
+          PacketUtils.encodePacket({ id, payload, type: PacketType[type] }),
         );
-        this.emitter.on('end', onEnd);
 
-        const timeout = setTimeout(() => {
-          this.off('end', onEnd);
-          reject(new Error(`Timeout for packet id ${id}`));
-        }, this.config.timeout);
+        const packetPromise = this.createPacketPromise(id);
+        const timeoutPromise = this.createTimeoutPromise(id);
 
-        this.callbacks.set(id, (packet) => {
-          this.off('end', onEnd);
-          clearTimeout(timeout);
-          resolve(packet);
-        });
-      });
+        return Promise.race([packetPromise, timeoutPromise]);
+      } catch (err) {
+        this.handleError(err, 'Failed to write to socket');
+        throw err;
+      }
     };
 
     if (type === 'Auth') {
@@ -185,8 +235,40 @@ export class Rcon {
     }
   }
 
+  private createPacketPromise(id: number): Promise<Packet> {
+    let timeout: NodeJS.Timeout;
+
+    return new Promise<Packet>((resolve, reject) => {
+      const onEnd = () => (
+        reject(new Error('Connection closed')), clearTimeout(timeout)
+      );
+      this.emitter.on('end', onEnd);
+
+      this.callbacks.set(id, (packet) => {
+        this.off('end', onEnd);
+        clearTimeout(timeout);
+        resolve(packet);
+      });
+    });
+  }
+
+  private createTimeoutPromise(id: number): Promise<Packet> {
+    return new Promise<Packet>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Timeout for packet id ${id}`));
+      }, this.config.timeout);
+    });
+  }
+
   private handlePacket(data: Buffer) {
-    const packet = PacketUtils.decodePacket(data);
+    let packet;
+
+    try {
+      packet = PacketUtils.decodePacket(data);
+    } catch (err) {
+      this.handleError(err, 'Failed to decode packet');
+      return;
+    }
 
     const id = this.authenticated ? packet.id : this.requestId - 1;
     const handler = this.callbacks.get(id);
@@ -194,6 +276,17 @@ export class Rcon {
     if (handler) {
       handler(packet);
       this.callbacks.delete(id);
+    }
+  }
+
+  private handleError(error: unknown, message: string) {
+    if (error instanceof Error && 'message' in error) {
+      this.emitter.emit('error', new RconError(`${message}: ${error.message}`));
+    } else {
+      this.emitter.emit(
+        'error',
+        new RconError(`${message} but no error message was provided`),
+      );
     }
   }
 }
