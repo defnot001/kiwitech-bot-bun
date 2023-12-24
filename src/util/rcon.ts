@@ -6,9 +6,9 @@ export default abstract class RCONUtil {
     server: ServerChoice,
     command: string,
   ): Promise<string> {
-    const client = new Rcon(this.getRconOptionsFromServerChoice(server));
-
-    await client.connect();
+    const client = await Rcon.connect(
+      this.getRconOptionsFromServerChoice(server),
+    );
 
     const response = await client.send(command);
 
