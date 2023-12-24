@@ -37,10 +37,9 @@ export default new Command({
       choice === 'smp' &&
       !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
     ) {
-      await interaction.editReply(
+      return interaction.editReply(
         'You do not have the required permissions to run commands on this server.',
       );
-      return;
     }
 
     const command = args.getString('command');
