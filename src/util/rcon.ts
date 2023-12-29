@@ -27,6 +27,8 @@ export default abstract class RCONUtil {
     const promises = commands.map((c) => client.send(c));
     const resolved = await Promise.all(promises);
 
+    await client.end();
+
     return resolved;
   }
 
