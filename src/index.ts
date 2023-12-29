@@ -20,5 +20,5 @@ client.start({
   commandsPath: projectPaths.commands,
   eventsPath: projectPaths.events,
   globalCommands: false,
-  registerCommands: false,
+  registerCommands: true,
 });
