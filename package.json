@@ -10,6 +10,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.44",
     "discord.js": "^14.14.1",
     "glob": "^10.3.10",
     "ptero-client": "^1.1.3",
