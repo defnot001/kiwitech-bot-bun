@@ -24,13 +24,13 @@ export function createSplitter(): Transform {
           typeof offset === 'number' &&
           typeof (offset + 4 + length) === 'number'
         ) {
-          this.push(buffer.slice(offset, offset + 4 + length));
+          this.push(buffer.subarray(offset, offset + 4 + length));
         }
         offset += 4 + length;
       }
 
       if (typeof offset === 'number') {
-        buffer = buffer.slice(offset as number);
+        buffer = buffer.subarray(offset as number);
       }
       callback();
     }

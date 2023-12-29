@@ -34,7 +34,7 @@ export default abstract class PacketUtils {
       throw new Error(`Invalid type: ${type}`);
     }
 
-    const payload = buffer.slice(12, length + 2);
+    const payload = buffer.subarray(12, length + 2);
 
     return {
       id,
