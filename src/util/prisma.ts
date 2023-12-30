@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { type GuildMemberManager, type Snowflake, type User } from 'discord.js';
 import { getUUID, getMultipleUUIDs } from './mojang';
 import { ApplicationObject } from './application';
+import { getMembersFromID } from './helpers';
 
 const prisma = new PrismaClient();
 
@@ -168,14 +169,6 @@ export async function removeMember(discordID: Snowflake) {
       discordID,
     },
   });
-}
-
-async function getMembersFromID(members: Snowflake[], manager: GuildMemberManager) {
-  const fetched = await manager.fetch({
-    user: members,
-  });
-
-  return fetched;
 }
 
 export async function getMemberNames(manager: GuildMemberManager) {

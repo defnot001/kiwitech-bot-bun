@@ -1,7 +1,9 @@
 import {
   ApplicationCommandOptionChoiceData,
   GuildMember,
+  GuildMemberManager,
   PartialGuildMember,
+  Snowflake,
   time,
 } from 'discord.js';
 import { config } from '../config';
@@ -34,13 +36,16 @@ export function capitalizeFirstLetter(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function getJoinedAtComponent(
-  member: GuildMember | PartialGuildMember,
-): string {
+export function getJoinedAtComponent(member: GuildMember | PartialGuildMember): string {
   return member.joinedAt
-    ? `\nJoined at: ${time(member.joinedAt, 'f')} (${time(
-        member.joinedAt,
-        'R',
-      )})`
+    ? `\nJoined at: ${time(member.joinedAt, 'f')} (${time(member.joinedAt, 'R')})`
     : '\u200b';
+}
+
+export async function getMembersFromID(members: Snowflake[], manager: GuildMemberManager) {
+  const fetched = await manager.fetch({
+    user: members,
+  });
+
+  return fetched;
 }
