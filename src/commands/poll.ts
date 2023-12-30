@@ -44,9 +44,7 @@ export default new Command({
       const answers = args.getString('answers');
 
       if (!question || !answerType) {
-        return interaction.reply(
-          'Please specify a question and an answer type!',
-        );
+        return interaction.reply('Please specify a question and an answer type!');
       }
 
       question = !question.endsWith('?') ? question + '?' : question;
@@ -70,18 +68,7 @@ export default new Command({
           return interaction.reply('Please specify answers!');
         }
 
-        const emojiArr = [
-          '1️⃣',
-          '2️⃣',
-          '3️⃣',
-          '4️⃣',
-          '5️⃣',
-          '6️⃣',
-          '7️⃣',
-          '8️⃣',
-          '9️⃣',
-          '🔟',
-        ];
+        const emojiArr = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
 
         const fields = answers.split(',').map((answer, index) => {
           return {

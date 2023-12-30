@@ -13,12 +13,9 @@ export default new Event('guildMemberRemove', async (member) => {
     const memberLog = await getTextChannelFromID(member.guild, 'memberLog');
 
     const userLeaveEmbed = new JoinLeaveEmbedBuilder(member, 'left', {
-      description: `Username: ${userMention(
+      description: `Username: ${userMention(member.user.id)}\nUser ID: ${inlineCode(
         member.user.id,
-      )}\nUser ID: ${inlineCode(member.user.id)}${joinedAt}\nLeft at: ${time(
-        new Date(),
-        'f',
-      )} (${time(new Date(), 'R')})`,
+      )}${joinedAt}\nLeft at: ${time(new Date(), 'f')} (${time(new Date(), 'R')})`,
     });
 
     memberLog.send({ embeds: [userLeaveEmbed] });
@@ -40,9 +37,7 @@ export default new Event('guildMemberRemove', async (member) => {
     }
 
     if (target.id === member.user.id) {
-      console.log(
-        `${member.user.username} was kicked from ${member.guild.name}.`,
-      );
+      console.log(`${member.user.username} was kicked from ${member.guild.name}.`);
 
       const executingMember = await member.guild.members.fetch(executor.id);
       const modLog = await getTextChannelFromID(member.guild, 'modLog');

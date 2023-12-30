@@ -70,9 +70,7 @@ export default new Command({
       return handleInteractionError({
         interaction,
         err,
-        message: `Error while running command ${inlineCode(
-          command,
-        )} on server ${choice}!`,
+        message: `Error while running command ${inlineCode(command)} on server ${choice}!`,
       });
     }
   },

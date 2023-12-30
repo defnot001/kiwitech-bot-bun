@@ -1,9 +1,4 @@
-import {
-  ApplicationCommandOptionType,
-  escapeMarkdown,
-  inlineCode,
-  time,
-} from 'discord.js';
+import { ApplicationCommandOptionType, escapeMarkdown, inlineCode, time } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { confirmCancelRow, getButtonCollector } from '../util/components';
@@ -35,9 +30,7 @@ export default new Command({
     });
 
     if (!targetUser) {
-      await interaction.editReply(
-        `Unable to find user with ID ${inlineCode(targetID)}.`,
-      );
+      await interaction.editReply(`Unable to find user with ID ${inlineCode(targetID)}.`);
       return;
     }
 
@@ -48,16 +41,11 @@ export default new Command({
       },
       fields: [
         { name: 'Username', value: targetUser.username, inline: false },
-        ...(targetUser.globalName
-          ? [{ name: 'Global Name', value: targetUser.globalName }]
-          : []),
+        ...(targetUser.globalName ? [{ name: 'Global Name', value: targetUser.globalName }] : []),
         { name: 'User ID', value: targetUser.id, inline: false },
         {
           name: 'Joined Discord on',
-          value: `${time(targetUser.createdAt, 'D')}\n(${time(
-            targetUser.createdAt,
-            'R',
-          )})`,
+          value: `${time(targetUser.createdAt, 'D')}\n(${time(targetUser.createdAt, 'R')})`,
           inline: true,
         },
       ],
@@ -88,9 +76,7 @@ export default new Command({
           reason: 'Banned by ID.',
         });
 
-        await interaction.editReply(
-          `Successfully banned ${inlineCode(targetUser.username)}!`,
-        );
+        await interaction.editReply(`Successfully banned ${inlineCode(targetUser.username)}!`);
         return;
       }
 

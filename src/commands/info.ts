@@ -62,12 +62,7 @@ export default new Command({
   ],
   execute: async ({ interaction, args }) => {
     await interaction.deferReply();
-    const subcommand = args.getSubcommand() as
-      | 'server'
-      | 'user'
-      | 'members'
-      | 'admins'
-      | 'avatar';
+    const subcommand = args.getSubcommand() as 'server' | 'user' | 'members' | 'admins' | 'avatar';
     const { guild } = interaction;
 
     if (!guild) {
@@ -77,9 +72,7 @@ export default new Command({
     const guildIconURL: string | null = guild.iconURL();
 
     if (!guildIconURL) {
-      return interaction.reply(
-        `Cannot find the server icon of ${interaction.guild}!`,
-      );
+      return interaction.reply(`Cannot find the server icon of ${interaction.guild}!`);
     }
 
     try {
@@ -103,10 +96,7 @@ export default new Command({
             },
             {
               name: 'Guild created',
-              value: `${time(guild.createdAt, 'D')}\n(${time(
-                guild.createdAt,
-                'R',
-              )})`,
+              value: `${time(guild.createdAt, 'D')}\n(${time(guild.createdAt, 'R')})`,
             },
             {
               name: 'Permanent Invite Link',
@@ -134,10 +124,7 @@ export default new Command({
           { name: 'User ID', value: targetUser.id, inline: false },
           {
             name: 'Joined Discord on',
-            value: `${time(targetUser.createdAt, 'D')}\n(${time(
-              targetUser.createdAt,
-              'R',
-            )})`,
+            value: `${time(targetUser.createdAt, 'D')}\n(${time(targetUser.createdAt, 'R')})`,
             inline: true,
           },
         ];
@@ -156,10 +143,7 @@ export default new Command({
           if (targetMember.joinedAt) {
             const joinedField: EmbedField = {
               name: 'Joined this server on',
-              value: `${time(targetMember.joinedAt, 'D')}\n(${time(
-                targetMember.joinedAt,
-                'R',
-              )})`,
+              value: `${time(targetMember.joinedAt, 'D')}\n(${time(targetMember.joinedAt, 'R')})`,
               inline: true,
             };
 
@@ -187,8 +171,7 @@ export default new Command({
       }
 
       if (subcommand === 'members' || subcommand === 'admins') {
-        const allMembers: Collection<Snowflake, GuildMember> =
-          await guild.members.fetch();
+        const allMembers: Collection<Snowflake, GuildMember> = await guild.members.fetch();
 
         const targetMembers: GuildMember[] = [];
 
@@ -208,8 +191,7 @@ export default new Command({
         );
 
         // using nullish coalescing to protect the function from strings that are less than 2 characters long
-        const capitalizedSubcommand =
-          capitalizeFirstLetter(subcommand) ?? subcommand;
+        const capitalizedSubcommand = capitalizeFirstLetter(subcommand) ?? subcommand;
 
         const roleEmbed = new KoalaEmbedBuilder(interaction.user, {
           title: `Info ${capitalizedSubcommand}`,

@@ -2,11 +2,7 @@ import { ApplicationCommandOptionType, bold } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config, ServerChoice } from '../config';
-import {
-  confirmCancelRow,
-  getButtonCollector,
-  mcServerChoice,
-} from '../util/components';
+import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/components';
 import { capitalizeFirstLetter, formatBytes } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import { ptero } from '../util/pterodactyl';
@@ -52,12 +48,7 @@ export default new Command({
     const serverChoice = args.getString('server', true) as ServerChoice;
     const { serverId } = config.mcConfig[serverChoice];
 
-    const subcommand = args.getSubcommand() as
-      | 'start'
-      | 'stop'
-      | 'restart'
-      | 'kill'
-      | 'stats';
+    const subcommand = args.getSubcommand() as 'start' | 'stop' | 'restart' | 'kill' | 'stats';
     const { guild } = interaction;
 
     if (!guild) {
@@ -71,9 +62,7 @@ export default new Command({
 
       if (subcommand === 'stats') {
         if (serverState !== 'running') {
-          interaction.editReply(
-            `${guild.name} is currently ${serverStats.current_state}!`,
-          );
+          interaction.editReply(`${guild.name} is currently ${serverStats.current_state}!`);
 
           return;
         }
@@ -129,17 +118,13 @@ export default new Command({
 
       if (subcommand === 'start') {
         await ptero.servers.start(serverId);
-        interaction.editReply(
-          `Successfully started ${guild.name} ${bold(serverChoice)}!`,
-        );
+        interaction.editReply(`Successfully started ${guild.name} ${bold(serverChoice)}!`);
 
         return;
       }
 
       interaction.editReply({
-        content: `Are you sure you want to ${subcommand} ${guild.name} ${bold(
-          serverChoice,
-        )}?`,
+        content: `Are you sure you want to ${subcommand} ${guild.name} ${bold(serverChoice)}?`,
         components: [confirmCancelRow],
       });
 
@@ -156,18 +141,16 @@ export default new Command({
 
           if (success) {
             await i.update({
-              content: `Successfully ${translateAction(subcommand)} ${
-                guild.name
-              } ${bold(serverChoice)}!`,
+              content: `Successfully ${translateAction(subcommand)} ${guild.name} ${bold(
+                serverChoice,
+              )}!`,
               components: [],
             });
 
             return;
           } else {
             await i.update({
-              content: `Failed to ${subcommand} ${guild.name} ${bold(
-                serverChoice,
-              )}!`,
+              content: `Failed to ${subcommand} ${guild.name} ${bold(serverChoice)}!`,
               components: [],
             });
 
@@ -177,9 +160,7 @@ export default new Command({
 
         if (i.customId === 'cancel') {
           await i.update({
-            content: `Cancelled ${subcommand} ${guild.name} ${bold(
-              serverChoice,
-            )}!`,
+            content: `Cancelled ${subcommand} ${guild.name} ${bold(serverChoice)}!`,
             components: [],
           });
 
@@ -210,10 +191,7 @@ function isValidState(
   return serverState === validCalls[action];
 }
 
-async function performAction(
-  action: 'stop' | 'restart' | 'kill',
-  serverId: string,
-) {
+async function performAction(action: 'stop' | 'restart' | 'kill', serverId: string) {
   try {
     await ptero.servers[action](serverId);
     return true;

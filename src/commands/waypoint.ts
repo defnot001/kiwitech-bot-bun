@@ -1,9 +1,4 @@
-import {
-  ApplicationCommandOptionType,
-  AttachmentBuilder,
-  inlineCode,
-  time,
-} from 'discord.js';
+import { ApplicationCommandOptionType, AttachmentBuilder, inlineCode, time } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { createHash } from 'crypto';
 import { ptero } from '../util/pterodactyl';
@@ -57,9 +52,7 @@ export default new Command({
     const subcommand = args.getSubcommand() as 'list' | 'find';
 
     if (!interaction.guild) {
-      interaction.editReply(
-        'Cannot find the guild this interaction was created in.',
-      );
+      interaction.editReply('Cannot find the guild this interaction was created in.');
       return;
     }
 
@@ -92,15 +85,13 @@ export default new Command({
 
             if (dim === 'The Nether') {
               return `${dim}: ${inlineCode(
-                `${Math.floor(target.pos[0] / 8)} ${Math.floor(
-                  target.pos[1] / 8,
-                )} ${Math.floor(target.pos[2] / 8)}`,
+                `${Math.floor(target.pos[0] / 8)} ${Math.floor(target.pos[1] / 8)} ${Math.floor(
+                  target.pos[2] / 8,
+                )}`,
               )}`;
             }
 
-            return `${dim}: ${inlineCode(
-              `${target.pos[0]} ${target.pos[1]} ${target.pos[2]}`,
-            )}`;
+            return `${dim}: ${inlineCode(`${target.pos[0]} ${target.pos[1]} ${target.pos[2]}`)}`;
           })
           .join('\n');
 
@@ -144,9 +135,7 @@ export default new Command({
       }
 
       if (subcommand === 'list') {
-        const dimension = args.getString('dimension', true) as
-          | Dimension
-          | 'all';
+        const dimension = args.getString('dimension', true) as Dimension | 'all';
         const waypoints = await getWaypoints();
 
         const dimLookup = {
@@ -196,10 +185,7 @@ export default new Command({
 
 type Dimension = 'overworld' | 'the_nether' | 'the_end';
 
-function getWaypointNamesByDimension(
-  waypoints: Waypoint[],
-  dimension: Dimension,
-) {
+function getWaypointNamesByDimension(waypoints: Waypoint[], dimension: Dimension) {
   return waypoints
     .filter((w) => w.dimensions.includes(`minecraft:${dimension}`))
     .map((w) => w.name);

@@ -8,11 +8,7 @@ export function createSplitter(): Transform {
       super(options);
     }
 
-    _transform(
-      chunk: Buffer,
-      _encoding: string,
-      callback: (error?: Error | null) => void,
-    ) {
+    _transform(chunk: Buffer, _encoding: string, callback: (error?: Error | null) => void) {
       buffer = Buffer.concat([buffer, chunk]);
 
       let offset = 0;
@@ -20,10 +16,7 @@ export function createSplitter(): Transform {
       while (offset + 4 < buffer.length) {
         const length = buffer.readInt32LE(offset);
         if (offset + 4 + length > buffer.length) break;
-        if (
-          typeof offset === 'number' &&
-          typeof (offset + 4 + length) === 'number'
-        ) {
+        if (typeof offset === 'number' && typeof (offset + 4 + length) === 'number') {
           this.push(buffer.subarray(offset, offset + 4 + length));
         }
         offset += 4 + length;

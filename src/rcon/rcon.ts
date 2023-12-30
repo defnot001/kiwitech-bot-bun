@@ -54,9 +54,7 @@ export class Rcon {
     this.config = { ...DEFAULT_RCON_OPTIONS, ...config };
     this.sendQueue = new PromiseQueue(this.config.maxPending);
 
-    this.emitter.setMaxListeners(
-      config.maxPending ?? DEFAULT_RCON_OPTIONS.maxPending,
-    );
+    this.emitter.setMaxListeners(config.maxPending ?? DEFAULT_RCON_OPTIONS.maxPending);
   }
 
   public async connect() {
@@ -184,10 +182,7 @@ export class Rcon {
     }
 
     const id = this.requestId;
-    const packet = await this.sendPacket(
-      'Auth',
-      Buffer.from(this.config.password),
-    );
+    const packet = await this.sendPacket('Auth', Buffer.from(this.config.password));
 
     this.sendQueue.resume();
 
@@ -202,10 +197,7 @@ export class Rcon {
     this.emitter.emit('authenticated');
   }
 
-  private async sendPacket(
-    type: keyof typeof PacketType,
-    payload: Buffer,
-  ): Promise<Packet> {
+  private async sendPacket(type: keyof typeof PacketType, payload: Buffer): Promise<Packet> {
     const id = this.requestId++;
 
     const createSendPromise = (): Promise<Packet> => {
@@ -214,9 +206,7 @@ export class Rcon {
       }
 
       try {
-        this.socket.write(
-          PacketUtils.encodePacket({ id, payload, type: PacketType[type] }),
-        );
+        this.socket.write(PacketUtils.encodePacket({ id, payload, type: PacketType[type] }));
 
         const packetPromise = this.createPacketPromise(id);
         const timeoutPromise = this.createTimeoutPromise(id);
@@ -239,9 +229,7 @@ export class Rcon {
     let timeout: NodeJS.Timeout;
 
     return new Promise<Packet>((resolve, reject) => {
-      const onEnd = () => (
-        reject(new Error('Connection closed')), clearTimeout(timeout)
-      );
+      const onEnd = () => (reject(new Error('Connection closed')), clearTimeout(timeout));
       this.emitter.on('end', onEnd);
 
       this.callbacks.set(id, (packet) => {
@@ -283,10 +271,7 @@ export class Rcon {
     if (error instanceof Error && 'message' in error) {
       this.emitter.emit('error', new RconError(`${message}: ${error.message}`));
     } else {
-      this.emitter.emit(
-        'error',
-        new RconError(`${message} but no error message was provided`),
-      );
+      this.emitter.emit('error', new RconError(`${message} but no error message was provided`));
     }
   }
 }

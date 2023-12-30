@@ -1,7 +1,4 @@
-import type {
-  CommandInteractionOptionResolver,
-  TextBasedChannel,
-} from 'discord.js';
+import type { CommandInteractionOptionResolver, TextBasedChannel } from 'discord.js';
 import { Event } from '../handler/classes/Event';
 import { client } from '..';
 import getErrorMessage from '../util/errors';
@@ -18,12 +15,9 @@ export default new Event('interactionCreate', async (interaction) => {
     }
   };
 
-  const channelNameAddon: string =
-    `in #${getChannelName(interaction.channel)}` || '';
+  const channelNameAddon: string = `in #${getChannelName(interaction.channel)}` || '';
 
-  console.log(
-    `${interaction.user.username} ${channelNameAddon} triggered an interaction.`,
-  );
+  console.log(`${interaction.user.username} ${channelNameAddon} triggered an interaction.`);
 
   if (!command) {
     return interaction.reply({

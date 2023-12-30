@@ -14,12 +14,12 @@ export default new Event('guildMemberAdd', async (member) => {
     const embedColor = colorFromDuration(accountAge) || 3_092_790;
 
     const joinEmbed = new JoinLeaveEmbedBuilder(member, 'joined', {
-      description: `Username: ${userMention(
+      description: `Username: ${userMention(member.user.id)}\nUser ID: ${inlineCode(
         member.user.id,
-      )}\nUser ID: ${inlineCode(member.user.id)}${joinedAt}\nCreated at: ${time(
+      )}${joinedAt}\nCreated at: ${time(member.user.createdAt, 'f')} (${time(
         member.user.createdAt,
-        'f',
-      )} (${time(member.user.createdAt, 'R')})`,
+        'R',
+      )})`,
     });
 
     joinEmbed.setColor(embedColor);

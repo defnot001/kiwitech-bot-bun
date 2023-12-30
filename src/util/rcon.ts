@@ -2,13 +2,8 @@ import { ServerChoice, config } from '../config';
 import { Rcon, RconOptions } from '../rcon/rcon';
 
 export default abstract class RCONUtil {
-  public static async runSingleCommand(
-    server: ServerChoice,
-    command: string,
-  ): Promise<string> {
-    const client = await Rcon.connect(
-      this.getRconOptionsFromServerChoice(server),
-    );
+  public static async runSingleCommand(server: ServerChoice, command: string): Promise<string> {
+    const client = await Rcon.connect(this.getRconOptionsFromServerChoice(server));
 
     const response = await client.send(command);
 
@@ -32,9 +27,7 @@ export default abstract class RCONUtil {
     return resolved;
   }
 
-  private static getRconOptionsFromServerChoice(
-    server: ServerChoice,
-  ): RconOptions {
+  private static getRconOptionsFromServerChoice(server: ServerChoice): RconOptions {
     const { host, rconPort, rconPasswd } = config.mcConfig[server];
 
     return {

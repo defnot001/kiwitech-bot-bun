@@ -44,8 +44,7 @@ export default new Command({
       const serverMetrics = await getServerMetrics(server);
 
       const playerlist =
-        serverMetrics.players.playerList.join('\n') ||
-        'There is currently nobody online.';
+        serverMetrics.players.playerList.join('\n') || 'There is currently nobody online.';
 
       const statusEmbed = new KoalaEmbedBuilder(interaction.user, {
         title: `${interaction.guild.name} ${server.toUpperCase()}`,
@@ -123,14 +122,10 @@ async function getServerMetrics(server: ServerChoice): Promise<ServerMetrics> {
   const commands: string[] = [];
 
   for (const dimension of MINECRAFT_DIMENSIONS) {
-    commands.push(
-      `execute in minecraft:${dimension} run script run get_mob_counts('monster')`,
-    );
+    commands.push(`execute in minecraft:${dimension} run script run get_mob_counts('monster')`);
   }
 
-  commands.push(
-    `script run reduce(system_info('server_last_tick_times'), _a+_, 0)/100`,
-  );
+  commands.push(`script run reduce(system_info('server_last_tick_times'), _a+_, 0)/100`);
 
   commands.push(`list`);
 
@@ -177,17 +172,13 @@ function getPerformance(rconResponse: string): ServerPerformance {
 
 function getMobcaps(rconResponses: string[]): DimensionMobcaps {
   if (rconResponses.length !== 3) {
-    throw new Error(
-      'Failed to parse mobcaps because of unexpected server response data',
-    );
+    throw new Error('Failed to parse mobcaps because of unexpected server response data');
   }
 
   const replaced = [];
 
   for (const res of rconResponses) {
-    replaced.push(
-      res.replace(/^.{0,3}| \(.*\)|[[\]]/g, '').replace(/, /g, ' | '),
-    );
+    replaced.push(res.replace(/^.{0,3}| \(.*\)|[[\]]/g, '').replace(/, /g, ' | '));
   }
 
   return {

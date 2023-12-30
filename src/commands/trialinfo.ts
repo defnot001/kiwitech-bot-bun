@@ -1,8 +1,4 @@
-import {
-  ApplicationCommandOptionType,
-  GuildMember,
-  userMention,
-} from 'discord.js';
+import { ApplicationCommandOptionType, GuildMember, userMention } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
@@ -63,8 +59,7 @@ export default new Command({
       return handleInteractionError({
         interaction,
         err,
-        message:
-          'Something went wrong trying to execute the trialinfo command!',
+        message: 'Something went wrong trying to execute the trialinfo command!',
       });
     }
   },

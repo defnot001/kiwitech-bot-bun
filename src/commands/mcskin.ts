@@ -41,9 +41,7 @@ export default new Command({
     }
 
     try {
-      const uuidRes = await fetch(
-        `https://api.mojang.com/users/profiles/minecraft/${name}`,
-      );
+      const uuidRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${name}`);
 
       if (!uuidRes.ok) {
         await interaction.editReply(`Could not find the uuid for ${name}`);

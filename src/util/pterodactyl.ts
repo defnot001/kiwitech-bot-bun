@@ -39,19 +39,14 @@ export async function getModNames(serverChoice: ServerChoice) {
 }
 
 export async function getServerState(serverChoice: ServerChoice) {
-  const serverStats = await ptero.servers.getResourceUsage(
-    config.mcConfig[serverChoice].serverId,
-  );
+  const serverStats = await ptero.servers.getResourceUsage(config.mcConfig[serverChoice].serverId);
 
   return serverStats.current_state;
 }
 
 export async function getServerProperties(serverChoice: ServerChoice) {
   const { serverId } = config.mcConfig[serverChoice];
-  const fileContent = (await ptero.files.getContent(
-    serverId,
-    'server.properties',
-  )) as string;
+  const fileContent = (await ptero.files.getContent(serverId, 'server.properties')) as string;
 
   return parseServerProperties(fileContent);
 }
@@ -91,12 +86,7 @@ function parseServerProperties(propertiesText: string): ServerProperties {
         properties.motd = value;
         break;
       case 'difficulty':
-        properties.difficulty = value as
-          | 'hard'
-          | 'normal'
-          | 'easy'
-          | 'peaceful'
-          | undefined;
+        properties.difficulty = value as 'hard' | 'normal' | 'easy' | 'peaceful' | undefined;
         break;
       case 'max-players':
         properties.maxPlayers = parseInt(value!);

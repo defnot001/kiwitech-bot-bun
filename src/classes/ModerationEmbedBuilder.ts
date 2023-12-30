@@ -1,10 +1,4 @@
-import {
-  EmbedBuilder,
-  escapeMarkdown,
-  GuildMember,
-  inlineCode,
-  User,
-} from 'discord.js';
+import { EmbedBuilder, escapeMarkdown, GuildMember, inlineCode, User } from 'discord.js';
 import { config } from '../config';
 
 interface ModerationDescription {
@@ -29,9 +23,7 @@ export class ModerationEmbedBuilder extends EmbedBuilder {
     const { target, executor, action, reason, expiration } = options;
 
     const descriptionObject: ModerationDescription = {
-      member: `**Member**: ${escapeMarkdown(target.username)} (${inlineCode(
-        target.id,
-      )})`,
+      member: `**Member**: ${escapeMarkdown(target.username)} (${inlineCode(target.id)})`,
       action: `**Action**: ${action}`,
     };
 

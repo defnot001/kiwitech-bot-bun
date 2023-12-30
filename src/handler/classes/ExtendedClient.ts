@@ -7,11 +7,7 @@ import {
   ClientOptions,
   Collection,
 } from 'discord.js';
-import {
-  ClientStartOptions,
-  CommandOptions,
-  RegisterCommandOptions,
-} from '../types';
+import { ClientStartOptions, CommandOptions, RegisterCommandOptions } from '../types';
 import { Event } from './Event';
 
 export class ExtendedClient extends Client {
@@ -22,20 +18,15 @@ export class ExtendedClient extends Client {
   }
 
   public async start(options: ClientStartOptions) {
-    const {
-      botToken,
-      guildID,
-      commandsPath,
-      eventsPath,
-      globalCommands,
-      registerCommands,
-    } = options;
+    const { botToken, guildID, commandsPath, eventsPath, globalCommands, registerCommands } =
+      options;
 
     await this.setModules(commandsPath, eventsPath);
 
     if (registerCommands) {
-      const slashCommands: ApplicationCommandDataResolvable[] =
-        this.commands.map((command) => command);
+      const slashCommands: ApplicationCommandDataResolvable[] = this.commands.map(
+        (command) => command,
+      );
 
       this.once('ready', () => {
         if (globalCommands) {
@@ -71,9 +62,7 @@ export class ExtendedClient extends Client {
       console.log(`Removing commands from ${guild.name}...`);
     } else {
       if (!this.application) {
-        throw new Error(
-          'Cannot find the application to remove the commands from!',
-        );
+        throw new Error('Cannot find the application to remove the commands from!');
       }
 
       await this.application.commands.set([]);
@@ -97,9 +86,7 @@ export class ExtendedClient extends Client {
       console.log(`Registered ${commands.length} commands to ${guild.name}...`);
     } else {
       if (!this.application) {
-        throw new Error(
-          'Cannot find the application to register the commands to',
-        );
+        throw new Error('Cannot find the application to register the commands to');
       }
 
       await this.application.commands.set(commands);
@@ -109,32 +96,24 @@ export class ExtendedClient extends Client {
   }
 
   private async setModules(commandsPath: string, eventsPath: string) {
-    const commandPaths: string[] = await glob.glob(
-      `${commandsPath.toString()}/*{.ts,.js}`,
-    );
+    const commandPaths: string[] = await glob.glob(`${commandsPath.toString()}/*{.ts,.js}`);
 
     for await (const path of commandPaths) {
       const fileURL = pathToFileURL(path);
       const command: CommandOptions = await this.importFile(fileURL.toString());
 
       if (!command.name) {
-        throw new Error(
-          `Command at path ${path} is missing the name property.`,
-        );
+        throw new Error(`Command at path ${path} is missing the name property.`);
       }
 
       this.commands.set(command.name, command);
     }
 
-    const eventPaths: string[] = await glob.glob(
-      `${eventsPath.toString()}/*{.ts,.js}`,
-    );
+    const eventPaths: string[] = await glob.glob(`${eventsPath.toString()}/*{.ts,.js}`);
 
     for await (const path of eventPaths) {
       const fileURL = pathToFileURL(path);
-      const event: Event<keyof ClientEvents> = await this.importFile(
-        fileURL.toString(),
-      );
+      const event: Event<keyof ClientEvents> = await this.importFile(fileURL.toString());
 
       this.on(event.name, event.execute);
     }

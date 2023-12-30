@@ -39,10 +39,7 @@ export default new Command({
     const choice = args.getString('thing', true);
 
     const helpDirPath = path.join(import.meta.dir, '../../documents/help');
-    const helpDocContent = fs.readFileSync(
-      path.join(helpDirPath, `${choice}.md`),
-      'utf-8',
-    );
+    const helpDocContent = fs.readFileSync(path.join(helpDirPath, `${choice}.md`), 'utf-8');
 
     const embed = new KoalaEmbedBuilder(interaction.user, {
       description: helpDocContent,

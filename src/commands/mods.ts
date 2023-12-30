@@ -58,9 +58,7 @@ export default new Command({
         const modNames = await getModNames(serverChoice);
 
         if (modNames.enabled.length === 0 && modNames.disabled.length === 0) {
-          return interaction.editReply(
-            'Cannot find any mods in the mods folder!',
-          );
+          return interaction.editReply('Cannot find any mods in the mods folder!');
         }
 
         const modListEmbed = new KoalaEmbedBuilder(interaction.user, {
@@ -91,8 +89,7 @@ export default new Command({
         const modFiles = await getModFiles(serverChoice);
 
         const targetMods = modFiles.filter(
-          (mod) =>
-            mod.name === `${modname}.jar` || mod.name === `${modname}.disabled`,
+          (mod) => mod.name === `${modname}.jar` || mod.name === `${modname}.disabled`,
         );
 
         if (targetMods.length === 0 || !targetMods[0]) {
@@ -100,18 +97,14 @@ export default new Command({
         }
 
         if (targetMods.length > 1) {
-          return interaction.editReply(
-            `Found multiple mods with the name: ${modname}!`,
-          );
+          return interaction.editReply(`Found multiple mods with the name: ${modname}!`);
         }
 
         const targetMod = targetMods[0];
 
         if (subcommand === 'enable') {
           if (targetMod.name.endsWith('.jar')) {
-            return interaction.editReply(
-              `Mod: ${targetMod.name} is already enabled!`,
-            );
+            return interaction.editReply(`Mod: ${targetMod.name} is already enabled!`);
           }
 
           await ptero.files.rename(config.mcConfig[serverChoice].serverId, {
@@ -121,16 +114,11 @@ export default new Command({
           });
 
           return interaction.editReply(
-            `Successfully enabled mod: ${targetMod.name.replace(
-              '.disabled',
-              '',
-            )}!`,
+            `Successfully enabled mod: ${targetMod.name.replace('.disabled', '')}!`,
           );
         } else {
           if (targetMod.name.endsWith('.disabled')) {
-            return interaction.editReply(
-              `Mod: ${targetMod.name} is already disabled!`,
-            );
+            return interaction.editReply(`Mod: ${targetMod.name} is already disabled!`);
           }
 
           await ptero.files.rename(config.mcConfig[serverChoice].serverId, {

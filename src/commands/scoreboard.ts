@@ -87,9 +87,7 @@ export default new Command({
     const item = args.getString('item', true);
 
     const scoreboardChoice = action !== 'extra' ? `${action}-${item}` : item;
-    const scoreboardName = scoreboardMap.find(
-      (x) => x.stat === scoreboardChoice,
-    )?.translation;
+    const scoreboardName = scoreboardMap.find((x) => x.stat === scoreboardChoice)?.translation;
 
     if (!scoreboardName) {
       return interaction.editReply('This scoreboard does not exist!');
@@ -103,9 +101,7 @@ export default new Command({
           const leaderboard = await getPlaytimeLeaderboard();
           buffer = scoreboardToImage('SMP Play Time (hours)', leaderboard);
         } else {
-          const leaderboard = await queryScoreboard(
-            scoreboardChoice as Scoreboard,
-          );
+          const leaderboard = await queryScoreboard(scoreboardChoice as Scoreboard);
           buffer = scoreboardToImage(scoreboardName, leaderboard);
         }
 
@@ -117,26 +113,16 @@ export default new Command({
       if (subcommand === 'players') {
         const ingameName = args.getString('playername', true);
 
-        const score = await getPlayerScore(
-          ingameName,
-          scoreboardChoice as Scoreboard,
-        );
+        const score = await getPlayerScore(ingameName, scoreboardChoice as Scoreboard);
 
         if (score === undefined) {
-          interaction.editReply(
-            `Cannot find score ${scoreboardName} for ${ingameName}!`,
-          );
+          interaction.editReply(`Cannot find score ${scoreboardName} for ${ingameName}!`);
           return;
         }
 
-        const val =
-          scoreboardChoice !== 'z-play_time'
-            ? score
-            : Math.round(score / 20 / 3600);
+        const val = scoreboardChoice !== 'z-play_time' ? score : Math.round(score / 20 / 3600);
         const displayAction =
-          scoreboardChoice === 'z-play_time'
-            ? 'SMP Play Time (hours)'
-            : scoreboardName;
+          scoreboardChoice === 'z-play_time' ? 'SMP Play Time (hours)' : scoreboardName;
 
         return interaction.editReply(
           `Player _${ingameName}_ has ${inlineCode(
@@ -230,10 +216,7 @@ async function getPlaytimeLeaderboard(): Promise<QueryScoreboardResponse> {
 }
 
 async function getPlayerScore(ign: string, scoreboard: Scoreboard) {
-  const res = await RCONUtil.runSingleCommand(
-    'smp',
-    `scoreboard players get ${ign} ${scoreboard}`,
-  );
+  const res = await RCONUtil.runSingleCommand('smp', `scoreboard players get ${ign} ${scoreboard}`);
 
   if (res === `Can't get value of ${scoreboard} for ${ign}; none is set`) {
     return 0;
@@ -250,15 +233,9 @@ async function getPlayerScore(ign: string, scoreboard: Scoreboard) {
   return;
 }
 
-GlobalFonts.registerFromPath(
-  path.join(projectPaths.sources, 'assets/minecraft.ttf'),
-  'minecraft',
-);
+GlobalFonts.registerFromPath(path.join(projectPaths.sources, 'assets/minecraft.ttf'), 'minecraft');
 
-function scoreboardToImage(
-  scoreboardName: string,
-  scoreboardData: QueryScoreboardResponse,
-) {
+function scoreboardToImage(scoreboardName: string, scoreboardData: QueryScoreboardResponse) {
   enum ScoreboardConstants {
     gray = '#BFBFBF',
     red = '#FF5555',
@@ -271,8 +248,7 @@ function scoreboardToImage(
     scoreboardData.list.splice(16, scoreboardData.list.length - 16);
   }
 
-  const canvasHeight =
-    scoreboardData.list.length * ScoreboardConstants.spacing + 55;
+  const canvasHeight = scoreboardData.list.length * ScoreboardConstants.spacing + 55;
 
   const canvas = createCanvas(250, canvasHeight);
   const ctx = canvas.getContext('2d');
@@ -298,9 +274,7 @@ function scoreboardToImage(
   }
 
   const titlePos = [
-    Math.floor(
-      (ScoreboardConstants.width - ctx.measureText(scoreboardTitle).width) / 2,
-    ),
+    Math.floor((ScoreboardConstants.width - ctx.measureText(scoreboardTitle).width) / 2),
     20,
   ];
   const playerAndScorePos: [number, number] = [2, 50];
@@ -337,8 +311,7 @@ function scoreboardToImage(
   // Write the total score (in red)
   ctx.fillText(
     scoreboardData.total.toString(),
-    ScoreboardConstants.width -
-      ctx.measureText(scoreboardData.total.toString()).width,
+    ScoreboardConstants.width - ctx.measureText(scoreboardData.total.toString()).width,
     playerAndScorePos[1] + counter * ScoreboardConstants.spacing,
   );
 

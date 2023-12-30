@@ -1,21 +1,11 @@
-import {
-  ApplicationCommandOptionType,
-  bold,
-  inlineCode,
-  TextChannel,
-  time,
-} from 'discord.js';
+import { ApplicationCommandOptionType, bold, inlineCode, TextChannel, time } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config, ServerChoice } from '../config';
 import { formatBytes } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import { ptero } from '../util/pterodactyl';
-import {
-  confirmCancelRow,
-  getButtonCollector,
-  mcServerChoice,
-} from '../util/components';
+import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/components';
 
 export default new Command({
   name: 'backup',
@@ -114,8 +104,7 @@ export default new Command({
 
         const backupName =
           args.getString('name') ??
-          `Backup created by ${client.user
-            ?.username} at ${new Date().toUTCString()}`;
+          `Backup created by ${client.user?.username} at ${new Date().toUTCString()}`;
 
         if (meta.pagination.total < backupLimit) {
           const backup = await ptero.backups.create(serverId, {
@@ -124,18 +113,16 @@ export default new Command({
           });
 
           interaction.editReply(
-            `Successfully created backup (${inlineCode(backup.name)}) for ${
-              guild.name
-            } ${bold(serverChoice)}!`,
+            `Successfully created backup (${inlineCode(backup.name)}) for ${guild.name} ${bold(
+              serverChoice,
+            )}!`,
           );
 
           return;
         }
 
         await interaction.editReply({
-          content: `This command will delete the oldest backup for ${
-            guild.name
-          } ${bold(
+          content: `This command will delete the oldest backup for ${guild.name} ${bold(
             serverChoice,
           )} because the backup limit is reached for this server. Are you sure you want to continue? This can not be undone!`,
           components: [confirmCancelRow],
@@ -144,18 +131,14 @@ export default new Command({
         const collector = getButtonCollector(interaction);
 
         if (!collector) {
-          interaction.editReply(
-            'Failed to create message component collector!',
-          );
+          interaction.editReply('Failed to create message component collector!');
           return;
         }
 
         const oldestBackup = Array.from(backups.values()).pop();
 
         if (!oldestBackup) {
-          interaction.editReply(
-            'Something went wrong while trying to delete the oldest backup.',
-          );
+          interaction.editReply('Something went wrong while trying to delete the oldest backup.');
           return;
         }
 
@@ -178,9 +161,9 @@ export default new Command({
           }
 
           interaction.editReply({
-            content: `Cancelled deleting the oldest backup for ${
-              guild.name
-            } ${bold(serverChoice)}!`,
+            content: `Cancelled deleting the oldest backup for ${guild.name} ${bold(
+              serverChoice,
+            )}!`,
             components: [],
           });
         });
@@ -215,9 +198,9 @@ export default new Command({
 
       if (!backupDetails) {
         interaction.editReply(
-          `Could not find a backup with the name ${inlineCode(
-            backupName,
-          )} for ${guild.name} ${bold(serverChoice)}!`,
+          `Could not find a backup with the name ${inlineCode(backupName)} for ${guild.name} ${bold(
+            serverChoice,
+          )}!`,
         );
         return;
       }
@@ -234,9 +217,7 @@ export default new Command({
 
         if (backupDetails.is_locked) {
           interaction.editReply(
-            `Backup ${inlineCode(backupName)} for ${guild.name} ${bold(
-              serverChoice,
-            )} is locked!`,
+            `Backup ${inlineCode(backupName)} for ${guild.name} ${bold(serverChoice)} is locked!`,
           );
           return;
         }
@@ -260,9 +241,9 @@ export default new Command({
             await ptero.backups.delete(serverId, backupDetails.uuid);
 
             interaction.editReply({
-              content: `Successfully deleted backup: ${inlineCode(
-                backupDetails.name,
-              )} from ${guild.name} ${bold(serverChoice)}!`,
+              content: `Successfully deleted backup: ${inlineCode(backupDetails.name)} from ${
+                guild.name
+              } ${bold(serverChoice)}!`,
               components: [],
             });
 
@@ -270,9 +251,7 @@ export default new Command({
           }
 
           interaction.editReply({
-            content: `Cancelled deleting the backup for ${guild.name} ${bold(
-              serverChoice,
-            )}!`,
+            content: `Cancelled deleting the backup for ${guild.name} ${bold(serverChoice)}!`,
             components: [],
           });
         });
@@ -341,12 +320,8 @@ export default new Command({
 });
 
 async function getBackups(serverChoice: ServerChoice) {
-  const backups = await ptero.backups.list(
-    config.mcConfig[serverChoice].serverId,
-  );
-  const backupMap = new Map(
-    backups.data.reverse().map((backup) => [backup.name, backup]),
-  );
+  const backups = await ptero.backups.list(config.mcConfig[serverChoice].serverId);
+  const backupMap = new Map(backups.data.reverse().map((backup) => [backup.name, backup]));
 
   return {
     backups: backupMap,

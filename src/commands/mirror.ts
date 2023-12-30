@@ -12,8 +12,7 @@ export default new Command({
   options: [
     {
       name: 'server',
-      description:
-        'Choose wether you want to mirror SMP to Copy or CMP to CMP2.',
+      description: 'Choose wether you want to mirror SMP to Copy or CMP to CMP2.',
       type: ApplicationCommandOptionType.String,
       choices: [
         {
@@ -59,10 +58,7 @@ export default new Command({
     await interaction.deferReply();
 
     const server = args.getString('server', true) as 'survival' | 'creative';
-    const dimension = args.getString('dimension', true) as
-      | 'overworld'
-      | 'nether'
-      | 'end';
+    const dimension = args.getString('dimension', true) as 'overworld' | 'nether' | 'end';
     const regionsArg = args.getString('regions', true);
 
     const sourceServer = server === 'survival' ? 'smp' : 'cmp';
@@ -76,17 +72,13 @@ export default new Command({
       }
 
       if (fileNames.length > 12) {
-        return interaction.editReply(
-          'You can only mirror 12 regions at a time!',
-        );
+        return interaction.editReply('You can only mirror 12 regions at a time!');
       }
 
       await interaction.editReply('Checking if regions exist...');
 
       if (!(await areRegionsIncluded(fileNames, dimension, sourceServer))) {
-        return interaction.editReply(
-          'One or more regions do not exist on the source server!',
-        );
+        return interaction.editReply('One or more regions do not exist on the source server!');
       }
 
       await interaction.editReply(
@@ -100,9 +92,7 @@ export default new Command({
           const playerCount = await getPlayerCount(targetServer);
 
           if (playerCount === null) {
-            return interaction.editReply(
-              'Failed to get the current playercount. Aborting... ',
-            );
+            return interaction.editReply('Failed to get the current playercount. Aborting... ');
           }
 
           if (playerCount > 0) {
@@ -116,9 +106,7 @@ export default new Command({
           await stopServerAndWait(targetServer);
         } catch (err) {
           console.error(err);
-          return interaction.editReply(
-            'Failed to get server status. Aborting...',
-          );
+          return interaction.editReply('Failed to get server status. Aborting...');
         }
       }
 
@@ -132,9 +120,7 @@ export default new Command({
 
       await Promise.all(mirrorPromises);
 
-      await interaction.editReply(
-        'All files copied! Starting target server...',
-      );
+      await interaction.editReply('All files copied! Starting target server...');
 
       await startServerAndWait(targetServer);
 
@@ -183,9 +169,7 @@ async function mirrorRegionFiles(
   }[dimension];
 
   const fileTypes = ['region', 'entities', 'poi'] as const;
-  const filePaths = fileTypes.map(
-    (type) => `world/${dimensionPath}${type}/${regionName}`,
-  );
+  const filePaths = fileTypes.map((type) => `world/${dimensionPath}${type}/${regionName}`);
 
   const linkPromises = filePaths.map((path) =>
     ptero.files.getDownloadLink(config.mcConfig[server].serverId, path),
@@ -194,9 +178,7 @@ async function mirrorRegionFiles(
   const links = await Promise.all(linkPromises);
   links.forEach((link) => {
     if (!link) {
-      throw new Error(
-        `Couldn't get the download links for ${dimension} region: ${regionName}`,
-      );
+      throw new Error(`Couldn't get the download links for ${dimension} region: ${regionName}`);
     }
   });
 
@@ -207,16 +189,10 @@ async function mirrorRegionFiles(
     const path = filePaths[index];
 
     if (!path) {
-      throw new Error(
-        `Couldn't get the path for ${dimension} region: ${regionName}`,
-      );
+      throw new Error(`Couldn't get the path for ${dimension} region: ${regionName}`);
     }
 
-    await ptero.files.write(
-      config.mcConfig[targetServer].serverId,
-      path,
-      fileBuffer,
-    );
+    await ptero.files.write(config.mcConfig[targetServer].serverId, path, fileBuffer);
   });
 
   await Promise.all(fileFetchAndWritePromises);
@@ -265,9 +241,7 @@ async function areRegionsIncluded(
 
   const regionFileNames = regionFiles.map((file) => file.name);
 
-  return regionNames.every((regionName) =>
-    regionFileNames.includes(regionName),
-  );
+  return regionNames.every((regionName) => regionFileNames.includes(regionName));
 }
 
 async function startServerAndWait(serverChoice: ServerChoice) {
