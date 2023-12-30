@@ -108,59 +108,60 @@ export async function addMember(
 
 export async function updateMember(
   discordID: Snowflake,
-  minecraftIGNs: string[],
-  trialMember = false,
-  memberSince: Date | undefined,
+  minecraftIGNs?: string[],
+  trialMember?: boolean,
+  memberSince?: Date,
 ) {
-  if (minecraftIGNs.length === 0 || minecraftIGNs.length > 10) {
-    throw new Error(`Expected between 1 and 10 minecraft igns, got ${minecraftIGNs.length}.`);
+  const updateData: any = {};
+
+  if (trialMember !== undefined) {
+    updateData.trialMember = trialMember;
   }
 
-  if (minecraftIGNs.length === 1) {
-    const userdata = await getUUID(minecraftIGNs[0]!);
+  if (memberSince) {
+    updateData.memberSince = memberSince;
+  }
 
-    await prisma.mCMember.update({
-      where: {
-        discordID,
-      },
-      data: {
-        trialMember,
-        ...(memberSince && { memberSince }),
-        minecraftData: {
-          deleteMany: {},
-          create: {
-            username: userdata.name,
-            uuid: userdata.id,
-          },
+  if (minecraftIGNs && minecraftIGNs.length > 0) {
+    if (minecraftIGNs.length > 10) {
+      throw new Error(`Expected between 1 and 10 minecraft igns, got ${minecraftIGNs.length}.`);
+    }
+
+    if (minecraftIGNs.length === 1) {
+      const userdata = await getUUID(minecraftIGNs[0]!);
+
+      updateData.minecraftData = {
+        deleteMany: {},
+        create: {
+          username: userdata.name,
+          uuid: userdata.id,
         },
-      },
-    });
-  }
+      };
+    }
 
-  if (minecraftIGNs.length > 1) {
-    const userdata = await getMultipleUUIDs(minecraftIGNs);
+    if (minecraftIGNs.length > 1) {
+      const userdata = await getMultipleUUIDs(minecraftIGNs);
 
-    await prisma.mCMember.update({
-      where: {
-        discordID,
-      },
-      data: {
-        trialMember,
-        ...(memberSince && { memberSince }),
-        minecraftData: {
-          deleteMany: {},
-          createMany: {
-            data: userdata.map((data) => {
-              return {
-                username: data.name,
-                uuid: data.id,
-              };
-            }),
-          },
+      updateData.minecraftData = {
+        deleteMany: {},
+        createMany: {
+          data: userdata.map((data) => {
+            return {
+              username: data.name,
+              uuid: data.id,
+            };
+          }),
         },
-      },
-    });
+      };
+    }
   }
+
+  await prisma.mCMember.update({
+    where: {
+      discordID,
+    },
+    data: updateData,
+  });
 }
 
 export async function removeMember(discordID: Snowflake) {
@@ -225,6 +226,19 @@ export async function getMemberFromID(id: Snowflake) {
   }
 
   return member;
+}
+
+export async function isMemberInDatabase(id: Snowflake) {
+  try {
+    await prisma.mCMember.findUnique({
+      where: {
+        discordID: id,
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function storeApplication(application: ApplicationObject, discordID: Snowflake) {

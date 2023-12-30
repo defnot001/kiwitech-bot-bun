@@ -11,6 +11,7 @@ import {
   addMember,
   getMemberFromID,
   getMemberNames,
+  isMemberInDatabase,
   removeMember,
   updateMember,
 } from '../util/prisma';
@@ -58,6 +59,7 @@ export default new Command({
           name: 'trial',
           description: 'Wether the member is a trial Member. Defaults to false.',
           type: ApplicationCommandOptionType.Boolean,
+          required: true,
         },
         {
           name: 'member_since',
@@ -81,7 +83,6 @@ export default new Command({
           name: 'ign',
           description: "The Member's In-Game Name(s). Separate multiple names with a comma (,).",
           type: ApplicationCommandOptionType.String,
-          required: true,
         },
         {
           name: 'trial',
@@ -146,18 +147,16 @@ export default new Command({
         try {
           await guild.members.fetch(user.id);
         } catch (err) {
-          return interaction.editReply({
-            content: `${user.username} is not a member of ${guild.name}.`,
-          });
+          return interaction.editReply(`${user.username} is not a member of ${guild.name}.`);
         }
 
         const member = await getMemberFromID(user.id);
         const { minecraftData } = member;
 
         if (!minecraftData.length) {
-          return interaction.editReply({
-            content: `${user.username} does not have any data related to Minecraft.`,
-          });
+          return interaction.editReply(
+            `${user.username} does not have any data related to Minecraft.`,
+          );
         }
 
         const usernames: Array<[string, string]> = [];
@@ -205,27 +204,31 @@ export default new Command({
 
     if (subcommand === 'add' || subcommand === 'update') {
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-        return interaction.editReply({
-          content: 'You must be an Administrator to use this command.',
-        });
+        return interaction.editReply('You must be an Administrator to use this command.');
       }
 
       const user = args.getUser('member', true);
-      const ign = args.getString('ign', true);
-      const trial = args.getBoolean('trial') ?? false;
-
-      const igns = ign.split(',').map((name) => name.trim());
-
-      if (!igns.length) {
-        return interaction.editReply('You must provide at least one IGN.');
-      }
+      const ign = args.getString('ign');
+      const trial = args.getBoolean('trial');
+      const memberSince = args.getString('member_since');
 
       if (subcommand === 'add') {
-        const memberSince = args.getString('member_since') ?? new Date().toISOString();
-        const memberSinceDate = new Date(memberSince);
+        if ((await isMemberInDatabase(user.id)) === true) {
+          return interaction.editReply({
+            content: `${user.username} is already a member of ${guild.name}.`,
+          });
+        }
+
+        const igns = ign!.split(',').map((name) => name.trim());
+
+        if (igns.length === 0) {
+          return interaction.editReply('You must provide at least one IGN.');
+        }
+
+        const memberSinceDate = new Date(memberSince ?? new Date().toISOString());
 
         try {
-          await addMember(user.id, igns, memberSinceDate, trial);
+          await addMember(user.id, igns, memberSinceDate, trial!);
 
           interaction.editReply({
             content: `Successfully added ${inlineCode(user.username)} to the Memberlist.`,
@@ -238,11 +241,28 @@ export default new Command({
       }
 
       if (subcommand === 'update') {
-        const memberSince = args.getString('member_since');
-        const memberSinceDate = memberSince ? new Date(memberSince) : undefined;
+        if (!(await isMemberInDatabase(user.id))) {
+          return interaction.editReply(`${user.username} is not a member of ${guild.name}.`);
+        }
+
+        let igns: string[] | undefined = undefined;
+        let trialMember: boolean | undefined = undefined;
+        let memberSinceDate: Date | undefined = undefined;
+
+        if (ign !== null) {
+          igns = ign.split(',').map((name) => name.trim());
+        }
+
+        if (trial !== null) {
+          trialMember = trial;
+        }
+
+        if (memberSince !== null) {
+          memberSinceDate = new Date(memberSince);
+        }
 
         try {
-          await updateMember(user.id, igns, trial, memberSinceDate);
+          await updateMember(user.id, igns, trialMember, memberSinceDate);
 
           interaction.editReply({
             content: `Successfully updated ${user.username} in the Memberlist.`,
@@ -257,9 +277,13 @@ export default new Command({
 
     if (subcommand === 'remove') {
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-        return interaction.editReply({
-          content: 'You must be an Administrator to use this command.',
-        });
+        return interaction.editReply('You must be an Administrator to use this command.');
+      }
+
+      if (!(await isMemberInDatabase(interaction.user.id))) {
+        return interaction.editReply(
+          `${interaction.user.username} is not a member of ${guild.name}.`,
+        );
       }
 
       const user = args.getUser('member', true);
@@ -267,13 +291,9 @@ export default new Command({
       try {
         await removeMember(user.id);
 
-        interaction.editReply({
-          content: `Successfully removed ${user.username} from the Memberlist.`,
-        });
+        interaction.editReply(`Successfully removed ${user.username} from the Memberlist.`);
       } catch (err) {
-        interaction.editReply({
-          content: `Failed to remove ${user.username} from ${guild.name}.`,
-        });
+        interaction.editReply(`Failed to remove ${user.username} from ${guild.name}.`);
       }
     }
 
