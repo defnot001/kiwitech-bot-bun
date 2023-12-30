@@ -5,6 +5,7 @@ import { config, ServerChoice } from '../config';
 import { getServerChoices } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import RCONUtil from '../util/rcon';
+import { Rcon } from '../rcon/rcon';
 
 export default new Command({
   name: 'whitelist',
@@ -25,8 +26,7 @@ export default new Command({
     },
     {
       name: 'remove',
-      description:
-        'Removes a player from the whitelist on all minecraft servers.',
+      description: 'Removes a player from the whitelist on all minecraft servers.',
       type: ApplicationCommandOptionType.Subcommand,
       options: [
         {
@@ -99,33 +99,28 @@ export default new Command({
           return interaction.editReply('Please provide an in-game name!');
         }
 
-        const servers = Object.keys(config.mcConfig);
+        const servers = Object.keys(config.mcConfig) as ServerChoice[];
 
-        const whitelistCheck: [string, string][] = [];
-        const opCheck: [string, string][] = [];
+        const whitelistCheck: [ServerChoice, string][] = [];
+        const opCheck: [ServerChoice, string][] = [];
 
         for await (const server of servers) {
-          const whitelistCommand = `whitelist ${subcommand} ${ign}`;
+          const rconClient = await Rcon.connect({
+            host: config.mcConfig[server].host,
+            port: config.mcConfig[server].rconPort,
+            password: config.mcConfig[server].rconPasswd,
+          });
 
-          const whitelist = await RCONUtil.runSingleCommand(
-            server as ServerChoice,
-            whitelistCommand,
-          );
+          whitelistCheck.push([server, await rconClient.send(`whitelist ${subcommand} ${ign}`)]);
 
-          whitelistCheck.push([server, whitelist]);
-
-          if (config.mcConfig[server as ServerChoice].operator) {
+          if (config.mcConfig[server].operator === true) {
             const action = subcommand === 'add' ? 'op' : 'deop';
-            const opCommand = `${action} ${ign}`;
-
-            const op = await RCONUtil.runSingleCommand(
-              server as ServerChoice,
-              opCommand,
-            );
-
-            opCheck.push([server, op]);
+            opCheck.push([server, await rconClient.send(`${action} ${ign}`)]);
           }
+
+          await rconClient.end();
         }
+
         const successMessage =
           subcommand === 'add'
             ? `Successfully added ${inlineCode(ign)} to the whitelist on ${
@@ -135,9 +130,9 @@ export default new Command({
               } servers.`
             : `Successfully removed ${inlineCode(ign)} from the whitelist on ${
                 whitelistCheck.length
-              } servers.\nSuccessfully removed ${inlineCode(
-                ign,
-              )} as an operator on ${opCheck.length} servers.`;
+              } servers.\nSuccessfully removed ${inlineCode(ign)} as an operator on ${
+                opCheck.length
+              } servers.`;
 
         return interaction.editReply(successMessage);
       }
@@ -169,7 +164,5 @@ async function getWhitelist(server: ServerChoice) {
     throw new Error('Failed to parse the response correctly!');
   }
 
-  return splitResponse
-    .split(', ')
-    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  return splitResponse.split(', ').sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 }
