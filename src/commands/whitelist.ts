@@ -151,7 +151,7 @@ function escapeMarkdown(text: string): string {
   return unescaped.replace(/(\*|_|`|~|\\)/g, '\\$1');
 }
 
-async function getWhitelist(server: ServerChoice) {
+export async function getWhitelist(server: ServerChoice) {
   const response = await RCONUtil.runSingleCommand(server, 'whitelist list');
 
   if (response === 'There are no whitelisted players') {
