@@ -5,7 +5,7 @@ export class RconError extends Error {
   }
 }
 
-export const ERROR_MESSAGES = {
+export const RCON_ERROR_MESSAGES = {
   NOT_CONNECTED: 'Cannot send command because the client is not connected',
   ALREADY_CONNECTED: 'Already connected. Please disconnect before trying to connect again.',
   AUTH_FAILED: 'Client authentification failed',

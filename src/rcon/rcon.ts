@@ -5,7 +5,7 @@ import { createSplitter } from './splitter';
 import { PromiseQueue } from './queue';
 import { EventEmitter } from 'events';
 import { RconEmitter } from './EventEmitter';
-import { ERROR_MESSAGES, RconError } from './errors';
+import { RCON_ERROR_MESSAGES, RconError } from './errors';
 
 export interface RconOptions {
   host: string;
@@ -59,7 +59,7 @@ export class Rcon {
 
   public async connect() {
     if (this.socket) {
-      return Promise.reject(new RconError(ERROR_MESSAGES.ALREADY_CONNECTED));
+      return Promise.reject(new RconError(RCON_ERROR_MESSAGES.ALREADY_CONNECTED));
     }
 
     this.setupSocket();
@@ -67,7 +67,7 @@ export class Rcon {
     try {
       await this.waitForConnection();
     } catch (err) {
-      this.handleError(err, ERROR_MESSAGES.CONNECTION_FAILED);
+      this.handleError(err, RCON_ERROR_MESSAGES.CONNECTION_FAILED);
       throw err;
     }
 
@@ -76,7 +76,7 @@ export class Rcon {
     try {
       await this.authenticate();
     } catch (err) {
-      this.handleError(err, ERROR_MESSAGES.AUTH_FAILED);
+      this.handleError(err, RCON_ERROR_MESSAGES.AUTH_FAILED);
       throw err;
     }
 
@@ -88,11 +88,11 @@ export class Rcon {
     */
   public async end() {
     if (!this.socket || this.socket.connecting) {
-      throw new RconError(ERROR_MESSAGES.NOT_CONNECTED);
+      throw new RconError(RCON_ERROR_MESSAGES.NOT_CONNECTED);
     }
 
     if (!this.socket.writable) {
-      throw new RconError(ERROR_MESSAGES.END_CALLED_TWICE);
+      throw new RconError(RCON_ERROR_MESSAGES.END_CALLED_TWICE);
     }
 
     this.sendQueue.pause();
@@ -113,7 +113,7 @@ export class Rcon {
 
   public async sendRaw(buffer: Buffer) {
     if (!this.authenticated || !this.socket) {
-      throw new RconError(ERROR_MESSAGES.NOT_CONNECTED);
+      throw new RconError(RCON_ERROR_MESSAGES.NOT_CONNECTED);
     }
 
     try {
@@ -135,7 +135,7 @@ export class Rcon {
 
   private async waitForConnection(): Promise<void> {
     if (!this.socket) {
-      throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+      throw new RconError(RCON_ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
     }
 
     const errorHandler = (err: Error) => {
@@ -158,7 +158,7 @@ export class Rcon {
 
   private setupSocketEvents(): void {
     if (!this.socket) {
-      throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+      throw new RconError(RCON_ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
     }
 
     this.socket.setNoDelay(true);
@@ -178,7 +178,7 @@ export class Rcon {
 
   private async authenticate(): Promise<void> {
     if (!this.socket) {
-      throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+      throw new RconError(RCON_ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
     }
 
     const id = this.requestId;
@@ -190,7 +190,7 @@ export class Rcon {
       this.sendQueue.pause();
       this.socket.destroy();
       this.socket = null;
-      throw new RconError(ERROR_MESSAGES.AUTH_FAILED);
+      throw new RconError(RCON_ERROR_MESSAGES.AUTH_FAILED);
     }
 
     this.authenticated = true;
@@ -202,7 +202,7 @@ export class Rcon {
 
     const createSendPromise = (): Promise<Packet> => {
       if (!this.socket) {
-        throw new RconError(ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
+        throw new RconError(RCON_ERROR_MESSAGES.SOCKET_NOT_INITIALIZED);
       }
 
       try {
