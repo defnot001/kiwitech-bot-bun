@@ -13,6 +13,7 @@ import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
 import { capitalizeFirstLetter } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'info',
@@ -66,7 +67,7 @@ export default new Command({
     const { guild } = interaction;
 
     if (!guild) {
-      return interaction.reply('This command can only be used in a guild.');
+      return interaction.reply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
     const guildIconURL: string | null = guild.iconURL();

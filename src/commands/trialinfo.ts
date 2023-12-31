@@ -4,6 +4,7 @@ import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { getEmojis } from '../util/components';
 import { handleInteractionError } from '../util/loggers';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'trialinfo',
@@ -30,7 +31,7 @@ export default new Command({
 
     if (!guild) {
       return interaction.reply({
-        content: 'This command can only be used in a guild!',
+        content: ERROR_MESSAGES.ONLY_GUILD,
         ephemeral: true,
       });
     }

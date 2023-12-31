@@ -3,6 +3,7 @@ import {
   GuildMember,
   GuildMemberManager,
   PartialGuildMember,
+  PermissionFlagsBits,
   Snowflake,
   time,
 } from 'discord.js';
@@ -48,4 +49,8 @@ export async function getMembersFromID(members: Snowflake[], manager: GuildMembe
   });
 
   return fetched;
+}
+
+export function isAdmin(member: GuildMember | PartialGuildMember): boolean {
+  return member.permissions.has(PermissionFlagsBits.Administrator);
 }

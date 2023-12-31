@@ -6,6 +6,7 @@ import { getServerChoices } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import RCONUtil from '../util/rcon';
 import { Rcon } from '../rcon/rcon';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'whitelist',
@@ -63,7 +64,7 @@ export default new Command({
     }
 
     if (!interaction.guild) {
-      return interaction.reply('This command can only be used in a guild.');
+      return interaction.reply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
     try {

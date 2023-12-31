@@ -1,10 +1,4 @@
-import {
-  ApplicationCommandOptionType,
-  PermissionsBitField,
-  escapeMarkdown,
-  inlineCode,
-  time,
-} from 'discord.js';
+import { ApplicationCommandOptionType, escapeMarkdown, inlineCode, time } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import {
@@ -15,6 +9,8 @@ import {
   removeMember,
   updateMember,
 } from '../util/prisma';
+import { isAdmin } from '../util/helpers';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'member',
@@ -116,9 +112,7 @@ export default new Command({
     const guild = interaction.guild;
 
     if (!guild) {
-      return interaction.editReply({
-        content: 'This command can only be used in a server.',
-      });
+      return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
     const subcommand = args.getSubcommand() as 'list' | 'info' | 'add' | 'update' | 'remove';
@@ -203,7 +197,7 @@ export default new Command({
     }
 
     if (subcommand === 'add' || subcommand === 'update') {
-      if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      if (!isAdmin(interaction.member)) {
         return interaction.editReply('You must be an Administrator to use this command.');
       }
 
@@ -276,7 +270,7 @@ export default new Command({
     }
 
     if (subcommand === 'remove') {
-      if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      if (!isAdmin(interaction.member)) {
         return interaction.editReply('You must be an Administrator to use this command.');
       }
 

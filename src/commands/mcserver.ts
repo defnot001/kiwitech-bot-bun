@@ -6,6 +6,7 @@ import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/co
 import { capitalizeFirstLetter, formatBytes } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import { ptero } from '../util/pterodactyl';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'mcserver',
@@ -52,7 +53,7 @@ export default new Command({
     const { guild } = interaction;
 
     if (!guild) {
-      interaction.editReply('This command can only be used in a server.');
+      interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
       return;
     }
 

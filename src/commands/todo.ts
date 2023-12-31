@@ -4,6 +4,7 @@ import { Command } from '../handler/classes/Command';
 import { config } from '../config';
 import { getTextChannelFromID, handleInteractionError } from '../util/loggers';
 import { addTodo, completeTodo, getTodoByType, updateTodo } from '../util/prisma';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'todo',
@@ -71,7 +72,7 @@ export default new Command({
     await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.guild) {
-      return interaction.editReply('This command can only be used in a server.');
+      return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
     const subcommand = args.getSubcommand() as 'add' | 'update' | 'complete';

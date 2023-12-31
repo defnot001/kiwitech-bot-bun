@@ -7,6 +7,7 @@ import { handleInteractionError } from '../util/loggers';
 import RCONUtil from '../util/rcon';
 import { getServerState } from '../util/pterodactyl';
 import MCStatus from '../util/mcstatus';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'status',
@@ -30,7 +31,7 @@ export default new Command({
     }
 
     if (!interaction.guild) {
-      return interaction.reply('This command can only be used in a guild.');
+      return interaction.reply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
     try {

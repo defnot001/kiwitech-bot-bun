@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType, escapeMarkdown, inlineCode, time } from '
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { confirmCancelRow, getButtonCollector } from '../util/components';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'idban',
@@ -20,7 +21,7 @@ export default new Command({
     const interactionGuild = interaction.guild;
 
     if (!interactionGuild) {
-      await interaction.editReply('This command can only be used in a server.');
+      await interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
       return;
     }
 

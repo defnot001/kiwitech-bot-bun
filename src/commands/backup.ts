@@ -6,6 +6,7 @@ import { formatBytes } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import { ptero } from '../util/pterodactyl';
 import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/components';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'backup',
@@ -76,8 +77,7 @@ export default new Command({
     const { guild, channel } = interaction;
 
     if (!guild) {
-      interaction.editReply('This command can only be used in a server.');
-      return;
+      return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
     if (!channel || !(channel instanceof TextChannel)) {

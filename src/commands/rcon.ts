@@ -1,14 +1,10 @@
-import {
-  ApplicationCommandOptionType,
-  PermissionFlagsBits,
-  codeBlock,
-  inlineCode,
-} from 'discord.js';
+import { ApplicationCommandOptionType, codeBlock, inlineCode } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { ServerChoice } from '../config';
-import { getServerChoices } from '../util/helpers';
+import { getServerChoices, isAdmin } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import RCONUtil from '../util/rcon';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'run',
@@ -33,10 +29,7 @@ export default new Command({
 
     const choice = args.getString('server', true) as ServerChoice;
 
-    if (
-      choice === 'smp' &&
-      !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
-    ) {
+    if (choice === 'smp' && !isAdmin(interaction.member)) {
       return interaction.editReply(
         'You do not have the required permissions to run commands on this server.',
       );
@@ -49,7 +42,7 @@ export default new Command({
     }
 
     if (!interaction.guild) {
-      return interaction.editReply('This command can only be used in a guild.');
+      return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
     try {
