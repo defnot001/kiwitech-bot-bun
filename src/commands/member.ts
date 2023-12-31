@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, escapeMarkdown, inlineCode, time } from 'discord.js';
+import { ApplicationCommandOptionType, inlineCode, time } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../util/prisma';
 import { isAdmin } from '../util/helpers';
 import { ERROR_MESSAGES } from '../util/constants';
+import { escapeMarkdown } from '../util/helpers';
 
 export default new Command({
   name: 'member',
@@ -190,9 +191,7 @@ export default new Command({
           embeds: [embed],
         });
       } catch {
-        interaction.editReply({
-          content: `${escapeMarkdown(user.username)} is not a member of ${guild.name}.`,
-        });
+        interaction.editReply(`${escapeMarkdown(user.username)} is not a member of ${guild.name}.`);
       }
     }
 

@@ -1,5 +1,6 @@
-import { EmbedBuilder, escapeMarkdown, GuildMember, inlineCode, User } from 'discord.js';
+import { EmbedBuilder, GuildMember, inlineCode, User } from 'discord.js';
 import { config } from '../config';
+import { escapeMarkdown } from '../util/helpers';
 
 interface ModerationDescription {
   member: string;
@@ -57,7 +58,7 @@ export class ModerationEmbedBuilder extends EmbedBuilder {
     this.setColor(color);
 
     this.setAuthor({
-      name: escapeMarkdown(executor.user.username),
+      name: executor.user.username,
       iconURL: executor.user.displayAvatarURL(),
     });
 

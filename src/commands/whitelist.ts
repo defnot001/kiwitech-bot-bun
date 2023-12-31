@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, inlineCode } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config, ServerChoice } from '../config';
-import { getServerChoices } from '../util/helpers';
+import { escapeMarkdown, getServerChoices } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import RCONUtil from '../util/rcon';
 import { Rcon } from '../rcon/rcon';
@@ -146,11 +146,6 @@ export default new Command({
     }
   },
 });
-
-function escapeMarkdown(text: string): string {
-  const unescaped = text.replace(/\\(\*|_|`|~|\\)/g, '$1');
-  return unescaped.replace(/(\*|_|`|~|\\)/g, '\\$1');
-}
 
 export async function getWhitelist(server: ServerChoice) {
   const response = await RCONUtil.runSingleCommand(server, 'whitelist list');

@@ -1,8 +1,9 @@
-import { ApplicationCommandOptionType, escapeMarkdown, inlineCode, time } from 'discord.js';
+import { ApplicationCommandOptionType, inlineCode, time } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { confirmCancelRow, getButtonCollector } from '../util/components';
 import { ERROR_MESSAGES } from '../util/constants';
+import { escapeMarkdown } from '../util/helpers';
 
 export default new Command({
   name: 'idban',

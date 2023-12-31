@@ -1,6 +1,5 @@
 import {
   ApplicationCommandOptionType,
-  escapeMarkdown,
   GuildMember,
   time,
   type Collection,
@@ -14,6 +13,7 @@ import { config } from '../config';
 import { capitalizeFirstLetter } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';
 import { ERROR_MESSAGES } from '../util/constants';
+import { escapeMarkdown } from '../util/helpers';
 
 export default new Command({
   name: 'info',

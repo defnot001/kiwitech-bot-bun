@@ -54,3 +54,8 @@ export async function getMembersFromID(members: Snowflake[], manager: GuildMembe
 export function isAdmin(member: GuildMember | PartialGuildMember): boolean {
   return member.permissions.has(PermissionFlagsBits.Administrator);
 }
+
+export function escapeMarkdown(text: string): string {
+  const unescaped = text.replace(/\\(\*|_|`|~|\\)/g, '$1');
+  return unescaped.replace(/(\*|_|`|~|\\)/g, '\\$1');
+}
