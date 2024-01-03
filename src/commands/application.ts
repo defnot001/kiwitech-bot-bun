@@ -2,6 +2,7 @@ import {
   ApplicationCommandOptionType,
   EmbedBuilder,
   GuildChannelManager,
+  GuildMember,
   Snowflake,
   User,
   time,
@@ -9,6 +10,7 @@ import {
 } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import {
+  addMember,
   closeApplication,
   deleteApplication,
   getApplicationFromID,
@@ -19,11 +21,16 @@ import {
 } from '../util/prisma';
 import { ERROR_MESSAGES } from '../util/constants';
 import { getTextChannelFromID, handleInteractionError } from '../util/loggers';
-import { getApplicationEmbeds, notifyUserApplicationRecieved } from '../util/application';
+import {
+  ApplicationObject,
+  getApplicationEmbeds,
+  notifyUserApplicationRecieved,
+} from '../util/application';
 import { getEmojis } from '../util/components';
 import { config } from '../config';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
+import { ExtendedInteraction } from '../handler/types';
 
 type ApplicationSubcommand =
   | 'display_latest'
@@ -409,6 +416,10 @@ export default new Command({
           targetUser,
         );
 
+        if (!interaction.channel) {
+          return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+        }
+
         if (!applicationChannel) {
           return interaction.editReply(
             `Application channel for ${application.discordID} not found.`,
@@ -421,27 +432,46 @@ export default new Command({
           );
         }
 
+        const applicationObject = await getApplicationFromID(applicationID);
+
+        if (!applicationObject) {
+          return interaction.editReply(`Application with ID ${applicationID} not found.`);
+        }
+
         await applicationChannel.send(getAcceptMessage(application.discordID));
+
         await closeApplication(applicationID);
 
-        const { kiwi } = getEmojis(interaction.client);
+        try {
+          await sendTrialInfo(targetUser, interaction);
+        } catch {
+          interaction.channel.send(
+            'Failed to send welcome message, please do so manually by using the `/trialinfo` command. Proceeding...',
+          );
+        }
 
-        const trialEmbed = new KoalaEmbedBuilder(interaction.user, {
-          title: `${kiwi}  Welcome to ${interaction.guild.name} ${targetUser.username}!  ${kiwi}`,
-          thumbnail: {
-            url: targetUser.displayAvatarURL(),
-          },
-          fields: getTrialWelcomeMessage(interaction.client),
-        });
+        try {
+          await addMember(
+            targetUser.id,
+            [getIgnsFromApplication(application.content)],
+            new Date(),
+            true,
+          );
+        } catch {
+          interaction.channel.send(
+            'Failed to add member to the database, please do so manually using the `/member add` command. Proceeding...',
+          );
+        }
 
-        const memberGeneralChannel = await getTextChannelFromID(interaction.guild, 'memberGeneral');
+        try {
+          const targetMember = await interaction.guild.members.fetch(targetUser.id);
+          await awardTrialMemberRoles(targetMember);
+        } catch {
+          interaction.channel.send(
+            `Failed to award roles to ${targetUser.username}. Proceeding...`,
+          );
+        }
 
-        const message = await memberGeneralChannel.send({
-          content: userMention(targetUser.id),
-          embeds: [trialEmbed],
-        });
-
-        await message.edit({ content: '\u200b' });
         return interaction.editReply(`Successfully accepted application ID ${applicationID}.`);
       } catch (err) {
         handleInteractionError({
@@ -529,4 +559,34 @@ async function notifyUserApplicationDenied(user: User) {
   await user.send(
     `We are sorry to inform you that your application to KiwiTech has been denied. Thank you again for your interest in our community! Of course you are welcome to stay in our server to chat with members and ask anything that interests you. We wish you the best of luck in your future endeavours!`,
   );
+}
+
+async function sendTrialInfo(targetUser: User, interaction: ExtendedInteraction) {
+  const { kiwi } = getEmojis(interaction.client);
+
+  const trialEmbed = new KoalaEmbedBuilder(interaction.user, {
+    title: `${kiwi}  Welcome to ${interaction.guild!.name} ${targetUser.username}!  ${kiwi}`,
+    thumbnail: {
+      url: targetUser.displayAvatarURL(),
+    },
+    fields: getTrialWelcomeMessage(interaction.client),
+  });
+
+  const memberGeneralChannel = await getTextChannelFromID(interaction.guild!, 'memberGeneral');
+
+  const message = await memberGeneralChannel.send({
+    content: userMention(targetUser.id),
+    embeds: [trialEmbed],
+  });
+
+  await message.edit({ content: '\u200b' });
+}
+
+function getIgnsFromApplication(application: ApplicationObject) {
+  return application.ign.trim();
+}
+
+async function awardTrialMemberRoles(member: GuildMember) {
+  const { trialMember, members, kiwiInc } = config.roles;
+  await member.roles.add([trialMember, members, kiwiInc]);
 }
