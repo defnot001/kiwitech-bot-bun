@@ -1,10 +1,4 @@
-import {
-  ApplicationCommandOptionType,
-  ChannelType,
-  EmbedBuilder,
-  User,
-  userMention,
-} from 'discord.js';
+import { ApplicationCommandOptionType, EmbedBuilder, User, userMention } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import {
   getApplicationFromID,
@@ -214,23 +208,18 @@ export default new Command({
 
         const newChannel = await interaction.guild.channels.create({
           name: `${applicant.username}-application`,
-          type: ChannelType.GuildText,
           parent: config.channels.applicationCategory,
-          permissionOverwrites: [
-            {
-              id: applicant.id,
-              allow: [
-                'ViewChannel',
-                'SendMessages',
-                'EmbedLinks',
-                'AttachFiles',
-                'AddReactions',
-                'UseExternalEmojis',
-                'ReadMessageHistory',
-              ],
-              deny: ['MentionEveryone'],
-            },
-          ],
+        });
+
+        await newChannel.permissionOverwrites.create(applicant, {
+          ViewChannel: true,
+          SendMessages: true,
+          EmbedLinks: true,
+          AttachFiles: true,
+          AddReactions: true,
+          UseExternalEmojis: true,
+          ReadMessageHistory: true,
+          MentionEveryone: false,
         });
 
         await applicationMessage.delete();
