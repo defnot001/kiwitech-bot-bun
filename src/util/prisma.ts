@@ -241,7 +241,7 @@ export async function isMemberInDatabase(id: Snowflake) {
   }
 }
 
-type ApplicationObjectInDatabase = {
+export type ApplicationObjectInDatabase = {
   id: number;
   discordID: Snowflake | null;
   isOpen: boolean;
@@ -250,6 +250,13 @@ type ApplicationObjectInDatabase = {
   updatedAt: Date;
 };
 
+/**
+ * Store an application in the database. If the discordID is provided, it will be linked to the User's ID.
+ * @param {ApplicationObject} application The application.
+ * @param {boolean} isOpen Whether the application is open.
+ * @param {Snowflake} discordID The discord ID of the user. Optional.
+ * @returns {Promise<ApplicationObjectInDatabase>} The stored application.
+ */
 export async function storeApplication(
   application: ApplicationObject,
   isOpen: boolean,
@@ -266,6 +273,14 @@ export async function storeApplication(
   return val as unknown as ApplicationObjectInDatabase;
 }
 
+/**
+ * Update an application in the database. This will also set the discordID of the application to the user's ID.
+ * @param {number} applicationID The ID of the application.
+ * @param {User} user The user that updated the application.
+ * @param {ApplicationObject} application The new application.
+ * @returns {Promise<ApplicationObjectInDatabase>} The updated application.
+ * @throws {Error} If the application does not exist in the database.
+ */
 export async function updateApplication(
   applicationID: number,
   user: User,
@@ -284,6 +299,11 @@ export async function updateApplication(
   return val as unknown as ApplicationObjectInDatabase;
 }
 
+/**
+ * Get an application from the database.
+ * @param {number} applicationID The ID of the application.
+ * @returns {Promise<ApplicationObjectInDatabase | null>} The application or null if it was not found.
+ */
 export async function getApplicationFromID(applicationID: number) {
   const val = await prisma.application.findUnique({
     where: {
@@ -291,9 +311,15 @@ export async function getApplicationFromID(applicationID: number) {
     },
   });
 
-  return val as unknown as ApplicationObjectInDatabase;
+  return val as unknown as ApplicationObjectInDatabase | null;
 }
 
+/**
+ * Get the latest application from a member.
+ * @param {Snowflake} discordID The discord ID of the member.
+ * @returns {Promise<ApplicationObjectInDatabase>} The latest application.
+ * @throws {Error} If the member does not exist in the database or if the member has no applications.
+ */
 export async function getLatestApplicationFromMember(discordID: Snowflake) {
   const val = await prisma.application.findFirst({
     where: {
@@ -305,4 +331,85 @@ export async function getLatestApplicationFromMember(discordID: Snowflake) {
   });
 
   return val as unknown as ApplicationObjectInDatabase;
+}
+
+/**
+ * Get the latest applications from the database.
+ * @param {number} amount The amount of applications to get. Defaults to 25.
+ * @returns {Promise<ApplicationObjectInDatabase[]>} The latest applications.
+ */
+export async function getLatestApplications(amount = 20) {
+  const val = await prisma.application.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: amount,
+  });
+
+  return val as unknown as ApplicationObjectInDatabase[];
+}
+
+/**
+ * Get the latest open applications from the database.
+ * @param {number} amount The amount of applications to get. Defaults to 25.
+ * @returns {Promise<ApplicationObjectInDatabase[]>} The latest open applications. Returns an empty array if there are no open applications.
+ */
+export async function getLatestOpenApplications(amount = 20) {
+  const val = await prisma.application.findMany({
+    where: {
+      isOpen: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: amount,
+  });
+
+  return val as unknown as ApplicationObjectInDatabase[];
+}
+
+/**
+ * Closes an application in the database.
+ * @param {number} applicationID The ID of the application.
+ * @returns {Promise<void>}
+ */
+export async function closeApplication(applicationID: number) {
+  await prisma.application.update({
+    where: {
+      id: applicationID,
+    },
+    data: {
+      isOpen: false,
+    },
+  });
+}
+
+/**
+ * Opens an application in the database.
+ * @param {number} applicationID The ID of the application.
+ * @returns {Promise<void>}
+ */
+export async function openApplication(applicationID: number) {
+  await prisma.application.update({
+    where: {
+      id: applicationID,
+    },
+    data: {
+      isOpen: true,
+    },
+  });
+}
+
+/**
+ * Delete an application from the database.
+ * @param {number} applicationID The ID of the application.
+ * @returns {Promise<void>}
+ * @throws {Error} If the application does not exist in the database.
+ */
+export async function deleteApplication(applicationID: number) {
+  await prisma.application.delete({
+    where: {
+      id: applicationID,
+    },
+  });
 }
