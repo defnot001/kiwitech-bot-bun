@@ -266,13 +266,18 @@ export async function storeApplication(
   return val as unknown as ApplicationObjectInDatabase;
 }
 
-export async function updateApplicationWithMember(applicationID: number, discordID: Snowflake) {
+export async function updateApplication(
+  applicationID: number,
+  user: User,
+  application: ApplicationObject,
+) {
   const val = await prisma.application.update({
     where: {
       id: applicationID,
     },
     data: {
-      discordID,
+      content: application,
+      discordID: user.id,
     },
   });
 

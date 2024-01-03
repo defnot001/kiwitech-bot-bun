@@ -3,7 +3,7 @@ import { Command } from '../handler/classes/Command';
 import {
   getApplicationFromID,
   getLatestApplicationFromMember,
-  updateApplicationWithMember,
+  updateApplication,
 } from '../util/prisma';
 import { ERROR_MESSAGES } from '../util/constants';
 import { getTextChannelFromID, handleInteractionError } from '../util/loggers';
@@ -88,7 +88,9 @@ export default new Command({
       const messageID = args.getString('message_id', true);
 
       try {
-        const updatedApplication = await updateApplicationWithMember(applicationID, targetUser.id);
+        const { content } = await getApplicationFromID(applicationID);
+        content.discordName = targetUser.globalName ?? targetUser.username;
+        const updatedApplication = await updateApplication(applicationID, targetUser, content);
 
         const applicationChannel = await getTextChannelFromID(interaction.guild, 'application');
         const message = await applicationChannel.messages.fetch(messageID);
