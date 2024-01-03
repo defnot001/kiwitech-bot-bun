@@ -141,6 +141,24 @@ export default new Command({
       ],
     },
     {
+      name: 'deny',
+      description: 'Deny an application.',
+      type: ApplicationCommandOptionType.Subcommand,
+      options: [
+        {
+          name: 'application_id',
+          description: 'The ID of the application.',
+          type: ApplicationCommandOptionType.Integer,
+          required: true,
+        },
+        {
+          name: 'message_id',
+          description: 'The message ID of the posted application. This will delete the message.',
+          type: ApplicationCommandOptionType.String,
+        },
+      ],
+    },
+    {
       name: 'delete',
       description: 'Delete an application.',
       type: ApplicationCommandOptionType.Subcommand,
@@ -150,6 +168,11 @@ export default new Command({
           description: 'The ID of the application.',
           type: ApplicationCommandOptionType.Integer,
           required: true,
+        },
+        {
+          name: 'message_id',
+          description: 'The message ID of the posted application. This will delete the message.',
+          type: ApplicationCommandOptionType.String,
         },
       ],
     },
@@ -348,9 +371,17 @@ export default new Command({
 
     if (subcommand === 'delete') {
       const applicationID = args.getInteger('application_id', true);
+      const messageID = args.getString('message_id', false);
 
       try {
         await deleteApplication(applicationID);
+
+        if (messageID) {
+          const applicationChannel = await getTextChannelFromID(interaction.guild, 'application');
+          const message = await applicationChannel.messages.fetch(messageID);
+          await message.delete();
+        }
+
         await interaction.editReply(`Successfully deleted application ID ${applicationID}.`);
       } catch {
         await interaction.editReply(`Failed to delete application ID ${applicationID}.`);
@@ -422,7 +453,54 @@ export default new Command({
     }
 
     if (subcommand === 'deny') {
-      return interaction.editReply('Not implemented yet.');
+      const applicationID = args.getInteger('application_id', true);
+      const application = await getApplicationFromID(applicationID);
+      const messageID = args.getString('message_id', false);
+
+      if (!interaction.channel) {
+        return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+      }
+
+      if (!application) {
+        return interaction.editReply(`Application with ID ${applicationID} not found.`);
+      }
+
+      if (!application.discordID) {
+        return interaction.editReply(
+          `Application with ID ${applicationID} does not have a linked user.`,
+        );
+      }
+
+      try {
+        const targetUser = await interaction.client.users.fetch(application.discordID);
+
+        try {
+          await notifyUserApplicationDenied(targetUser);
+        } catch {
+          interaction.channel.send('Failed to notify user, please do so manually. Proceeding...');
+        }
+
+        if (messageID) {
+          try {
+            const applicationChannel = await getTextChannelFromID(interaction.guild, 'application');
+            const message = await applicationChannel.messages.fetch(messageID);
+            await message.delete();
+          } catch {
+            interaction.channel.send(
+              'Failed to delete application message, please do so manually. Proceeding...',
+            );
+          }
+        }
+
+        await closeApplication(applicationID);
+        return interaction.editReply(`Successfully denied application ID ${applicationID}.`);
+      } catch (err) {
+        handleInteractionError({
+          interaction,
+          err,
+          message: `Failed to deny application ID ${applicationID}.`,
+        });
+      }
     }
 
     return;
@@ -445,4 +523,10 @@ async function getApplicationChannel(channelManager: GuildChannelManager, user: 
   await channelManager.fetch();
   const channel = await channelManager.cache.get(`${user.username}-application`);
   return channel;
+}
+
+async function notifyUserApplicationDenied(user: User) {
+  await user.send(
+    `We are sorry to inform you that your application to KiwiTech has been denied. Thank you again for your interest in our community! Of course you are welcome to stay in our server to chat with members and ask anything that interests you. We wish you the best of luck in your future endeavours!`,
+  );
 }
