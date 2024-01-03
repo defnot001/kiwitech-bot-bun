@@ -263,6 +263,8 @@ async function notifyApplicationMissingMember(
   logChannel.send({ embeds: [memberErrorEmbed], content: `<@&${config.roles.admins}>` });
 }
 
+export async function notifyUserDMFailed() {}
+
 export async function getGuildMemberFromUsername(
   username: string,
   guild: Guild,
@@ -284,5 +286,42 @@ export async function getGuildMemberFromUsername(
     return member;
   } catch {
     return undefined;
+  }
+}
+
+export async function notifyUserApplicationRecieved(
+  user: User,
+  clientUser: ClientUser,
+): Promise<void> {
+  try {
+    await user.send(
+      'Thank you for applying to KiwiTech! Your application has been received and will be reviewed shortly. If you have any questions, please contact a staff member.',
+    );
+  } catch {
+    try {
+      const botLogChannel = await getTextChannelFromID(
+        client.guilds.cache.get(config.bot.guildID)!,
+        'botLog',
+      );
+
+      const applicationErrorEmbed = new EmbedBuilder({
+        author: {
+          name: clientUser.username,
+          iconURL: clientUser.displayAvatarURL(),
+        },
+        description: `Could not DM user ${
+          user.globalName ?? user.username
+        } about application recieved.`,
+        color: config.embedColors.red,
+        footer: {
+          text: `Application Error Log`,
+        },
+        timestamp: Date.now(),
+      });
+
+      await botLogChannel.send({ embeds: [applicationErrorEmbed] });
+    } catch (err) {
+      console.error(err);
+    }
   }
 }

@@ -3,6 +3,7 @@ import { Event } from '../handler/classes/Event';
 import {
   ApplicationBody,
   getGuildMemberFromUsername,
+  notifyUserApplicationRecieved,
   parseApplication,
   postApplicationToChannel,
 } from '../util/application';
@@ -43,6 +44,11 @@ export default new Event('ready', async (client) => {
 
           const member = await getGuildMemberFromUsername(applicationObject.discordName, guild);
           const { id } = await storeApplication(applicationObject, true, member?.id);
+
+          if (member) {
+            await notifyUserApplicationRecieved(member.user, client.user);
+          }
+
           await postApplicationToChannel(applicationObject, guild, id, true, member);
 
           return new Response('Application recieved', {
