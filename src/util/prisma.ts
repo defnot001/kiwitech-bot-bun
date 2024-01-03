@@ -241,51 +241,63 @@ export async function isMemberInDatabase(id: Snowflake) {
   }
 }
 
-export async function storeApplication(application: ApplicationObject, discordID: Snowflake) {
-  await prisma.application.create({
+type ApplicationObjectInDatabase = {
+  id: number;
+  discordID: Snowflake | null;
+  isOpen: boolean;
+  content: ApplicationObject;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export async function storeApplication(
+  application: ApplicationObject,
+  isOpen: boolean,
+  discordID?: Snowflake,
+) {
+  const val = await prisma.application.create({
     data: {
       discordID,
+      isOpen,
       content: application,
     },
   });
+
+  return val as unknown as ApplicationObjectInDatabase;
 }
 
-export async function getApplicationsFromID(discordID: Snowflake) {
-  const applications = await prisma.application.findMany({
+export async function updateApplicationWithMember(applicationID: number, discordID: Snowflake) {
+  const val = await prisma.application.update({
     where: {
+      id: applicationID,
+    },
+    data: {
       discordID,
     },
   });
 
-  if (!applications || applications.length === 0) {
-    throw new Error(`Application with ID ${discordID} not found.`);
-  }
-
-  return applications;
+  return val as unknown as ApplicationObjectInDatabase;
 }
 
-export async function getLatestApplicationFromID(discordID: Snowflake) {
-  const applications = await getApplicationsFromID(discordID);
+export async function getApplicationFromID(applicationID: number) {
+  const val = await prisma.application.findUnique({
+    where: {
+      id: applicationID,
+    },
+  });
 
-  const latestApplication = applications.sort((a, b) => {
-    if (a.createdAt && b.createdAt) {
-      return b.createdAt.getTime() - a.createdAt.getTime();
-    }
-    return 0;
-  })[0];
-
-  return latestApplication;
+  return val as unknown as ApplicationObjectInDatabase;
 }
 
-export async function getLatestApplication() {
-  const applications = await prisma.application.findMany();
+export async function getLatestApplicationFromMember(discordID: Snowflake) {
+  const val = await prisma.application.findFirst({
+    where: {
+      discordID,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
-  const latestApplication = applications.sort((a, b) => {
-    if (a.createdAt && b.createdAt) {
-      return b.createdAt.getTime() - a.createdAt.getTime();
-    }
-    return 0;
-  })[0];
-
-  return latestApplication;
+  return val as unknown as ApplicationObjectInDatabase;
 }

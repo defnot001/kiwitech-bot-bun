@@ -1,18 +1,17 @@
-import { EmbedBuilder, Guild, GuildMember } from 'discord.js';
+import {
+  ClientUser,
+  EmbedBuilder,
+  Guild,
+  GuildMember,
+  TextChannel,
+  User,
+  inlineCode,
+} from 'discord.js';
 import { z } from 'zod';
 import { client } from '..';
 import { config } from '../config';
 import { getTextChannelFromID } from './loggers';
-
-export type ApplicationPostHeaders = {
-  host: string;
-  'user-agent': string;
-  'content-length': string;
-  'accept-encoding': string;
-  'content-type': string;
-  'x-forwarded-for': string;
-  'x-forwarded-proto': string;
-};
+import { getEmojis } from './components';
 
 export type ApplicationObject = {
   timestamp: Date;
@@ -36,8 +35,6 @@ export type ApplicationObject = {
   suggestions: string;
 };
 
-export type ApplicationBody = z.infer<typeof applicationBodySchema>;
-
 const applicationBodySchema = z.object({
   'What is your discord username? (Eg: @tmcplayer)': z.string(),
   'What is your in game name?': z.string(),
@@ -57,7 +54,10 @@ const applicationBodySchema = z.object({
   "Explain zero ticking mechanics (it's not about force growth):": z.string(),
   'Link images of past builds / farms YOU’ve done:': z.string(),
   'Anything else you want to tell us? How can we improve our application?': z.string(),
+  secret: z.string(),
 });
+
+export type ApplicationBody = z.infer<typeof applicationBodySchema>;
 
 export function parseApplication(body: ApplicationBody): ApplicationObject | null {
   try {
@@ -97,7 +97,67 @@ export function parseApplication(body: ApplicationBody): ApplicationObject | nul
   }
 }
 
-export async function postApplicationToChannel(application: ApplicationObject, guild: Guild) {
+export async function postApplicationToChannel(
+  application: ApplicationObject,
+  guild: Guild,
+  applicationID: number,
+  pingMembers: boolean,
+  member?: GuildMember,
+) {
+  try {
+    if (!client.user) {
+      throw new Error('Client user not found');
+    }
+
+    const botLogChannel = await getTextChannelFromID(guild, 'botLog');
+    const applicationChannel = await getTextChannelFromID(guild, 'application');
+
+    if (!member) {
+      notifyApplicationMissingMember(application, applicationID, client.user, botLogChannel);
+    }
+
+    const applicationEmbeds = getApplicationEmbeds(application, applicationID, member?.user);
+
+    if (!pingMembers) {
+      await applicationChannel.send({ embeds: applicationEmbeds });
+      return;
+    }
+
+    const message = await applicationChannel.send({
+      content: `<@&${config.roles.pingPong}>`,
+      embeds: applicationEmbeds,
+    });
+
+    const emojis = getEmojis(client);
+
+    await message.react(emojis.frogYes);
+    await message.react(emojis.frogNo);
+  } catch (err) {
+    console.error(err);
+
+    const applicationErrorEmbed = new EmbedBuilder({
+      author: {
+        name: client.user!.username,
+        iconURL: client.user!.displayAvatarURL(),
+      },
+      description: `Application from ${application.discordName} could not be posted to application channel.`,
+      color: config.embedColors.red,
+      footer: {
+        text: `${client.user!.username} Error Log`,
+      },
+      timestamp: Date.now(),
+    });
+
+    const botLogChannel = await getTextChannelFromID(guild, 'botLog');
+    botLogChannel.send({ embeds: [applicationErrorEmbed] });
+  }
+}
+
+export function getApplicationEmbeds(
+  application: ApplicationObject,
+  applicationID: number,
+  user?: User,
+) {
   const embedOne = new EmbedBuilder({
     title: `${application.discordName} Application`,
     color: config.embedColors.default,
@@ -125,7 +185,7 @@ export async function postApplicationToChannel(application: ApplicationObject, g
       },
     ],
     footer: {
-      text: '1/3 General Information',
+      text: `1/3 General Information | ID: ${applicationID}`,
     },
     timestamp: application.timestamp,
   });
@@ -148,7 +208,7 @@ export async function postApplicationToChannel(application: ApplicationObject, g
       },
     ],
     footer: {
-      text: '2/3 Technical Knowledge',
+      text: `2/3 Technical Knowledge | ID: ${applicationID}`,
     },
     timestamp: application.timestamp,
   });
@@ -163,83 +223,66 @@ export async function postApplicationToChannel(application: ApplicationObject, g
       },
     ],
     footer: {
-      text: '3/3 Images & Suggestions',
+      text: `3/3 Images & Suggestions | ID: ${applicationID}`,
     },
     timestamp: application.timestamp,
   });
 
-  if (!client.user) {
-    throw new Error('Client user not found');
+  if (user) {
+    embedOne.setThumbnail(user.displayAvatarURL());
   }
 
-  const botLogChannel = await getTextChannelFromID(guild, 'botLog');
-  const applicationChannel = await getTextChannelFromID(guild, 'application');
+  return [embedOne, embedTwo, embedThree];
+}
 
-  try {
-    const discordName = application.discordName.replace('@', '');
-    const member = await getGuildMemberFromUsername(discordName, guild);
+async function notifyApplicationMissingMember(
+  application: ApplicationObject,
+  applicationID: number,
+  clientUser: ClientUser,
+  logChannel: TextChannel,
+) {
+  const errorMessage = `Could not find member ${inlineCode(
+    application.discordName,
+  )} for application ID ${inlineCode(
+    applicationID.toString(10),
+  )} in the guild. Please link the application to the member manually using the \`/application link\` command.`;
 
-    if (!member) {
-      const memberErrorEmbed = new EmbedBuilder({
-        author: {
-          name: client.user.username,
-          iconURL: client.user.displayAvatarURL(),
-        },
-        description: `Could not find member ${application.discordName} in the guild. Please link the application to the member manually using the /application link command.`,
-        color: config.embedColors.red,
-        footer: {
-          text: `${client.user.username} Error Log`,
-        },
-        timestamp: Date.now(),
-      });
+  const memberErrorEmbed = new EmbedBuilder({
+    author: {
+      name: clientUser.username,
+      iconURL: clientUser.displayAvatarURL(),
+    },
+    description: errorMessage,
+    color: config.embedColors.red,
+    footer: {
+      text: `Application Error Log`,
+    },
+    timestamp: Date.now(),
+  });
 
-      botLogChannel.send({ embeds: [memberErrorEmbed] });
-      return;
-    }
-
-    embedOne.setThumbnail(member.user.displayAvatarURL());
-
-    await applicationChannel.send({
-      embeds: [embedOne, embedTwo, embedThree],
-    });
-
-    try {
-      const applicationErrorEmbed = new EmbedBuilder({
-        author: {
-          name: client.user.username,
-          iconURL: client.user.displayAvatarURL(),
-        },
-        description: `Application from ${application.discordName} could not be posted to application channel.`,
-        color: config.embedColors.red,
-        footer: {
-          text: `${client.user.username} Error Log`,
-        },
-        timestamp: Date.now(),
-      });
-
-      botLogChannel.send({ embeds: [applicationErrorEmbed] });
-    } catch {
-      throw new Error('Bot log channel not found');
-    }
-  } catch {
-    throw new Error('Member not found');
-  }
+  logChannel.send({ embeds: [memberErrorEmbed], content: `<@&${config.roles.admins}>` });
 }
 
 export async function getGuildMemberFromUsername(
   username: string,
   guild: Guild,
-): Promise<GuildMember | null> {
-  const memberCollection = await guild.members.fetch({
-    query: username,
-    limit: 1,
-  });
+): Promise<GuildMember | undefined> {
+  const replaced = username.replace('@', '');
 
-  const member = memberCollection.first();
+  try {
+    const memberCollection = await guild.members.fetch({
+      query: replaced,
+      limit: 1,
+    });
 
-  if (!member) {
-    return null;
+    const member = memberCollection.first();
+
+    if (!member) {
+      return undefined;
+    }
+
+    return member;
+  } catch {
+    return undefined;
   }
-
-  return member;
 }
