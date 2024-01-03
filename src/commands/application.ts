@@ -7,7 +7,7 @@ import {
 } from '../util/prisma';
 import { ERROR_MESSAGES } from '../util/constants';
 import { getTextChannelFromID, handleInteractionError } from '../util/loggers';
-import { getApplicationEmbeds } from '../util/application';
+import { getApplicationEmbeds, notifyUserApplicationRecieved } from '../util/application';
 import { getEmojis } from '../util/components';
 
 type ApplicationSubcommand = 'display_latest' | 'display_by_id' | 'link';
@@ -107,6 +107,8 @@ export default new Command({
 
         await postedApp.react(emojis.frogYes);
         await postedApp.react(emojis.frogNo);
+
+        await notifyUserApplicationRecieved(targetUser, interaction.client.user);
 
         await interaction.editReply(
           `Successfully linked application ID ${applicationID} to ${targetUser.username}.`,
