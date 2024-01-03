@@ -39,6 +39,7 @@ const channelConfigSchema = z.object({
   application: z.string(),
   applicationVoting: z.string(),
   applicationCategory: z.string(),
+  memberGeneral: z.string(),
 });
 
 const roleConfigSchema = z.object({
@@ -116,6 +117,7 @@ const importedConfig = {
     application: env['CHANNEL_APPLICATION'],
     applicationVoting: env['CHANNEL_APPLICATION_VOTING'],
     applicationCategory: env['CATEGORY_APPLICATION'],
+    memberGeneral: env['CHANNEL_MEMBER_GENERAL'],
   },
   roles: {
     members: env['ROLE_MEMBER'],

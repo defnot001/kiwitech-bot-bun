@@ -16,6 +16,7 @@ declare module 'bun' {
     CHANNEL_APPLICATION: string;
     CHANNEL_APPLICATION_VOTING: string;
     CATEGORY_APPLICATION: string;
+    CHANNEL_MEMBER_GENERAL: string;
     ROLE_MEMBER: string;
     ROLE_ADMIN: string;
     ROLE_PINGPONG: string;
