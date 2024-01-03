@@ -53,7 +53,8 @@ export default new Event('ready', async (client) => {
         statusText: 'FORBIDDEN',
       });
     },
+    port: 32001,
   });
 
-  console.log('Listening for applications on port 3000.');
+  console.log('Listening for applications on port 32001.');
 });
