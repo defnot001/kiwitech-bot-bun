@@ -35,7 +35,8 @@ model MinecraftData {
 
 model Application {
   id          Int      @id @default(autoincrement())
-  discordID   String
+  discordID   String?
+  isOpen      Boolean
   content     Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
