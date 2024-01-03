@@ -20,6 +20,9 @@ declare module 'bun' {
     ROLE_MEMBER: string;
     ROLE_ADMIN: string;
     ROLE_PINGPONG: string;
+    ROLE_MEMBERS: string;
+    ROLE_TRIALMEMBER: string;
+    ROLE_KIWIINC: string;
     EMOJI_KIWI: string;
     EMOJI_OWOKIWI: string;
     EMOJI_FROGHYPERS: string;

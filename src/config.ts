@@ -43,7 +43,10 @@ const channelConfigSchema = z.object({
 });
 
 const roleConfigSchema = z.object({
+  member: z.string(),
   members: z.string(),
+  trialMember: z.string(),
+  kiwiInc: z.string(),
   admins: z.string(),
   pingPong: z.string(),
 });
@@ -120,9 +123,12 @@ const importedConfig = {
     memberGeneral: env['CHANNEL_MEMBER_GENERAL'],
   },
   roles: {
-    members: env['ROLE_MEMBER'],
+    member: env['ROLE_MEMBER'],
+    members: env['ROLE_MEMBERS'],
+    trialMember: env['ROLE_TRIALMEMBER'],
     admins: env['ROLE_ADMIN'],
     pingPong: env['ROLE_PINGPONG'],
+    kiwiInc: env['ROLE_KIWIINC'],
   },
   webhooks: {
     todo: env['TODO_WEBHOOK_URL'],
