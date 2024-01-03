@@ -30,6 +30,8 @@ export default new Event('ready', async (client) => {
             });
           }
 
+          console.log('Application recieved at ' + new Date().toLocaleString() + '.');
+
           const applicationObject = parseApplication(json);
 
           if (!applicationObject) {
