@@ -16,6 +16,7 @@ declare module 'bun' {
     CHANNEL_APPLICATION: string;
     ROLE_MEMBER: string;
     ROLE_ADMIN: string;
+    ROLE_PINGPONG: string;
     EMOJI_KIWI: string;
     EMOJI_OWOKIWI: string;
     EMOJI_FROGHYPERS: string;
@@ -44,7 +45,7 @@ declare module 'bun' {
     MINECRAFT_SNAPSHOTS_PORT: string;
     MINECRAFT_SNAPSHOTS_RCON_PORT: string;
     MINECRAFT_SNAPSHOTS_RCON_PASSWORD: string;
-    APPLICATION_ID: string;
+    APPLICATION_SECRET: string;
   }
 }
 

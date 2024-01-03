@@ -42,6 +42,7 @@ const channelConfigSchema = z.object({
 const roleConfigSchema = z.object({
   members: z.string(),
   admins: z.string(),
+  pingPong: z.string(),
 });
 
 const webhookConfigSchema = z.object({
@@ -115,6 +116,7 @@ const importedConfig = {
   roles: {
     members: env['ROLE_MEMBER'],
     admins: env['ROLE_ADMIN'],
+    pingPong: env['ROLE_PINGPONG'],
   },
   webhooks: {
     todo: env['TODO_WEBHOOK_URL'],
@@ -184,7 +186,7 @@ const importedConfig = {
     },
   },
   application: {
-    id: env['APPLICATION_ID'],
+    id: env['APPLICATION_SECRET'],
   },
 } as const;
 
