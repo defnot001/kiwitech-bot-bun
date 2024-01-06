@@ -321,7 +321,9 @@ export default new Command({
 
         await applicationMessage.delete();
 
-        await newChannel.send({ embeds: applicationMessage.embeds });
+        const embeds = getApplicationEmbeds(application.content, application.id, applicant);
+
+        await newChannel.send({ embeds });
         await newChannel.send(getWelcomeMessage(applicant));
 
         const voteEmbed = new EmbedBuilder({
