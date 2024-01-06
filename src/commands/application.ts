@@ -418,6 +418,10 @@ export default new Command({
         return interaction.editReply(`Application with ID ${applicationID} not found.`);
       }
 
+      if (!application.isOpen) {
+        return interaction.editReply(`Application with ID ${applicationID} is not open.`);
+      }
+
       if (!application.discordID) {
         return interaction.editReply(
           `Application with ID ${applicationID} does not have a linked user.`,
@@ -436,9 +440,7 @@ export default new Command({
         }
 
         if (!applicationChannel) {
-          return interaction.editReply(
-            `Application channel for ${application.discordID} not found.`,
-          );
+          return interaction.editReply(`Application channel for ${targetUser.username} not found.`);
         }
 
         if (!applicationChannel.isTextBased()) {
@@ -566,7 +568,7 @@ function getAcceptMessage(userID: Snowflake) {
 
 async function getApplicationChannel(channelManager: GuildChannelManager, user: User) {
   await channelManager.fetch();
-  const channel = await channelManager.cache.get(`${user.username}-application`);
+  const channel = await channelManager.cache.find((c) => c.name === `${user.username}-application`);
   return channel;
 }
 
