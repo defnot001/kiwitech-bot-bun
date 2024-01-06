@@ -148,6 +148,19 @@ export default new Command({
       ],
     },
     {
+      name: 'accept',
+      description: 'Accept an application.',
+      type: ApplicationCommandOptionType.Subcommand,
+      options: [
+        {
+          name: 'application_id',
+          description: 'The ID of the application.',
+          type: ApplicationCommandOptionType.Integer,
+          required: true,
+        },
+      ],
+    },
+    {
       name: 'deny',
       description: 'Deny an application.',
       type: ApplicationCommandOptionType.Subcommand,
