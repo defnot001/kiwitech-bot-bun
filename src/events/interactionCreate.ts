@@ -1,7 +1,7 @@
 import type { CommandInteractionOptionResolver, TextBasedChannel } from 'discord.js';
 import { Event } from '../handler/classes/Event';
 import { client } from '..';
-import getErrorMessage from '../util/errors';
+import getAndLogErrorMessage from '../util/errors';
 import { ExtendedInteraction } from '../handler/types';
 
 export default new Event('interactionCreate', async (interaction) => {
@@ -33,7 +33,7 @@ export default new Event('interactionCreate', async (interaction) => {
       interaction: interaction as ExtendedInteraction,
     });
   } catch (err) {
-    console.error(getErrorMessage(err));
+    console.error(getAndLogErrorMessage(err));
     return interaction.reply({
       content: `There was an error trying to execute the interaction: ${interaction.commandName}!`,
       ephemeral: true,
