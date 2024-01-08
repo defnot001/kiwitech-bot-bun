@@ -1,11 +1,34 @@
-export async function getUUID(username: string) {
-  const response = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-  const data = (await response.json()) as { id: string; name: string };
+import { Client, Guild } from 'discord.js';
+import { logErrorToBotLogChannel } from './loggers';
 
-  return {
-    id: formatMojangUUID(data.id),
-    name: data.name,
-  };
+export async function getMojangUUID(
+  username: string,
+  guild: Guild,
+  client: Client,
+): Promise<{ id: string; name: string } | undefined> {
+  try {
+    const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+
+    if (!res.ok) {
+      throw new Error(`${res.status}: ${res.statusText}`);
+    }
+
+    const data = (await res.json()) as { id: string; name: string };
+
+    return {
+      id: formatMojangUUID(data.id),
+      name: data.name,
+    };
+  } catch (err) {
+    await logErrorToBotLogChannel({
+      client,
+      guild,
+      message: `Failed to get the uuid for ${username}`,
+      error: err,
+    });
+
+    return;
+  }
 }
 
 export async function getMultipleUUIDs(usernames: string[]) {

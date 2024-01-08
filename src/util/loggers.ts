@@ -2,7 +2,7 @@ import { Client, Guild, TextChannel, inlineCode } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
 import type { ExtendedInteraction } from '../handler/types';
 import { ChannelConfig, config } from '../config';
-import getErrorMessage from './errors';
+import getAndLogErrorMessage, { getErrorMessage } from './errors';
 
 type InteractionErrorOptions = {
   interaction: ExtendedInteraction;
@@ -20,7 +20,7 @@ type EventErrorOptions = {
 export async function handleInteractionError(options: InteractionErrorOptions) {
   const { interaction, err, message } = options;
 
-  const errorMessage = getErrorMessage(err);
+  const errorMessage = getAndLogErrorMessage(err);
   console.error(errorMessage);
 
   if (!interaction.guild) {
@@ -65,7 +65,7 @@ export async function handleEventError(options: EventErrorOptions) {
     throw new Error('This client does not have a user!');
   }
 
-  const errorMessage = getErrorMessage(err);
+  const errorMessage = getAndLogErrorMessage(err);
   console.error(errorMessage);
 
   const eventErrorEmbed = new EmbedBuilder({
@@ -81,6 +81,40 @@ export async function handleEventError(options: EventErrorOptions) {
   });
 
   botLogChannel.send({ embeds: [eventErrorEmbed] });
+}
+
+export async function logErrorToBotLogChannel({
+  client,
+  guild,
+  error,
+  message,
+}: {
+  client: Client;
+  guild: Guild;
+  message: string;
+  error?: unknown;
+}) {
+  const botLogChannel = await getTextChannelFromID(guild, 'botLog');
+
+  if (!client.user) {
+    throw new Error('This client does not have a user!');
+  }
+
+  const errorMessage = getErrorMessage(error);
+
+  const errorEmbed = new EmbedBuilder({
+    author: {
+      name: client.user.username,
+      iconURL: client.user.displayAvatarURL(),
+    },
+    description: `${message}\n\n${inlineCode(errorMessage)}`,
+    footer: {
+      text: 'Error Logging',
+    },
+    timestamp: Date.now(),
+  });
+
+  botLogChannel.send({ embeds: [errorEmbed] });
 }
 
 export async function getTextChannelFromID(

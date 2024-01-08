@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { type GuildMemberManager, type Snowflake, type User } from 'discord.js';
-import { getUUID, getMultipleUUIDs } from './mojang';
+import { Client, Guild, type GuildMemberManager, type Snowflake, type User } from 'discord.js';
+import { getMojangUUID, getMultipleUUIDs } from './mojang';
 import { ApplicationObject } from './application';
 import { getMembersFromID } from './helpers';
 
@@ -60,13 +60,19 @@ export async function addMember(
   minecraftIGNs: string[],
   memberSince: Date,
   trialMember = false,
+  guild: Guild,
+  client: Client,
 ) {
   if (minecraftIGNs.length === 0 || minecraftIGNs.length > 10) {
     throw new Error(`Expected between 1 and 10 minecraft igns, got ${minecraftIGNs.length}.`);
   }
 
   if (minecraftIGNs.length === 1) {
-    const userdata = await getUUID(minecraftIGNs[0]!);
+    const userdata = await getMojangUUID(minecraftIGNs[0]!, guild, client);
+
+    if (!userdata) {
+      throw new Error(`Could not find the UUID for ${minecraftIGNs[0]!} from the Mojang API!`);
+    }
 
     await prisma.mCMember.create({
       data: {
@@ -108,6 +114,8 @@ export async function addMember(
 
 export async function updateMember(
   discordID: Snowflake,
+  guild: Guild,
+  client: Client,
   minecraftIGNs?: string[],
   trialMember?: boolean,
   memberSince?: Date,
@@ -128,7 +136,11 @@ export async function updateMember(
     }
 
     if (minecraftIGNs.length === 1) {
-      const userdata = await getUUID(minecraftIGNs[0]!);
+      const userdata = await getMojangUUID(minecraftIGNs[0]!, guild, client);
+
+      if (!userdata) {
+        throw new Error(`Could not find the UUID for ${minecraftIGNs[0]!} from the Mojang API!`);
+      }
 
       updateData.minecraftData = {
         deleteMany: {},
