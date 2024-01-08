@@ -1,6 +1,14 @@
-import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
+import {
+  ApplicationCommandOptionType,
+  AttachmentBuilder,
+  Client,
+  Guild,
+  inlineCode,
+} from 'discord.js';
 import { Command } from '../handler/classes/Command';
-import { handleInteractionError } from '../util/loggers';
+import { handleInteractionError, logErrorToBotLogChannel } from '../util/loggers';
+import { getMojangUUID } from '../util/mojang';
+import { ERROR_MESSAGES } from '../util/constants';
 
 export default new Command({
   name: 'mcskin',
@@ -28,51 +36,46 @@ export default new Command({
   execute: async ({ interaction, args }) => {
     await interaction.deferReply();
 
-    const imageType = args.getString('type', true) as
-      | '/avatars/'
-      | '/renders/head/'
-      | '/renders/body/'
-      | '/skins/';
+    if (!interaction.guild) {
+      await interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+      return;
+    }
 
     const name = args.getString('name');
 
     if (!name) {
-      return interaction.editReply('Please provide a username!');
+      await interaction.editReply('Please provide a username!');
+      return;
     }
 
+    const imageType = args.getString('type', true) as ImageType;
+
     try {
-      const uuidRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${name}`);
+      const uuid = await getMojangUUID(name, interaction.guild, interaction.client);
 
-      if (!uuidRes.ok) {
-        await interaction.editReply(`Could not find the uuid for ${name}`);
+      if (!uuid) {
+        await interaction.editReply(
+          `Could not find the UUID for ${inlineCode(name)} from the Mojang API!`,
+        );
         return;
       }
 
-      const uuidJSONResponse = (await uuidRes.json()) as {
-        name: string;
-        id: string;
-      };
+      const skin = await getPlayerSkin(
+        uuid.id,
+        name,
+        imageType,
+        interaction.guild,
+        interaction.client,
+      );
 
-      const url = `https://crafatar.com${imageType}${uuidJSONResponse.id}`;
-
-      const skinRes = await fetch(url);
-
-      if (!skinRes.ok) {
-        await interaction.editReply(`Could not find the skin for ${name}`);
+      if (!skin) {
+        await interaction.editReply(
+          `Could not find the skin for ${inlineCode(name)} from the crafatar API!`,
+        );
         return;
       }
 
-      const arrBuffer = await skinRes.arrayBuffer();
-      const buffer = Buffer.from(arrBuffer);
-
-      const skinAttachment = new AttachmentBuilder(buffer, {
-        name: `${name}.png`,
-        description: `Minecraft Skin of the player ${name}`,
-      });
-
-      interaction.editReply({ files: [skinAttachment] });
-
-      return;
+      await interaction.editReply({ files: [skin] });
     } catch (err) {
       handleInteractionError({
         interaction,
@@ -84,3 +87,42 @@ export default new Command({
     }
   },
 });
+
+async function getPlayerSkin(
+  uuid: string,
+  name: string,
+  imageType: ImageType,
+  guild: Guild,
+  client: Client,
+) {
+  const url = `https://crafatar.com${imageType}${uuid}`;
+
+  try {
+    const skinRes = await fetch(url);
+
+    if (!skinRes.ok) {
+      throw new Error(`${skinRes.status}: ${skinRes.statusText}`);
+    }
+
+    const arrBuffer = await skinRes.arrayBuffer();
+    const buffer = Buffer.from(arrBuffer);
+
+    const skinAttachment = new AttachmentBuilder(buffer, {
+      name: `${name}.png`,
+      description: `Minecraft Skin of the player ${name}`,
+    });
+
+    return skinAttachment;
+  } catch (err) {
+    await logErrorToBotLogChannel({
+      client,
+      guild,
+      message: `Failed to get the skin for ${name}!`,
+      error: err,
+    });
+
+    return;
+  }
+}
+
+type ImageType = '/avatars/' | '/renders/head/' | '/renders/body/' | '/skins/';
