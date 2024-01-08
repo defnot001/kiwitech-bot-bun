@@ -1,6 +1,8 @@
 import {
   ApplicationCommandOptionType,
+  Client,
   EmbedBuilder,
+  Guild,
   GuildChannelManager,
   GuildMember,
   Snowflake,
@@ -455,7 +457,7 @@ export default new Command({
           return interaction.editReply(`Application with ID ${applicationID} not found.`);
         }
 
-        await applicationChannel.send(getAcceptMessage(application.discordID));
+        await applicationChannel.send(getAcceptMessage(application.discordID, interaction.client));
 
         await closeApplication(applicationID);
 
@@ -482,7 +484,7 @@ export default new Command({
 
         try {
           const targetMember = await interaction.guild.members.fetch(targetUser.id);
-          await awardTrialMemberRoles(targetMember);
+          await setTrialMemberRoles(targetMember, interaction.guild);
         } catch {
           interaction.channel.send(
             `Failed to award roles to ${targetUser.username}. Proceeding...`,
@@ -560,10 +562,12 @@ function getWelcomeMessage(user: User) {
   )}! You can use this channel to communicate with the members about your application and share more images and information. Don't hesistate to ask questions! There is a vote active on our application where every member can vote on your application.`;
 }
 
-function getAcceptMessage(userID: Snowflake) {
+function getAcceptMessage(userID: Snowflake, client: Client) {
+  const { froghypers } = getEmojis(client);
+
   return `We are happy to inform you that your application has been accepted, ${userMention(
     userID,
-  )}! Welcome to the community! ${config.emoji.froghypers}`;
+  )}! Welcome to the community ${froghypers}`;
 }
 
 async function getApplicationChannel(channelManager: GuildChannelManager, user: User) {
@@ -603,7 +607,18 @@ function getIgnsFromApplication(application: ApplicationObject) {
   return application.ign.trim();
 }
 
-async function awardTrialMemberRoles(member: GuildMember) {
+export async function setTrialMemberRoles(member: GuildMember, guild: Guild) {
   const { trialMember, members, kiwiInc } = config.roles;
-  await member.roles.add([trialMember, members, kiwiInc]);
+
+  await guild.roles.fetch();
+
+  const trialMemberRole = guild.roles.cache.get(trialMember);
+  const membersRole = guild.roles.cache.get(members);
+  const kiwiIncRole = guild.roles.cache.get(kiwiInc);
+
+  if (!trialMemberRole || !membersRole || !kiwiIncRole) {
+    return console.error('Failed to find roles for trial member.');
+  }
+
+  await member.roles.set([trialMemberRole, membersRole, kiwiIncRole]);
 }
