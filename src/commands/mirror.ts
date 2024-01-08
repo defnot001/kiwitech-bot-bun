@@ -5,6 +5,7 @@ import { config } from '../config';
 import type { ServerChoice } from '../config';
 import { getServerState, ptero } from '../util/pterodactyl';
 import MCStatus from '../util/mcstatus';
+import { handleInteractionError } from '../util/loggers';
 
 export default new Command({
   name: 'mirror',
@@ -130,10 +131,11 @@ export default new Command({
         } region files and started ${targetServer.toUpperCase()}!`,
       );
     } catch (err) {
-      console.log(err);
-      return interaction.editReply(
-        `An error occured while mirroring regions from ${sourceServer} to ${targetServer}!`,
-      );
+      return handleInteractionError({
+        interaction,
+        err,
+        message: `An error occured while mirroring regions from ${sourceServer} to ${targetServer}!`,
+      });
     }
   },
 });
