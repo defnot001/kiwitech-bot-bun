@@ -8,6 +8,8 @@ import { ptero } from '../util/pterodactyl';
 import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/components';
 import { ERROR_MESSAGES } from '../util/constants';
 
+type BackupSubcommand = 'list' | 'create' | 'delete' | 'details';
+
 export default new Command({
   name: 'backup',
   description: 'Control backups on a minecraft server.',
@@ -72,15 +74,15 @@ export default new Command({
   execute: async ({ interaction, args, client }) => {
     await interaction.deferReply();
 
-    const subcommand = args.getSubcommand();
+    const subcommand = args.getSubcommand() as BackupSubcommand;
     const serverChoice = args.getString('server', true) as ServerChoice;
-    const { guild, channel } = interaction;
+    const { guild: interactionGuild, channel: interactionChannel } = interaction;
 
-    if (!guild) {
+    if (!interactionGuild) {
       return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
     }
 
-    if (!channel || !(channel instanceof TextChannel)) {
+    if (!interactionChannel || !(interactionChannel instanceof TextChannel)) {
       interaction.editReply('This command can only be used in a text channel.');
       return;
     }
@@ -95,7 +97,7 @@ export default new Command({
 
         if (backupLimit === 0) {
           interaction.editReply(
-            `You can not create a backup for ${guild.name} ${bold(
+            `You can not create a backup for ${interactionGuild.name} ${bold(
               serverChoice,
             )} because this server does not allow backups.`,
           );
@@ -113,16 +115,16 @@ export default new Command({
           });
 
           interaction.editReply(
-            `Successfully created backup (${inlineCode(backup.name)}) for ${guild.name} ${bold(
-              serverChoice,
-            )}!`,
+            `Successfully created backup (${inlineCode(backup.name)}) for ${
+              interactionGuild.name
+            } ${bold(serverChoice)}!`,
           );
 
           return;
         }
 
         await interaction.editReply({
-          content: `This command will delete the oldest backup for ${guild.name} ${bold(
+          content: `This command will delete the oldest backup for ${interactionGuild.name} ${bold(
             serverChoice,
           )} because the backup limit is reached for this server. Are you sure you want to continue? This can not be undone!`,
           components: [confirmCancelRow],
@@ -153,7 +155,7 @@ export default new Command({
             interaction.editReply({
               content: `Successfully deleted oldest backup and created backup (${inlineCode(
                 backup.name,
-              )}) for ${guild.name} ${bold(serverChoice)}!`,
+              )}) for ${interactionGuild.name} ${bold(serverChoice)}!`,
               components: [],
             });
 
@@ -161,7 +163,7 @@ export default new Command({
           }
 
           interaction.editReply({
-            content: `Cancelled deleting the oldest backup for ${guild.name} ${bold(
+            content: `Cancelled deleting the oldest backup for ${interactionGuild.name} ${bold(
               serverChoice,
             )}!`,
             components: [],
@@ -178,7 +180,7 @@ export default new Command({
         ).slice(-20);
 
         const backupListEmbed = new KoalaEmbedBuilder(interaction.user, {
-          title: `Backup List for ${guild.name} ${serverChoice}`,
+          title: `Backup List for ${interactionGuild.name} ${serverChoice}`,
           description: transformedList.join('\n\n'),
         });
 
@@ -198,9 +200,9 @@ export default new Command({
 
       if (!backupDetails) {
         interaction.editReply(
-          `Could not find a backup with the name ${inlineCode(backupName)} for ${guild.name} ${bold(
-            serverChoice,
-          )}!`,
+          `Could not find a backup with the name ${inlineCode(backupName)} for ${
+            interactionGuild.name
+          } ${bold(serverChoice)}!`,
         );
         return;
       }
@@ -208,7 +210,7 @@ export default new Command({
       if (subcommand === 'delete') {
         if (!backupDetails.completed_at) {
           interaction.editReply(
-            `Backup ${inlineCode(backupName)} for ${guild.name} ${bold(
+            `Backup ${inlineCode(backupName)} for ${interactionGuild.name} ${bold(
               serverChoice,
             )} is not completed yet!`,
           );
@@ -217,13 +219,15 @@ export default new Command({
 
         if (backupDetails.is_locked) {
           interaction.editReply(
-            `Backup ${inlineCode(backupName)} for ${guild.name} ${bold(serverChoice)} is locked!`,
+            `Backup ${inlineCode(backupName)} for ${interactionGuild.name} ${bold(
+              serverChoice,
+            )} is locked!`,
           );
           return;
         }
 
         await interaction.editReply({
-          content: `This command will delete a backup for ${guild.name} ${bold(
+          content: `This command will delete a backup for ${interactionGuild.name} ${bold(
             serverChoice,
           )} Are you sure you want to continue? This can not be undone!`,
           components: [confirmCancelRow],
@@ -242,7 +246,7 @@ export default new Command({
 
             interaction.editReply({
               content: `Successfully deleted backup: ${inlineCode(backupDetails.name)} from ${
-                guild.name
+                interactionGuild.name
               } ${bold(serverChoice)}!`,
               components: [],
             });
@@ -251,7 +255,9 @@ export default new Command({
           }
 
           interaction.editReply({
-            content: `Cancelled deleting the backup for ${guild.name} ${bold(serverChoice)}!`,
+            content: `Cancelled deleting the backup for ${interactionGuild.name} ${bold(
+              serverChoice,
+            )}!`,
             components: [],
           });
         });
@@ -265,7 +271,7 @@ export default new Command({
           : 'Backup not completed.';
 
         const backupEmbed = new KoalaEmbedBuilder(interaction.user, {
-          title: `Backup Details for ${guild.name} ${serverChoice}`,
+          title: `Backup Details for ${interactionGuild.name} ${serverChoice}`,
           fields: [
             { name: 'Name', value: backupDetails.name },
             {
@@ -301,8 +307,8 @@ export default new Command({
         });
 
         // we have to check if the guild has an icon because there is no method that provides a default icon.
-        if (guild.iconURL()) {
-          backupEmbed.setThumbnail(guild.iconURL());
+        if (interactionGuild.iconURL()) {
+          backupEmbed.setThumbnail(interactionGuild.iconURL());
         }
 
         interaction.editReply({ embeds: [backupEmbed] });
@@ -313,7 +319,7 @@ export default new Command({
       return handleInteractionError({
         interaction,
         err,
-        message: `Something went wrong while trying to execute the backup command for ${guild.name} ${serverChoice}!`,
+        message: `Something went wrong while trying to execute the backup command for ${interactionGuild.name} ${serverChoice}!`,
       });
     }
   },
