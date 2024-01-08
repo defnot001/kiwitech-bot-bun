@@ -1,4 +1,4 @@
-import { Client, Guild, TextChannel } from 'discord.js';
+import { Client, Guild, TextChannel, inlineCode } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
 import type { ExtendedInteraction } from '../handler/types';
 import { ChannelConfig, config } from '../config';
@@ -46,7 +46,7 @@ export async function handleInteractionError(options: InteractionErrorOptions) {
       name: clientUser.username,
       iconURL: clientUser.displayAvatarURL(),
     },
-    description: `${message}`,
+    description: `${message}\n\n${inlineCode(errorMessage)}`,
     color: config.embedColors.red,
     footer: {
       text: `${clientUser.username} Error Log`,
