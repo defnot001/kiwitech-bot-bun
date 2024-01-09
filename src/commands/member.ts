@@ -221,7 +221,14 @@ export default new Command({
         const memberSinceDate = new Date(memberSince ?? new Date().toISOString());
 
         try {
-          await addMember(user.id, igns, memberSinceDate, trial!);
+          await addMember(
+            user.id,
+            igns,
+            memberSinceDate,
+            trial!,
+            interaction.guild,
+            interaction.client,
+          );
 
           interaction.editReply({
             content: `Successfully added ${inlineCode(user.username)} to the Memberlist.`,
@@ -255,7 +262,14 @@ export default new Command({
         }
 
         try {
-          await updateMember(user.id, igns, trialMember, memberSinceDate);
+          await updateMember(
+            user.id,
+            interaction.guild,
+            interaction.client,
+            igns,
+            trialMember,
+            memberSinceDate,
+          );
 
           interaction.editReply({
             content: `Successfully updated ${user.username} in the Memberlist.`,

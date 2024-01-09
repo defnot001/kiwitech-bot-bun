@@ -475,6 +475,8 @@ export default new Command({
             [getIgnsFromApplication(application.content)],
             new Date(),
             true,
+            interaction.guild,
+            interaction.client,
           );
         } catch {
           interaction.channel.send(
