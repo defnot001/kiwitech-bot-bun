@@ -3,6 +3,8 @@ import { Command } from '../handler/classes/Command';
 import { handleInteractionError, logErrorToBotLogChannel } from '../util/loggers';
 import { ERROR_MESSAGES } from '../util/constants';
 
+type AnimalChoices = 'fox' | 'cat' | 'dog';
+
 export default new Command({
   name: 'animal',
   description: 'Get random pictures from animals.',
@@ -23,7 +25,7 @@ export default new Command({
     try {
       await interaction.deferReply();
 
-      const choice = args.getString('animal', true) as 'fox' | 'cat' | 'dog';
+      const choice = args.getString('animal', true) as AnimalChoices;
 
       if (!interaction.guild) {
         throw new Error(ERROR_MESSAGES.ONLY_GUILD);
@@ -52,8 +54,10 @@ export default new Command({
         await interaction.editReply({ files: [image] });
         return;
       }
+
+      throw new Error(`Invalid argument for \`/animal\`: ${choice}`);
     } catch (err) {
-      handleInteractionError({
+      await handleInteractionError({
         interaction,
         err,
         message: `Something went wrong trying to get a picture of a ${args.getString(
@@ -61,23 +65,26 @@ export default new Command({
           true,
         )}.`,
       });
+
+      return;
     }
   },
 });
 
-type FoxResponseJSON = {
-  image: string;
-  link: string;
-};
+/**
+ * Get a random fox image from the `randomfox.ca` API.
+ * @param {Client} client The Discord client.
+ * @param {Guild} guild The guild the command was executed in.
+ * @returns {string} The URL of the fox image or `undefined` if an error occurred.
+ *
+ * This function never throws an error. If an error occurs, it will be logged to the bot log channel.
+ */
+async function getFoxImage(client: Client, guild: Guild): Promise<string | undefined> {
+  type FoxResponseJSON = {
+    image: string;
+    link: string;
+  };
 
-type DogCatResponseJSON = {
-  id: string;
-  url: string;
-  width: number;
-  height: number;
-}[];
-
-async function getFoxImage(client: Client, guild: Guild) {
   try {
     const response = await fetch('https://randomfox.ca/floof/');
 
@@ -99,11 +106,27 @@ async function getFoxImage(client: Client, guild: Guild) {
   }
 }
 
+/**
+ * Get a random cat or dog image from the `thecatapi.com` or `thedogapi.com` API.
+ * @param {Client} client The Discord client.
+ * @param {Guild} guild The guild the command was executed in.
+ * @param {'cat' | 'dog'} choice The animal to get an image of.
+ * @returns {string} The URL of the cat or dog image or `undefined` if an error occurred.
+ *
+ * This function never throws an error. If an error occurs, it will be logged to the bot log channel.
+ */
 async function getCatOrDogImage(client: Client, guild: Guild, choice: 'cat' | 'dog') {
   const apiURL = {
     cat: 'https://api.thecatapi.com/v1/images/search',
     dog: 'https://api.thedogapi.com/v1/images/search',
   } as const;
+
+  type DogCatResponseJSON = {
+    id: string;
+    url: string;
+    width: number;
+    height: number;
+  }[];
 
   try {
     const response = await fetch(apiURL[choice]);

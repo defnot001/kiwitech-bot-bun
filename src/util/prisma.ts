@@ -290,15 +290,18 @@ export async function storeApplication(
  * @param {number} applicationID The ID of the application.
  * @param {User} user The user that updated the application.
  * @param {ApplicationObject} application The new application.
+ * @param {Guild} guild The guild the application was updated in.
+ * @param {Client} client The Discord client.
  * @returns {Promise<ApplicationObjectInDatabase>} The updated application.
- * @throws {Error} If the application does not exist in the database.
+ *
+ * This function throws an error if the application does not exist in the database.
  */
 export async function updateApplication(
   applicationID: number,
   user: User,
   application: ApplicationObject,
-) {
-  const val = await prisma.application.update({
+): Promise<ApplicationObjectInDatabase> {
+  return (await prisma.application.update({
     where: {
       id: applicationID,
     },
@@ -306,9 +309,7 @@ export async function updateApplication(
       content: application,
       discordID: user.id,
     },
-  });
-
-  return val as unknown as ApplicationObjectInDatabase;
+  })) as unknown as ApplicationObjectInDatabase;
 }
 
 /**
