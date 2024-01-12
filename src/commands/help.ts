@@ -20,7 +20,7 @@ export default new Command({
         },
         {
           name: 'Bed Bot',
-          value: 'Bed Bot',
+          value: 'BedBot',
         },
         {
           name: '10gt Raid Farm',
