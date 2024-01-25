@@ -30,6 +30,10 @@ export default new Command({
           name: 'Mushroom Farms',
           value: 'Mushroom Farms',
         },
+        {
+          name: 'Building',
+          value: 'Building',
+        },
       ],
     },
   ],
