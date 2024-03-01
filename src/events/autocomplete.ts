@@ -4,11 +4,11 @@ import type { ScoreboardChoice } from '../commands/scoreboard';
 import allScboreboards from '../assets/scoreboards_1.19.2';
 import { config, ServerChoice } from '../config';
 import { handleEventError } from '../util/loggers';
-import { getAllTodos } from '../util/prisma';
 import { getModNames, ptero } from '../util/pterodactyl';
 import type { AutocompleteFocusedOption } from 'discord.js';
 import { getWaypoints } from '../commands/waypoint';
 import { getWhitelist } from '../commands/whitelist';
+import TodoModelController from '../database/model/todoModelController';
 
 export default new Event('interactionCreate', async (interaction) => {
   if (!interaction.isAutocomplete()) return;
@@ -51,7 +51,7 @@ export default new Event('interactionCreate', async (interaction) => {
     }
 
     if (interaction.commandName === 'todo' && interaction.options.getSubcommand() !== 'add') {
-      const todoList = await getAllTodos();
+      const todoList = await TodoModelController.getAllTodos();
       const todoListChoice = todoList.map((todo) => todo.title);
 
       return interaction.respond(mapChoices(todoListChoice, focused));

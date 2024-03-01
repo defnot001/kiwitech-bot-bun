@@ -1,4 +1,5 @@
 import { config } from '../config';
+import ApplicationModelController from '../database/model/applicationModelController';
 import { Event } from '../handler/classes/Event';
 import {
   ApplicationBody,
@@ -7,7 +8,6 @@ import {
   parseApplication,
   postApplicationToChannel,
 } from '../util/application';
-import { storeApplication } from '../util/database';
 
 export default new Event('ready', async (client) => {
   const guild = client.guilds.cache.get(config.bot.guildID);
@@ -43,7 +43,11 @@ export default new Event('ready', async (client) => {
           }
 
           const member = await getGuildMemberFromUsername(applicationObject.discordName, guild);
-          const { id } = await storeApplication(applicationObject, true, member?.id);
+          const { id } = await ApplicationModelController.addApplication(
+            applicationObject,
+            true,
+            member?.id ?? null,
+          );
 
           if (member) {
             await notifyUserApplicationRecieved(member.user, client.user);
