@@ -4,6 +4,7 @@ declare module 'bun' {
     DISCORD_BOT_TOKEN: string;
     DISCORD_CLIENT_ID: string;
     DISCORD_GUILD_ID: string;
+    DATABASE_URL: string;
     CHANNEL_MEMBERLOG: string;
     CHANNEL_MODLOG: string;
     CHANNEL_BOTLOG: string;
