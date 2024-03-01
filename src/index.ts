@@ -21,7 +21,7 @@ await client.start({
   commandsPath: projectPaths.commands,
   eventsPath: projectPaths.events,
   globalCommands: false,
-  registerCommands: false,
+  registerCommands: true,
 });
 
 export const pgClient = await new Client({
