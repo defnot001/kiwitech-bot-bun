@@ -1,108 +1,18 @@
 import { env } from 'process';
 import path from 'path';
-import { z } from 'zod';
 
 const nodeENV = env.NODE_ENV ?? 'development';
 
-console.log(`Loading ${nodeENV} environment variables...`);
+console.info(`Loading ${nodeENV} environment variables...`);
 
-const mcServerConfigSchema = z.object({
-  host: z.string(),
-  port: z.coerce.number(),
-  serverId: z.string(),
-  rconPort: z.coerce.number(),
-  rconPasswd: z.string(),
-  operator: z.boolean(),
-  backupLimit: z.number(),
-});
-
-const botConfigSchema = z.object({
-  token: z.string(),
-  clientID: z.string(),
-  guildID: z.string(),
-});
-
-const pteroConfigSchema = z.object({
-  url: z.string(),
-  apiKey: z.string(),
-});
-
-const channelConfigSchema = z.object({
-  memberLog: z.string(),
-  modLog: z.string(),
-  botLog: z.string(),
-  invite: z.string(),
-  resources: z.string(),
-  serverInfo: z.string(),
-  todo: z.string(),
-  todoLog: z.string(),
-  application: z.string(),
-  applicationVoting: z.string(),
-  applicationCategory: z.string(),
-  memberGeneral: z.string(),
-});
-
-const roleConfigSchema = z.object({
-  member: z.string(),
-  members: z.string(),
-  trialMember: z.string(),
-  kiwiInc: z.string(),
-  admins: z.string(),
-  pingPong: z.string(),
-});
-
-const webhookConfigSchema = z.object({
-  todo: z.string(),
-});
-
-const embedColorConfigSchema = z.object({
-  default: z.number(),
-  none: z.number(),
-  red: z.number(),
-  orange: z.number(),
-  yellow: z.number(),
-  green: z.number(),
-  darkpurple: z.number(),
-  purple: z.number(),
-});
-
-const emojiConfigSchema = z.object({
-  kiwi: z.string(),
-  owoKiwi: z.string(),
-  froghypers: z.string(),
-  frogYes: z.string(),
-  frogNo: z.string(),
-});
-
-const mcConfigSchema = z.object({
-  smp: mcServerConfigSchema,
-  cmp: mcServerConfigSchema,
-  cmp2: mcServerConfigSchema,
-  copy: mcServerConfigSchema,
-  snapshots: mcServerConfigSchema,
-});
-
-const applicationSchema = z.object({
-  id: z.string(),
-});
-
-const configSchema = z.object({
-  bot: botConfigSchema,
-  ptero: pteroConfigSchema,
-  channels: channelConfigSchema,
-  roles: roleConfigSchema,
-  webhooks: webhookConfigSchema,
-  embedColors: embedColorConfigSchema,
-  emoji: emojiConfigSchema,
-  mcConfig: mcConfigSchema,
-  application: applicationSchema,
-});
-
-const importedConfig = {
+export const config = {
   bot: {
     token: env['DISCORD_BOT_TOKEN'],
     clientID: env['DISCORD_CLIENT_ID'],
     guildID: env['DISCORD_GUILD_ID'],
+  },
+  database: {
+    url: env['DATABASE_URL'],
   },
   ptero: {
     url: env['PTERO_URL'],
@@ -202,15 +112,34 @@ const importedConfig = {
   },
 } as const;
 
-export const config = configSchema.parse(importedConfig);
-
 export const projectPaths = {
   sources: path.join(path.dirname(import.meta.dir), 'src'),
   commands: path.join(path.dirname(import.meta.dir), `src/commands`),
   events: path.join(path.dirname(import.meta.dir), `src/events`),
 };
 
-export type ChannelConfig = Readonly<z.infer<typeof channelConfigSchema>>;
-export type EmojiConfig = Readonly<z.infer<typeof emojiConfigSchema>>;
-export type MCConfig = Readonly<z.infer<typeof mcConfigSchema>>;
-export type ServerChoice = keyof MCConfig;
+function isConfigFullySet(config: { [key: string]: any }): boolean {
+  for (const key in config) {
+    const value = config[key];
+
+    // Check if the value is an object and recurse, ignore null since typeof null === 'object' <- JS is the best language ever
+    if (typeof value === 'object' && value !== null) {
+      if (!isConfigFullySet(value)) {
+        return false;
+      }
+    } else {
+      if (value === undefined) {
+        console.log(`Missing value for key: ${key}`);
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+if (!isConfigFullySet(config)) {
+  throw new Error('Config not fully set');
+}
+
+export type Config = typeof config;
+export type ServerChoice = keyof Config['mcConfig'];
