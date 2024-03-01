@@ -21,9 +21,17 @@ await client.start({
   commandsPath: projectPaths.commands,
   eventsPath: projectPaths.events,
   globalCommands: false,
-  registerCommands: true,
+  registerCommands: false,
 });
 
-export const pgClient = new Client({
+export const pgClient = await new Client({
   connectionString: process.env.DATABASE_URL,
+});
+
+pgClient.connect();
+
+process.on('SIGINT', () => {
+  pgClient.connect();
+  client.destroy();
+  process.exit();
 });
