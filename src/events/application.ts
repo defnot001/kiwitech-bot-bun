@@ -7,7 +7,7 @@ import {
   parseApplication,
   postApplicationToChannel,
 } from '../util/application';
-import { storeApplication } from '../util/prisma';
+import { storeApplication } from '../util/database';
 
 export default new Event('ready', async (client) => {
   const guild = client.guilds.cache.get(config.bot.guildID);

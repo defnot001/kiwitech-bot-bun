@@ -11,17 +11,6 @@ import {
   userMention,
 } from 'discord.js';
 import { Command } from '../handler/classes/Command';
-import {
-  ApplicationObjectInDatabase,
-  addMember,
-  closeApplication,
-  deleteApplication,
-  getApplicationFromID,
-  getLatestApplicationFromMember,
-  getLatestApplications,
-  getLatestOpenApplications,
-  updateApplication,
-} from '../util/prisma';
 import { ERROR_MESSAGES } from '../util/constants';
 import {
   getTextChannelFromID,
@@ -38,6 +27,10 @@ import { config } from '../config';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
 import { ExtendedInteraction } from '../handler/types';
+import ApplicationModelController, {
+  ApplicationInDatabase,
+} from '../database/model/applicationModelController';
+import MemberModelController from '../database/model/memberModelController';
 
 type ApplicationSubcommand =
   | 'display_latest'
@@ -218,7 +211,7 @@ export default new Command({
         const targetUser = args.getUser('member', true);
         const applicationID = args.getInteger('application_id', true);
         const messageID = args.getString('message_id', true);
-        const application = await getApplicationFromID(applicationID);
+        const application = await ApplicationModelController.getApplication(applicationID);
 
         if (!application) {
           await interaction.editReply(`Application with ID ${applicationID} not found.`);
@@ -275,7 +268,7 @@ export default new Command({
 
       if (subcommand === 'display_by_id') {
         const applicationID = args.getInteger('application_id', true);
-        const application = await getApplicationFromID(applicationID);
+        const application = await ApplicationModelController.getApplication(applicationID);
 
         if (!application) {
           return interaction.editReply(`Application with ID ${applicationID} not found.`);
@@ -297,7 +290,9 @@ export default new Command({
           return interaction.editReply(`Cannot find user ${targetUser}.`);
         }
 
-        const application = await getLatestApplicationFromMember(targetUser.id);
+        const application = await ApplicationModelController.getLatestApplicationByDiscordID(
+          targetUser.id,
+        );
         const embeds = getApplicationEmbeds(application.content, application.id, targetUser);
 
         await interaction.editReply({ embeds });
@@ -308,7 +303,7 @@ export default new Command({
         const messageID = args.getString('message_id', true);
 
         try {
-          const application = await getApplicationFromID(applicationID);
+          const application = await ApplicationModelController.getApplication(applicationID);
 
           if (!application) {
             return interaction.editReply(`Application with ID ${applicationID} not found.`);
@@ -380,10 +375,7 @@ export default new Command({
         const listType = (args.getString('type', false) ?? 'open') as 'open' | 'all';
         const amount = args.getInteger('amount') ?? 20;
 
-        const applications =
-          listType === 'open'
-            ? await getLatestOpenApplications(amount)
-            : await getLatestApplications(amount);
+        const applications = await ApplicationModelController.getApplications(listType, amount);
 
         const display = applications.map((a) => {
           return `Application ID: ${a.id}\nApplicant: ${a.content.discordName}\nTime: ${time(
@@ -405,7 +397,7 @@ export default new Command({
         const messageID = args.getString('message_id', false);
 
         try {
-          await deleteApplication(applicationID);
+          await ApplicationModelController.deleteApplication(applicationID);
 
           if (messageID) {
             const applicationChannel = await getTextChannelFromID(interaction.guild, 'application');
@@ -421,7 +413,7 @@ export default new Command({
 
       if (subcommand === 'accept') {
         const applicationID = args.getInteger('application_id', true);
-        const application = await getApplicationFromID(applicationID);
+        const application = await ApplicationModelController.getApplication(applicationID);
 
         if (!application) {
           return interaction.editReply(`Application with ID ${applicationID} not found.`);
@@ -460,7 +452,7 @@ export default new Command({
             );
           }
 
-          const applicationObject = await getApplicationFromID(applicationID);
+          const applicationObject = await ApplicationModelController.getApplication(applicationID);
 
           if (!applicationObject) {
             return interaction.editReply(`Application with ID ${applicationID} not found.`);
@@ -470,7 +462,7 @@ export default new Command({
             getAcceptMessage(application.discordID, interaction.client),
           );
 
-          await closeApplication(applicationID);
+          await ApplicationModelController.closeApplication(applicationID);
 
           try {
             await sendTrialInfo(targetUser, interaction);
@@ -481,14 +473,9 @@ export default new Command({
           }
 
           try {
-            await addMember(
-              targetUser.id,
-              [getIgnsFromApplication(application.content)],
-              new Date(),
-              true,
-              interaction.guild,
-              interaction.client,
-            );
+            await MemberModelController.addMember(targetUser.id, true, [
+              getIgnsFromApplication(application.content),
+            ]);
           } catch {
             interaction.channel.send(
               'Failed to add member to the database, please do so manually using the `/member add` command. Proceeding...',
@@ -516,7 +503,7 @@ export default new Command({
 
       if (subcommand === 'deny') {
         const applicationID = args.getInteger('application_id', true);
-        const application = await getApplicationFromID(applicationID);
+        const application = await ApplicationModelController.getApplication(applicationID);
         const messageID = args.getString('message_id', false);
 
         if (!interaction.channel) {
@@ -557,7 +544,7 @@ export default new Command({
             }
           }
 
-          await closeApplication(applicationID);
+          await ApplicationModelController.closeApplication(applicationID);
           return interaction.editReply(`Successfully denied application ID ${applicationID}.`);
         } catch (err) {
           handleInteractionError({
@@ -586,17 +573,16 @@ export default new Command({
 
 async function updateApplicationLink(
   applicationID: number,
-  oldApplication: ApplicationObjectInDatabase,
+  oldApplication: ApplicationInDatabase,
   targetUser: User,
   interaction: ExtendedInteraction,
-): Promise<ApplicationObjectInDatabase | null> {
+): Promise<ApplicationInDatabase | null> {
   oldApplication.content.discordName = targetUser.globalName ?? targetUser.username;
 
   try {
-    const updatedApplication = await updateApplication(
+    const updatedApplication = await ApplicationModelController.updateApplicationDiscordID(
       applicationID,
-      targetUser,
-      oldApplication.content,
+      targetUser.id,
     );
 
     return updatedApplication;
