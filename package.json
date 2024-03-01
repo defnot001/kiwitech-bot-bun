@@ -19,7 +19,8 @@
     "sharp": "^0.33.1"
   },
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "bun run src/index.ts",
+    "dev:watch": "bun run --watch src/index.ts",
     "build": "NODE_ENV=production bun run build",
     "deploy": "NODE_ENV=production bun src/index.ts"
   }
