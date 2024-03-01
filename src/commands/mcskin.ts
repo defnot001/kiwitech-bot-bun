@@ -7,8 +7,8 @@ import {
 } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { handleInteractionError, logErrorToBotLogChannel } from '../util/loggers';
-import { getMojangUUID } from '../util/mojang';
 import { ERROR_MESSAGES } from '../util/constants';
+import MojangAPI from '../util/mojang';
 
 export default new Command({
   name: 'mcskin',
@@ -51,7 +51,7 @@ export default new Command({
     const imageType = args.getString('type', true) as ImageType;
 
     try {
-      const uuid = await getMojangUUID(name, interaction.guild, interaction.client);
+      const uuid = await MojangAPI.getUUID(name);
 
       if (!uuid) {
         await interaction.editReply(
