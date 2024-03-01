@@ -68,7 +68,7 @@ export const config = {
       rconPort: env['MINECRAFT_SMP_RCON_PORT'],
       rconPasswd: env['MINECRAFT_SMP_RCON_PASSWORD'],
       operator: false,
-      backupLimit: 20,
+      backupLimit: 8,
     },
     cmp: {
       host: env['MINECRAFT_SERVER_IP'],
@@ -77,7 +77,7 @@ export const config = {
       rconPort: env['MINECRAFT_CMP_RCON_PORT'],
       rconPasswd: env['MINECRAFT_CMP_RCON_PASSWORD'],
       operator: true,
-      backupLimit: 10,
+      backupLimit: 8,
     },
     cmp2: {
       host: env['MINECRAFT_SERVER_IP'],
@@ -86,7 +86,7 @@ export const config = {
       rconPort: env['MINECRAFT_CMP2_RCON_PORT'],
       rconPasswd: env['MINECRAFT_CMP2_RCON_PASSWORD'],
       operator: true,
-      backupLimit: 0,
+      backupLimit: 1,
     },
     copy: {
       host: env['MINECRAFT_SERVER_IP'],
@@ -95,7 +95,7 @@ export const config = {
       rconPort: env['MINECRAFT_COPY_RCON_PORT'],
       rconPasswd: env['MINECRAFT_COPY_RCON_PASSWORD'],
       operator: true,
-      backupLimit: 5,
+      backupLimit: 3,
     },
     snapshots: {
       host: env['MINECRAFT_SERVER_IP'],
