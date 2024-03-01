@@ -1,10 +1,9 @@
-import type { Todo } from '@prisma/client';
 import { ApplicationCommandOptionType, EmbedBuilder, inlineCode, WebhookClient } from 'discord.js';
 import { Command } from '../handler/classes/Command';
 import { config } from '../config';
 import { getTextChannelFromID, handleInteractionError } from '../util/loggers';
-import { addTodo, completeTodo, getTodoByType, updateTodo } from '../util/prisma';
 import { ERROR_MESSAGES } from '../util/constants';
+import TodoModelController, { Todo } from '../database/model/todoModelController';
 
 export default new Command({
   name: 'todo',
@@ -104,11 +103,7 @@ export default new Command({
       });
 
       if (subcommand === 'add') {
-        await addTodo({
-          title,
-          type,
-          createdBy: interaction.user,
-        });
+        await TodoModelController.addTodo(title, type, interaction.user.id);
 
         interaction.editReply('Successfully added todo item to the database.');
 
@@ -122,7 +117,7 @@ export default new Command({
           return interaction.editReply('Please provide a new title.');
         }
 
-        await updateTodo(title, newTitle);
+        await TodoModelController.updateTodoTitle(title, newTitle);
 
         interaction.editReply('Successfully updated todo item in the database.');
 
@@ -130,7 +125,7 @@ export default new Command({
           `Updated a todo item: "${inlineCode(title)}" to "${inlineCode(newTitle)}".`,
         );
       } else {
-        await completeTodo(title);
+        await TodoModelController.completeTodo(title);
 
         interaction.editReply('Successfully completed todo item.');
 
@@ -150,8 +145,8 @@ export default new Command({
         return todo.map((todo) => `• ${todo.title}`).join('\n');
       };
 
-      const survivalTodo = await getTodoByType('survival');
-      const creativeTodo = await getTodoByType('creative');
+      const survivalTodo = await TodoModelController.getTodoByType('survival');
+      const creativeTodo = await TodoModelController.getTodoByType('creative');
 
       const survivalEmbed = new EmbedBuilder({
         title: 'Survival Todo List',
