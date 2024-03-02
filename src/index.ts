@@ -28,7 +28,7 @@ export const pgClient = await new Client({
   connectionString: process.env.DATABASE_URL,
 });
 
-pgClient.connect();
+pgClient.connect().then(() => console.log('Connected to the database.'));
 
 process.on('SIGINT', () => {
   pgClient.connect();
