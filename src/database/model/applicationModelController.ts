@@ -4,11 +4,11 @@ import { pgClient } from '../..';
 
 export type ApplicationInDatabase = {
   id: number;
-  discordID: Snowflake | null;
-  isOpen: boolean;
+  discord_id: Snowflake | null;
+  is_open: boolean;
   content: ApplicationObject;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export default abstract class ApplicationModelController {
@@ -97,9 +97,9 @@ export default abstract class ApplicationModelController {
     const query = await pgClient.query(
       'UPDATE applications SET is_open = $1, content = $2, discord_id = $3, updated_at = $4 WHERE id = $5 RETURNING *',
       [
-        updates.isOpen ?? previousApplication.isOpen,
+        updates.isOpen ?? previousApplication.is_open,
         updates.content ?? previousApplication.content,
-        updates.discordID ?? previousApplication.discordID,
+        updates.discordID ?? previousApplication.discord_id,
         new Date(),
         applicationID,
       ],

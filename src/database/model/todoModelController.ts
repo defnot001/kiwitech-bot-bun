@@ -5,9 +5,9 @@ export type Todo = {
   id: number;
   title: string;
   type: 'survival' | 'creative';
-  createdBy: Snowflake;
-  createdAt: Date;
-  updatedAt: Date;
+  created_by: Snowflake;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export default abstract class TodoModelController {
