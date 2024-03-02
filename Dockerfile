@@ -14,14 +14,11 @@ FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
-RUN bun run build
-
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/src ./src
 COPY --from=prerelease /usr/src/app/package.json .
-COPY .env.template .
 
 USER bun
 EXPOSE 32001/tcp
-CMD ["bun", "run", "deploy"]
+CMD ["bun", "run", "bun run --env-file=/home/container/.env", "deploy"]

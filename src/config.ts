@@ -1,10 +1,6 @@
 import { env } from 'process';
 import path from 'path';
 
-const nodeENV = env.NODE_ENV ?? 'development';
-
-console.info(`Loading ${nodeENV} environment variables...`);
-
 export const config = {
   bot: {
     token: env['DISCORD_BOT_TOKEN'],
