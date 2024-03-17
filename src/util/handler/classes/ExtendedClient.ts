@@ -9,6 +9,7 @@ import { glob } from 'glob';
 import type { ClientStartOptions, CommandOptions, RegisterCommandOptions } from '../types';
 import type { Event } from './Event';
 import { LOGGER } from '../../logger';
+import { display } from '../../format';
 
 export class ExtendedClient extends Client {
 	public commands: Collection<string, CommandOptions> = new Collection();
@@ -55,7 +56,7 @@ export class ExtendedClient extends Client {
 
 			await guild.commands.set([]);
 
-			LOGGER.info(`Removed all commands from ${guild.name}.`);
+			LOGGER.info(`Removed all commands from ${display(guild)}.`);
 		} else {
 			if (!this.application) {
 				throw new Error('Cannot find the application to remove the commands from!');
@@ -79,7 +80,7 @@ export class ExtendedClient extends Client {
 
 			await guild.commands.set(commands);
 
-			LOGGER.info(`Registered ${commands.length} commands to ${guild.name}.`);
+			LOGGER.info(`Registered ${commands.length} commands to ${display(guild)}.`);
 		} else {
 			if (!this.application) {
 				throw new Error('Cannot find the application to register the commands to');
