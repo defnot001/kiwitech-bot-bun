@@ -1,31 +1,31 @@
 import {
-  EmbedBuilder,
-  type APIEmbed,
-  type EmbedData,
-  type GuildMember,
-  type PartialGuildMember,
+	type APIEmbed,
+	EmbedBuilder,
+	type EmbedData,
+	type GuildMember,
+	type PartialGuildMember,
 } from 'discord.js';
 import { config } from '../config';
 
 export class JoinLeaveEmbedBuilder extends EmbedBuilder {
-  constructor(
-    member: GuildMember | PartialGuildMember,
-    action: 'joined' | 'left',
-    data?: EmbedData | APIEmbed,
-  ) {
-    super(data);
+	constructor(
+		member: GuildMember | PartialGuildMember,
+		action: 'joined' | 'left',
+		data?: EmbedData | APIEmbed,
+	) {
+		super(data);
 
-    this.setAuthor({
-      name: member.user.username,
-      iconURL: member.user.displayAvatarURL(),
-    });
+		this.setAuthor({
+			name: member.user.username,
+			iconURL: member.user.displayAvatarURL(),
+		});
 
-    this.setColor(config.embedColors.none);
+		this.setColor(config.embedColors.none);
 
-    this.setFooter({
-      text: `User ${action}`,
-    });
+		this.setFooter({
+			text: `User ${action}`,
+		});
 
-    this.setTimestamp(Date.now());
-  }
+		this.setTimestamp(Date.now());
+	}
 }
