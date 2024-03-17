@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { client } from '..';
 import { config } from '../config';
 import { getEmojis } from './components';
-import { getTextChannelFromID } from './helpers';
+import { escapeMarkdown, getTextChannelFromID } from './helpers';
 import { LOGGER } from './logger';
 
 export type ApplicationObject = {
@@ -117,7 +117,11 @@ export async function postApplicationToChannel(
 			notifyApplicationMissingMember(application, applicationID, client.user, botLogChannel);
 		}
 
-		const applicationEmbeds = getApplicationEmbeds(application, applicationID, member?.user);
+		const applicationEmbeds = buildApplicationEmbeds(
+			application,
+			applicationID,
+			member?.user ?? null,
+		);
 
 		if (!pingMembers) {
 			await applicationChannel.send({ embeds: applicationEmbeds });
@@ -140,16 +144,22 @@ export async function postApplicationToChannel(
 	return;
 }
 
-export function getApplicationEmbeds(
+export function buildApplicationEmbeds(
 	application: ApplicationObject,
 	applicationID: number,
-	user?: User,
+	user: User | null,
 ) {
+	const title = user
+		? `${escapeMarkdown(user.globalName ?? user.username)} Application`
+		: `${application.discordName} Application`;
+
+	const discordName = user ? user.globalName ?? user.username : application.discordName;
+
 	const embedOne = new EmbedBuilder({
-		title: `${application.discordName} Application`,
+		title,
 		color: config.embedColors.default,
 		fields: [
-			{ name: 'Discord Name', value: application.discordName, inline: true },
+			{ name: 'Discord Name', value: discordName, inline: true },
 			{ name: 'IGN', value: application.ign, inline: true },
 			{ name: 'Pronouns', value: application.pronouns, inline: true },
 			{ name: 'Age', value: application.age, inline: true },
