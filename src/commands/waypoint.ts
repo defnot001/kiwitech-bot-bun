@@ -1,283 +1,282 @@
+import { createHash } from 'node:crypto';
 import { ApplicationCommandOptionType, AttachmentBuilder, inlineCode, time } from 'discord.js';
-import { Command } from '../util/handler/classes/Command';
-import { createHash } from 'crypto';
-import { ptero } from '../util/pterodactyl';
-import { config } from '../config';
-import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
-import { handleInteractionError } from '../util/loggers';
 import sharp from 'sharp';
+import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
+import { config } from '../config';
+import { Command } from '../util/handler/classes/Command';
+import { ptero } from '../util/pterodactyl';
+import { LOGGER } from '../util/logger';
 
 export default new Command({
-  name: 'waypoint',
-  description: 'Get the coordinates of a waypoint.',
-  options: [
-    {
-      name: 'list',
-      description: 'List all SMP Waypoints.',
-      type: ApplicationCommandOptionType.Subcommand,
-      options: [
-        {
-          name: 'dimension',
-          description: 'The dimension you want the waypoint list from.',
-          type: ApplicationCommandOptionType.String,
-          required: true,
-          choices: [
-            { name: 'Overworld', value: 'overworld' },
-            { name: 'Nether', value: 'the_nether' },
-            { name: 'End', value: 'the_end' },
-            { name: 'All', value: 'all' },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'find',
-      description: 'Get a waypoint from SMP.',
-      type: ApplicationCommandOptionType.Subcommand,
-      options: [
-        {
-          name: 'name',
-          description: 'The waypoint you want to get the location of.',
-          type: ApplicationCommandOptionType.String,
-          required: true,
-          autocomplete: true,
-        },
-      ],
-    },
-  ],
-  execute: async ({ interaction, args }) => {
-    await interaction.deferReply();
+	name: 'waypoint',
+	description: 'Get the coordinates of a waypoint.',
+	options: [
+		{
+			name: 'list',
+			description: 'List all SMP Waypoints.',
+			type: ApplicationCommandOptionType.Subcommand,
+			options: [
+				{
+					name: 'dimension',
+					description: 'The dimension you want the waypoint list from.',
+					type: ApplicationCommandOptionType.String,
+					required: true,
+					choices: [
+						{ name: 'Overworld', value: 'overworld' },
+						{ name: 'Nether', value: 'the_nether' },
+						{ name: 'End', value: 'the_end' },
+						{ name: 'All', value: 'all' },
+					],
+				},
+			],
+		},
+		{
+			name: 'find',
+			description: 'Get a waypoint from SMP.',
+			type: ApplicationCommandOptionType.Subcommand,
+			options: [
+				{
+					name: 'name',
+					description: 'The waypoint you want to get the location of.',
+					type: ApplicationCommandOptionType.String,
+					required: true,
+					autocomplete: true,
+				},
+			],
+		},
+	],
+	execute: async ({ interaction, args }) => {
+		await interaction.deferReply();
 
-    const name = args.getString('name');
-    const subcommand = args.getSubcommand() as 'list' | 'find';
+		const name = args.getString('name');
+		const subcommand = args.getSubcommand() as 'list' | 'find';
 
-    if (!interaction.guild) {
-      interaction.editReply('Cannot find the guild this interaction was created in.');
-      return;
-    }
+		if (!interaction.guild) {
+			interaction.editReply('Cannot find the guild this interaction was created in.');
+			return;
+		}
 
-    try {
-      if (subcommand === 'find') {
-        const waypoints = await getWaypoints();
-        const target = waypoints.find((w) => w.name === name);
+		try {
+			if (subcommand === 'find') {
+				const waypoints = await getWaypoints();
+				const target = waypoints.find((w) => w.name === name);
 
-        if (!target) {
-          await interaction.editReply(`Cannot find waypoint: "${name}"`);
-          return;
-        }
+				if (!target) {
+					await interaction.editReply(`Cannot find waypoint: "${name}"`);
+					return;
+				}
 
-        if (!interaction.guild) {
-          await interaction.editReply(
-            'Cannot find the guild this command interaction was created in.',
-          );
-          return;
-        }
+				if (!interaction.guild) {
+					await interaction.editReply(
+						'Cannot find the guild this command interaction was created in.',
+					);
+					return;
+				}
 
-        const locations = target.dimensions
-          .map((d) => {
-            const dimensionLookup = {
-              'minecraft:overworld': 'Overworld',
-              'minecraft:the_nether': 'The Nether',
-              'minecraft:the_end': 'The End',
-            };
+				const locations = target.dimensions
+					.map((d) => {
+						const dimensionLookup = {
+							'minecraft:overworld': 'Overworld',
+							'minecraft:the_nether': 'The Nether',
+							'minecraft:the_end': 'The End',
+						};
 
-            const dim = dimensionLookup[d as keyof typeof dimensionLookup];
+						const dim = dimensionLookup[d as keyof typeof dimensionLookup];
 
-            if (dim === 'The Nether') {
-              return `${dim}: ${inlineCode(
-                `${Math.floor(target.pos[0] / 8)} ${Math.floor(target.pos[1] / 8)} ${Math.floor(
-                  target.pos[2] / 8,
-                )}`,
-              )}`;
-            }
+						if (dim === 'The Nether') {
+							return `${dim}: ${inlineCode(
+								`${Math.floor(target.pos[0] / 8)} ${Math.floor(target.pos[1] / 8)} ${Math.floor(
+									target.pos[2] / 8,
+								)}`,
+							)}`;
+						}
 
-            return `${dim}: ${inlineCode(`${target.pos[0]} ${target.pos[1]} ${target.pos[2]}`)}`;
-          })
-          .join('\n');
+						return `${dim}: ${inlineCode(`${target.pos[0]} ${target.pos[1]} ${target.pos[2]}`)}`;
+					})
+					.join('\n');
 
-        const embed = new KoalaEmbedBuilder(interaction.user, {
-          title: `${interaction.guild.name} SMP Waypoint`,
-          fields: [
-            { name: 'Name', value: target.name },
-            { name: 'Coordinates', value: locations },
-            { name: 'Author', value: target.authorName },
-            {
-              name: 'Created at',
-              value: `${time(new Date(target.creationTime), 'D')}\n(${time(
-                new Date(target.creationTime),
-                'R',
-              )})`,
-            },
-          ],
-        });
+				const embed = new KoalaEmbedBuilder(interaction.user, {
+					title: `${interaction.guild.name} SMP Waypoint`,
+					fields: [
+						{ name: 'Name', value: target.name },
+						{ name: 'Coordinates', value: locations },
+						{ name: 'Author', value: target.authorName },
+						{
+							name: 'Created at',
+							value: `${time(new Date(target.creationTime), 'D')}\n(${time(
+								new Date(target.creationTime),
+								'R',
+							)})`,
+						},
+					],
+				});
 
-        if (target.icon) {
-          const icon = await getImageFile(target.icon);
-          const resized = await scaleImage(icon, 64, 64);
-          const attachment = new AttachmentBuilder(resized, {
-            name: 'icon.png',
-          });
+				if (target.icon) {
+					const icon = await getImageFile(target.icon);
+					const resized = await scaleImage(icon, 64, 64);
+					const attachment = new AttachmentBuilder(resized, {
+						name: 'icon.png',
+					});
 
-          embed.setThumbnail('attachment://icon.png');
+					embed.setThumbnail('attachment://icon.png');
 
-          await interaction.editReply({ embeds: [embed], files: [attachment] });
-          return;
-        }
+					await interaction.editReply({ embeds: [embed], files: [attachment] });
+					return;
+				}
 
-        const guildIcon = interaction.guild.iconURL();
+				const guildIcon = interaction.guild.iconURL();
 
-        if (guildIcon) {
-          embed.setThumbnail(guildIcon);
-        }
+				if (guildIcon) {
+					embed.setThumbnail(guildIcon);
+				}
 
-        await interaction.editReply({ embeds: [embed] });
-        return;
-      }
+				await interaction.editReply({ embeds: [embed] });
+				return;
+			}
 
-      if (subcommand === 'list') {
-        const dimension = args.getString('dimension', true) as Dimension | 'all';
-        const waypoints = await getWaypoints();
+			if (subcommand === 'list') {
+				const dimension = args.getString('dimension', true) as Dimension | 'all';
+				const waypoints = await getWaypoints();
 
-        const dimLookup = {
-          overworld: 'Overworld',
-          the_nether: 'The Nether',
-          the_end: 'The End',
-        };
+				const dimLookup = {
+					overworld: 'Overworld',
+					the_nether: 'The Nether',
+					the_end: 'The End',
+				};
 
-        if (dimension === 'all') {
-          const allDimensions = ['overworld', 'the_nether', 'the_end'] as const;
+				if (dimension === 'all') {
+					const allDimensions = ['overworld', 'the_nether', 'the_end'] as const;
 
-          const embeds: KoalaEmbedBuilder[] = [];
+					const embeds: KoalaEmbedBuilder[] = [];
 
-          for (const dim of allDimensions) {
-            const list = getWaypointNamesByDimension(waypoints, dim);
+					for (const dim of allDimensions) {
+						const list = getWaypointNamesByDimension(waypoints, dim);
 
-            const embed = new KoalaEmbedBuilder(interaction.user, {
-              title: `${interaction.guild.name} Waypoints ${dimLookup[dim]}`,
-              description: list.join('\n'),
-            });
+						const embed = new KoalaEmbedBuilder(interaction.user, {
+							title: `${interaction.guild.name} Waypoints ${dimLookup[dim]}`,
+							description: list.join('\n'),
+						});
 
-            embeds.push(embed);
-          }
+						embeds.push(embed);
+					}
 
-          await interaction.editReply({ embeds });
-          return;
-        }
+					await interaction.editReply({ embeds });
+					return;
+				}
 
-        const list = await getWaypointNamesByDimension(waypoints, dimension);
+				const list = await getWaypointNamesByDimension(waypoints, dimension);
 
-        const embed = new KoalaEmbedBuilder(interaction.user, {
-          title: `${interaction.guild.name} Waypoints ${dimLookup[dimension]}`,
-          description: list.join('\n'),
-        });
+				const embed = new KoalaEmbedBuilder(interaction.user, {
+					title: `${interaction.guild.name} Waypoints ${dimLookup[dimension]}`,
+					description: list.join('\n'),
+				});
 
-        await interaction.editReply({ embeds: [embed] });
-      }
-    } catch (err) {
-      handleInteractionError({
-        interaction,
-        err,
-        message: `Something went wrong trying to get the waypoint ${name}`,
-      });
-    }
-  },
+				await interaction.editReply({ embeds: [embed] });
+			}
+		} catch (e) {
+			await interaction.editReply(`Something went wrong trying to get the waypoint ${name}`);
+			await LOGGER.error(e, `Failed to get waypoint ${name}.`);
+		}
+	},
 });
 
 type Dimension = 'overworld' | 'the_nether' | 'the_end';
 
 function getWaypointNamesByDimension(waypoints: Waypoint[], dimension: Dimension) {
-  return waypoints
-    .filter((w) => w.dimensions.includes(`minecraft:${dimension}`))
-    .map((w) => w.name);
+	return waypoints
+		.filter((w) => w.dimensions.includes(`minecraft:${dimension}`))
+		.map((w) => w.name);
 }
 
 export async function getWaypoints() {
-  const fileContent = (await ptero.files.getContent(
-    config.mcConfig.smp.serverId,
-    'world/minimapsync.json',
-  )) as WaypointFile;
+	const fileContent = (await ptero.files.getContent(
+		config.mcConfig.smp.serverId,
+		'world/minimapsync.json',
+	)) as WaypointFile;
 
-  const waypoints = fileContent.waypoints.waypoints;
+	const waypoints = fileContent.waypoints.waypoints;
 
-  return waypoints.filter((w) => !w.isPrivate);
+	return waypoints.filter((w) => !w.isPrivate);
 }
 
 type WaypointFile = {
-  formatVersion: number;
-  waypoints: {
-    waypoints: Waypoint[];
-  };
-  teleportRule: string;
-  icons: string[];
+	formatVersion: number;
+	waypoints: {
+		waypoints: Waypoint[];
+	};
+	teleportRule: string;
+	icons: string[];
 };
 
 type Waypoint = {
-  name: string;
-  color: number;
-  dimensions: string[];
-  pos: [number, number, number];
-  author: string;
-  authorName: string;
-  icon?: string;
-  creationTime: number;
-  isPrivate?: boolean;
+	name: string;
+	color: number;
+	dimensions: string[];
+	pos: [number, number, number];
+	author: string;
+	authorName: string;
+	icon?: string;
+	creationTime: number;
+	isPrivate?: boolean;
 };
 
 async function getImageFile(iconName: string) {
-  const buffer = new Uint8Array(iconName.length * 2);
+	const buffer = new Uint8Array(iconName.length * 2);
 
-  for (let i = 0; i < iconName.length; i++) {
-    const char = iconName.charCodeAt(i);
+	for (let i = 0; i < iconName.length; i++) {
+		const char = iconName.charCodeAt(i);
 
-    buffer[i * 2] = char & 0xff;
-    buffer[i * 2 + 1] = char >> 8;
-  }
+		buffer[i * 2] = char & 0xff;
+		buffer[i * 2 + 1] = char >> 8;
+	}
 
-  const hash = createHash('sha1').update(buffer).digest('hex');
+	const hash = createHash('sha1').update(buffer).digest('hex');
 
-  const illegalChars = [
-    '/',
-    '.',
-    '\n',
-    '\r',
-    '\t',
-    '\u0000',
-    '\f',
-    '`',
-    '?',
-    '*',
-    '\\',
-    '<',
-    '>',
-    '|',
-    '"',
-    ':',
-  ];
+	const illegalChars = [
+		'/',
+		'.',
+		'\n',
+		'\r',
+		'\t',
+		'\u0000',
+		'\f',
+		'`',
+		'?',
+		'*',
+		'\\',
+		'<',
+		'>',
+		'|',
+		'"',
+		':',
+	];
 
-  for (const illegalChar of illegalChars) {
-    iconName = iconName.replace(illegalChar, '_');
-  }
+	let replacedIconName = iconName;
 
-  const imageLink = await ptero.files.getDownloadLink(
-    config.mcConfig.smp.serverId,
-    `/world/minimapsync_icons/${iconName}_${hash}.png`,
-  );
+	for (const illegalChar of illegalChars) {
+		replacedIconName = iconName.replace(illegalChar, '_');
+	}
 
-  const imageResponse = await fetch(imageLink);
-  const arrayBuffer = await imageResponse.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+	const imageLink = await ptero.files.getDownloadLink(
+		config.mcConfig.smp.serverId,
+		`/world/minimapsync_icons/${replacedIconName}_${hash}.png`,
+	);
+
+	const imageResponse = await fetch(imageLink);
+	const arrayBuffer = await imageResponse.arrayBuffer();
+	return Buffer.from(arrayBuffer);
 }
 
 async function scaleImage(img: Buffer, newWidth: number, newHeight: number) {
-  const outputBuffer = await sharp(img)
-    .resize({
-      width: newWidth,
-      height: newHeight,
-      fit: 'contain',
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-      kernel: sharp.kernel.nearest,
-    })
-    .toBuffer();
+	const outputBuffer = await sharp(img)
+		.resize({
+			width: newWidth,
+			height: newHeight,
+			fit: 'contain',
+			background: { r: 0, g: 0, b: 0, alpha: 0 },
+			kernel: sharp.kernel.nearest,
+		})
+		.toBuffer();
 
-  return outputBuffer;
+	return outputBuffer;
 }

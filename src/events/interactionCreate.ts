@@ -1,42 +1,48 @@
 import type { CommandInteractionOptionResolver, TextBasedChannel } from 'discord.js';
-import { Event } from '../util/handler/classes/Event';
 import { client } from '..';
-import getAndLogErrorMessage from '../util/errors';
-import { ExtendedInteraction } from '../handler/types';
+import type { ExtendedInteraction } from '../util/handler/types';
+import { Event } from '../util/handler/classes/Event';
+import { LOGGER } from '../util/logger';
 
 export default new Event('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+	if (!interaction.isChatInputCommand()) return;
 
-  const command = client.commands.get(interaction.commandName);
+	const command = client.commands.get(interaction.commandName);
 
-  const getChannelName = (channel: TextBasedChannel | null): string | void => {
-    if (channel && 'name' in channel) {
-      return channel.name;
-    }
-  };
+	const getChannelName = (channel: TextBasedChannel | null): string | null => {
+		if (channel && 'name' in channel) {
+			return channel.name;
+		}
 
-  const channelNameAddon: string = `in #${getChannelName(interaction.channel)}` || '';
+		return null;
+	};
 
-  console.log(`${interaction.user.username} ${channelNameAddon} triggered an interaction.`);
+	const channelNameAddon: string = `in #${getChannelName(interaction.channel)}` || '';
 
-  if (!command) {
-    return interaction.reply({
-      content: `This interaction does not exist!`,
-      ephemeral: true,
-    });
-  }
+	console.log(`${interaction.user.username} ${channelNameAddon} triggered an interaction.`);
 
-  try {
-    return command.execute({
-      args: interaction.options as CommandInteractionOptionResolver,
-      client,
-      interaction: interaction as ExtendedInteraction,
-    });
-  } catch (err) {
-    console.error(getAndLogErrorMessage(err));
-    return interaction.reply({
-      content: `There was an error trying to execute the interaction: ${interaction.commandName}!`,
-      ephemeral: true,
-    });
-  }
+	if (!command) {
+		return interaction.reply({
+			content: 'This interaction does not exist!',
+			ephemeral: true,
+		});
+	}
+
+	try {
+		command.execute({
+			args: interaction.options as CommandInteractionOptionResolver,
+			client,
+			interaction: interaction as ExtendedInteraction,
+		});
+	} catch (e) {
+		await LOGGER.error(e, `Failed to execute the interaction: ${interaction.commandName}`);
+
+		await interaction.reply({
+			content: `There was an error trying to execute the interaction: ${interaction.commandName}!`,
+			ephemeral: true,
+		});
+	}
+
+	LOGGER.info(`Interaction executed: ${interaction.commandName}`);
+	return;
 });

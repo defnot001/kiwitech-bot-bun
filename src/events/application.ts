@@ -1,80 +1,80 @@
 import { config } from '../config';
 import ApplicationModelController from '../database/model/applicationModelController';
-import { Event } from '../util/handler/classes/Event';
 import {
-  ApplicationBody,
-  getGuildMemberFromUsername,
-  notifyUserApplicationRecieved,
-  parseApplication,
-  postApplicationToChannel,
+	type ApplicationBody,
+	getGuildMemberFromUsername,
+	notifyUserApplicationRecieved,
+	parseApplication,
+	postApplicationToChannel,
 } from '../util/application';
+import { Event } from '../util/handler/classes/Event';
 
 export default new Event('ready', async (client) => {
-  const guild = client.guilds.cache.get(config.bot.guildID);
+	const guild = client.guilds.cache.get(config.bot.guildID);
 
-  if (!guild) {
-    throw new Error('Guild for application handling not found.');
-  }
+	if (!guild) {
+		throw new Error('Guild for application handling not found.');
+	}
 
-  Bun.serve({
-    async fetch(req: Request): Promise<Response> {
-      const url = new URL(req.url);
+	Bun.serve({
+		async fetch(req: Request): Promise<Response> {
+			const url = new URL(req.url);
 
-      if (url.pathname === '/form-submission') {
-        try {
-          const json = (await req.json()) as ApplicationBody;
+			if (url.pathname === '/form-submission') {
+				try {
+					const json = (await req.json()) as ApplicationBody;
 
-          if (!json.secret || json.secret !== process.env.APPLICATION_SECRET) {
-            return new Response('Permission denied', {
-              status: 403,
-              statusText: 'FORBIDDEN',
-            });
-          }
+					if (!json.secret || json.secret !== process.env.APPLICATION_SECRET) {
+						return new Response('Permission denied', {
+							status: 403,
+							statusText: 'FORBIDDEN',
+						});
+					}
 
-          console.log('Application recieved at ' + new Date().toLocaleString() + '.');
+					console.log(`Application recieved at ${new Date().toLocaleString()}.`);
 
-          const applicationObject = parseApplication(json);
+					const applicationObject = parseApplication(json);
 
-          if (!applicationObject) {
-            return new Response('Invalid application', {
-              status: 400,
-              statusText: 'BAD REQUEST',
-            });
-          }
+					if (!applicationObject) {
+						return new Response('Invalid application', {
+							status: 400,
+							statusText: 'BAD REQUEST',
+						});
+					}
 
-          const member = await getGuildMemberFromUsername(applicationObject.discordName, guild);
-          const { id } = await ApplicationModelController.addApplication(
-            applicationObject,
-            true,
-            member?.id ?? null,
-          );
+					const member = await getGuildMemberFromUsername(applicationObject.discordName, guild);
+					const { id } = await ApplicationModelController.addApplication(
+						applicationObject,
+						true,
+						member?.id ?? null,
+					);
 
-          if (member) {
-            await notifyUserApplicationRecieved(member.user, client.user);
-          }
+					if (member) {
+						await notifyUserApplicationRecieved(member.user, client.user);
+					}
 
-          await postApplicationToChannel(applicationObject, guild, id, true, member);
+					await postApplicationToChannel(applicationObject, guild, id, true, member);
 
-          return new Response('Application recieved', {
-            status: 200,
-            statusText: 'OK',
-          });
-        } catch (e) {
-          console.error(e);
-          return new Response('Internal server error', {
-            status: 500,
-            statusText: 'INTERNAL SERVER ERROR',
-          });
-        }
-      }
+					return new Response('Application recieved', {
+						status: 200,
+						statusText: 'OK',
+					});
+				} catch (e) {
+					console.error(e);
+					return new Response('Internal server error', {
+						status: 500,
+						statusText: 'INTERNAL SERVER ERROR',
+					});
+				}
+			}
 
-      return new Response('Permission denied', {
-        status: 403,
-        statusText: 'FORBIDDEN',
-      });
-    },
-    port: 32001,
-  });
+			return new Response('Permission denied', {
+				status: 403,
+				statusText: 'FORBIDDEN',
+			});
+		},
+		port: 32001,
+	});
 
-  console.log('Listening for applications on port 32001.');
+	console.log('Listening for applications on port 32001.');
 });
