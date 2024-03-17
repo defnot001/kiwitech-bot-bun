@@ -105,9 +105,10 @@ export default new Command({
 					await interaction.editReply('Stopping target server...');
 
 					await stopServerAndWait(targetServer);
-				} catch (err) {
-					console.error(err);
-					return interaction.editReply('Failed to get server status. Aborting...');
+				} catch (e) {
+					await LOGGER.error(e, 'Failed to get server status.');
+					await interaction.editReply('Failed to get server status. Aborting...');
+					return;
 				}
 			}
 

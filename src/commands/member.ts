@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType, inlineCode, time } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import MemberModelController from '../database/model/memberModelController';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { isAdmin } from '../util/helpers';
 import { escapeMarkdown } from '../util/helpers';
@@ -107,7 +106,7 @@ export default new Command({
 		const guild = interaction.guild;
 
 		if (!guild) {
-			return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+			return interaction.editReply('This command can only be used in a server!');
 		}
 
 		const subcommand = args.getSubcommand() as 'list' | 'info' | 'add' | 'update' | 'remove';

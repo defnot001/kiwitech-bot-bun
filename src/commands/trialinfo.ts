@@ -2,7 +2,6 @@ import { ApplicationCommandOptionType, GuildMember, userMention } from 'discord.
 import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { getEmojis } from '../util/components';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 
@@ -31,7 +30,7 @@ export default new Command({
 
 		if (!guild) {
 			return interaction.reply({
-				content: ERROR_MESSAGES.ONLY_GUILD,
+				content: 'This command can only be used in a server!',
 				ephemeral: true,
 			});
 		}

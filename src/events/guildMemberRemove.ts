@@ -4,11 +4,11 @@ import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
 import { Event } from '../util/handler/classes/Event';
 import { getJoinedAtComponent } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/loggers';
+import { getTextChannelFromID } from '../util/helpers';
 
 export default new Event('guildMemberRemove', async (member) => {
 	try {
-		console.log(`${member.user.username} left ${member.guild.name}`);
+		LOGGER.info(`${member.user.username} left ${member.guild.name}`);
 
 		const joinedAt = getJoinedAtComponent(member);
 		const memberLog = await getTextChannelFromID(member.guild, 'memberLog');
@@ -38,7 +38,7 @@ export default new Event('guildMemberRemove', async (member) => {
 		}
 
 		if (target.id === member.user.id) {
-			console.log(`${member.user.username} was kicked from ${member.guild.name}.`);
+			LOGGER.info(`${member.user.username} was kicked from ${member.guild.name}.`);
 
 			const executingMember = await member.guild.members.fetch(executor.id);
 			const modLog = await getTextChannelFromID(member.guild, 'modLog');

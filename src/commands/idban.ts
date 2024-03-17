@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType, inlineCode, time } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { confirmCancelRow, getButtonCollector } from '../util/components';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { escapeMarkdown } from '../util/helpers';
 
@@ -22,7 +21,7 @@ export default new Command({
 		const interactionGuild = interaction.guild;
 
 		if (!interactionGuild) {
-			await interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+			await interaction.editReply('This command can only be used in a server!');
 			return;
 		}
 

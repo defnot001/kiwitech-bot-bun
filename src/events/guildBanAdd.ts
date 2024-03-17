@@ -2,12 +2,13 @@ import { AuditLogEvent } from 'discord.js';
 import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
 import { Event } from '../util/handler/classes/Event';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/loggers';
+import { getTextChannelFromID } from '../util/helpers';
+
 export default new Event('guildBanAdd', async (guildBan) => {
 	try {
 		const ban = guildBan.partial ? await guildBan.fetch() : guildBan;
 
-		console.log(`${ban.user.username} was banned from ${ban.guild}.`);
+		LOGGER.info(`${ban.user.username} was banned from ${ban.guild}.`);
 
 		const fetchedLogs = await ban.guild.fetchAuditLogs({
 			limit: 1,

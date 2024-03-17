@@ -8,6 +8,7 @@ import {
 	postApplicationToChannel,
 } from '../util/application';
 import { Event } from '../util/handler/classes/Event';
+import { LOGGER } from '../util/logger';
 
 export default new Event('ready', async (client) => {
 	const guild = client.guilds.cache.get(config.bot.guildID);
@@ -31,7 +32,7 @@ export default new Event('ready', async (client) => {
 						});
 					}
 
-					console.log(`Application recieved at ${new Date().toLocaleString()}.`);
+					LOGGER.info(`Application recieved at ${new Date().toLocaleString()}.`);
 
 					const applicationObject = parseApplication(json);
 
@@ -50,7 +51,7 @@ export default new Event('ready', async (client) => {
 					);
 
 					if (member) {
-						await notifyUserApplicationRecieved(member.user, client.user);
+						await notifyUserApplicationRecieved(member.user);
 					}
 
 					await postApplicationToChannel(applicationObject, guild, id, true, member);
@@ -60,7 +61,7 @@ export default new Event('ready', async (client) => {
 						statusText: 'OK',
 					});
 				} catch (e) {
-					console.error(e);
+					await LOGGER.error(e, 'Failed to handle application submission.');
 					return new Response('Internal server error', {
 						status: 500,
 						statusText: 'INTERNAL SERVER ERROR',
@@ -76,5 +77,5 @@ export default new Event('ready', async (client) => {
 		port: 32001,
 	});
 
-	console.log('Listening for applications on port 32001.');
+	LOGGER.info('Listening for applications on port 32001.');
 });

@@ -2,7 +2,6 @@ import { ApplicationCommandOptionType, bold } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { type ServerChoice, config } from '../config';
 import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/components';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { capitalizeFirstLetter, formatBytes } from '../util/helpers';
 import { LOGGER } from '../util/logger';
@@ -53,7 +52,7 @@ export default new Command({
 		const { guild } = interaction;
 
 		if (!guild) {
-			interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+			interaction.editReply('This command can only be used in a server!');
 			return;
 		}
 

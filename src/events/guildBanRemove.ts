@@ -2,13 +2,13 @@ import { AuditLogEvent } from 'discord.js';
 import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
 import { Event } from '../util/handler/classes/Event';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/loggers';
+import { getTextChannelFromID } from '../util/helpers';
 
 export default new Event('guildBanRemove', async (guildUnban) => {
 	try {
 		const unban = guildUnban.partial ? await guildUnban.fetch() : guildUnban;
 
-		console.log(`${unban.user.username} was unbanned from ${unban.guild}.`);
+		LOGGER.info(`${unban.user.username} was unbanned from ${unban.guild}.`);
 
 		const fetchedLogs = await unban.guild.fetchAuditLogs({
 			limit: 1,

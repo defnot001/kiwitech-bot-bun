@@ -9,7 +9,6 @@ import {
 } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { capitalizeFirstLetter } from '../util/helpers';
 import { escapeMarkdown } from '../util/helpers';
@@ -67,7 +66,7 @@ export default new Command({
 		const { guild } = interaction;
 
 		if (!guild) {
-			return interaction.reply(ERROR_MESSAGES.ONLY_GUILD);
+			return interaction.reply('This command can only be used in a server!');
 		}
 
 		const guildIconURL: string | null = guild.iconURL();

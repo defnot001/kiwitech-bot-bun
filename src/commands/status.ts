@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { type ServerChoice, config } from '../config';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { getServerChoices } from '../util/helpers';
 import { LOGGER } from '../util/logger';
@@ -31,7 +30,7 @@ export default new Command({
 		}
 
 		if (!interaction.guild) {
-			return interaction.reply(ERROR_MESSAGES.ONLY_GUILD);
+			return interaction.reply('This command can only be used in a server!');
 		}
 
 		try {

@@ -1,10 +1,9 @@
 import { ApplicationCommandOptionType, EmbedBuilder, WebhookClient, inlineCode } from 'discord.js';
 import { config } from '../config';
 import TodoModelController, { type Todo } from '../database/model/todoModelController';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/loggers';
+import { getTextChannelFromID } from '../util/helpers';
 
 export default new Command({
 	name: 'todo',
@@ -72,7 +71,7 @@ export default new Command({
 		await interaction.deferReply({ ephemeral: true });
 
 		if (!interaction.guild) {
-			return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+			return interaction.editReply('This command can only be used in a server!');
 		}
 
 		const subcommand = args.getSubcommand() as 'add' | 'update' | 'complete';

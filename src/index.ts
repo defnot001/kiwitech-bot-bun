@@ -2,6 +2,7 @@ import { GatewayIntentBits, Partials } from 'discord.js';
 import { Client } from 'pg';
 import { projectPaths } from './config';
 import { ExtendedClient } from './util/handler/classes/ExtendedClient';
+import { LOGGER } from './util/logger';
 
 export const client = new ExtendedClient({
 	intents: [
@@ -30,8 +31,8 @@ export const pgClient = await new Client({
 
 pgClient
 	.connect()
-	.then(() => console.log('Connected to the database.'))
-	.catch(console.error);
+	.then(() => LOGGER.info('Connected to the database.'))
+	.catch(async (e) => await LOGGER.error(e));
 
 process.on('SIGINT', () => {
 	pgClient.connect();

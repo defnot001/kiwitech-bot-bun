@@ -2,7 +2,7 @@ import path from 'node:path';
 import { env } from 'bun';
 
 const nodeEnv = Bun.env.NODE_ENV || 'development';
-console.log(`Loaded ${nodeEnv} config.`);
+console.info(`Loaded ${nodeEnv} config.`);
 
 export const config = {
 	bot: {
@@ -128,7 +128,7 @@ function isConfigFullySet(config: { [key: string]: unknown }): boolean {
 			}
 		} else {
 			if (value === undefined) {
-				console.log(`Missing value for key: ${key}`);
+				console.error(`Missing value for key: ${key}`);
 				return false;
 			}
 		}

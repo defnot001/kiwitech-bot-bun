@@ -1,5 +1,4 @@
 import { ApplicationCommandOptionType, AttachmentBuilder, inlineCode } from 'discord.js';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 import MojangAPI from '../util/mojang';
@@ -31,7 +30,7 @@ export default new Command({
 		await interaction.deferReply();
 
 		if (!interaction.guild) {
-			await interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+			await interaction.editReply('This command can only be used in a server!');
 			return;
 		}
 

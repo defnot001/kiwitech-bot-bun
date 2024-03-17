@@ -2,7 +2,6 @@ import { ApplicationCommandOptionType, TextChannel, bold, inlineCode, time } fro
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { type ServerChoice, config } from '../config';
 import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/components';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { formatBytes } from '../util/helpers';
 import { LOGGER } from '../util/logger';
@@ -79,7 +78,7 @@ export default new Command({
 		const { guild: interactionGuild, channel: interactionChannel } = interaction;
 
 		if (!interactionGuild) {
-			return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+			return interaction.editReply('This command can only be used in a server!');
 		}
 
 		if (!interactionChannel || !(interactionChannel instanceof TextChannel)) {

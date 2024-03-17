@@ -1,6 +1,5 @@
 import { ApplicationCommandOptionType, codeBlock } from 'discord.js';
 import type { ServerChoice } from '../config';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { getServerChoices, isAdmin } from '../util/helpers';
 import { LOGGER } from '../util/logger';
@@ -42,7 +41,7 @@ export default new Command({
 		}
 
 		if (!interaction.guild) {
-			return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+			return interaction.editReply('This command can only be used in a server!');
 		}
 
 		try {

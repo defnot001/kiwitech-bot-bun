@@ -23,11 +23,10 @@ import {
 	notifyUserApplicationRecieved,
 } from '../util/application';
 import { getEmojis } from '../util/components';
-import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import type { ExtendedInteraction } from '../util/handler/types';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/loggers';
+import { getTextChannelFromID } from '../util/helpers';
 
 type ApplicationSubcommand =
 	| 'display_latest'
@@ -201,7 +200,7 @@ export default new Command({
 			const subcommand = args.getSubcommand() as ApplicationSubcommand;
 
 			if (!interaction.guild) {
-				return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+				return interaction.editReply('This command can only be used in a server!');
 			}
 
 			if (subcommand === 'link') {
@@ -246,7 +245,7 @@ export default new Command({
 					await postedApp.react(emojis.frogYes);
 					await postedApp.react(emojis.frogNo);
 
-					await notifyUserApplicationRecieved(targetUser, interaction.client.user);
+					await notifyUserApplicationRecieved(targetUser);
 
 					await interaction.editReply(
 						`Successfully linked application ID ${applicationID} to ${targetUser.username}.`,
@@ -427,7 +426,7 @@ export default new Command({
 					);
 
 					if (!interaction.channel) {
-						return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+						return interaction.editReply('This command can only be used in a server!');
 					}
 
 					if (!applicationChannel) {
@@ -495,7 +494,7 @@ export default new Command({
 				const messageID = args.getString('message_id', false);
 
 				if (!interaction.channel) {
-					return interaction.editReply(ERROR_MESSAGES.ONLY_GUILD);
+					return interaction.editReply('This command can only be used in a server!');
 				}
 
 				if (!application) {
@@ -637,7 +636,7 @@ export async function setTrialMemberRoles(member: GuildMember, guild: Guild) {
 	const kiwiIncRole = guild.roles.cache.get(kiwiInc);
 
 	if (!trialMemberRole || !membersRole || !kiwiIncRole) {
-		return console.error('Failed to find roles for trial member.');
+		return LOGGER.warn('Failed to find roles for trial member.');
 	}
 
 	await member.roles.set([trialMemberRole, membersRole, kiwiIncRole]);

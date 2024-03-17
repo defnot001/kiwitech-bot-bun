@@ -17,7 +17,8 @@ export default new Event('interactionCreate', async (interaction) => {
 	const command = client.commands.get(interaction.commandName);
 
 	if (!command) {
-		return console.error(`No command matching ${interaction.commandName} was found.`);
+		await LOGGER.error(`No command matching ${interaction.commandName} was found.`);
+		return;
 	}
 
 	const guild = interaction.guild;
