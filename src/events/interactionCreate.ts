@@ -1,48 +1,63 @@
-import type { CommandInteractionOptionResolver, TextBasedChannel } from 'discord.js';
+import type { CommandInteractionOptionResolver, Snowflake } from 'discord.js';
 import { client } from '..';
-import { Event } from '../util/handler/classes/Event';
-import type { ExtendedInteraction } from '../util/handler/types';
 import { LOGGER } from '../util/logger';
+import type { ExtendedInteraction } from '../util/handler/types';
+import { Event } from '../util/handler/classes/Event';
 
 export default new Event('interactionCreate', async (interaction) => {
-	if (!interaction.isChatInputCommand()) return;
+	if (!interaction.isChatInputCommand()) {
+		return;
+	}
 
-	const command = client.commands.get(interaction.commandName);
+	const { commandName } = interaction;
+	const username = interaction.user.globalName ?? interaction.user.username;
 
-	const getChannelName = (channel: TextBasedChannel | null): string | null => {
-		if (channel && 'name' in channel) {
-			return channel.name;
-		}
+	const channelNameAddon = await getChannelNameAddon(interaction.channelId);
+	const guildNameAddon = ` (${interaction.guild?.name})`;
 
-		return null;
-	};
-
-	const channelNameAddon: string = `in #${getChannelName(interaction.channel)}` || '';
-
-	console.log(`${interaction.user.username} ${channelNameAddon} triggered an interaction.`);
+	const command = client.commands.get(commandName);
 
 	if (!command) {
-		return interaction.reply({
+		await LOGGER.error(
+			`${username} used /${commandName} ${channelNameAddon} but the command does not exist.`,
+		);
+
+		await interaction.reply({
 			content: 'This interaction does not exist!',
 			ephemeral: true,
 		});
+
+		return;
 	}
 
+	LOGGER.info(
+		`${username} (${interaction.user.id}) used /${commandName}${channelNameAddon}${guildNameAddon}.`,
+	);
+
 	try {
-		command.execute({
+		return command.execute({
 			args: interaction.options as CommandInteractionOptionResolver,
 			client,
 			interaction: interaction as ExtendedInteraction,
 		});
 	} catch (e) {
-		await LOGGER.error(e, `Failed to execute the interaction: ${interaction.commandName}`);
+		await LOGGER.error(`An error occurred while executing ${commandName}: ${e}`);
 
 		await interaction.reply({
 			content: `There was an error trying to execute the interaction: ${interaction.commandName}!`,
 			ephemeral: true,
 		});
+
+		return;
+	}
+});
+
+async function getChannelNameAddon(channelID: Snowflake) {
+	const channel = await client.channels.fetch(channelID);
+
+	if (channel && 'name' in channel) {
+		return ` in #${channel.name}`;
 	}
 
-	LOGGER.info(`Interaction executed: ${interaction.commandName}`);
-	return;
-});
+	return '';
+}
