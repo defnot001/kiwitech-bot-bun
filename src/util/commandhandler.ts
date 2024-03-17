@@ -1,4 +1,4 @@
-import type { Guild, GuildMember } from 'discord.js';
+import type { User, Guild, GuildMember } from 'discord.js';
 import type { ExtendedClient } from './handler/classes/ExtendedClient';
 import type { ExtendedInteraction } from './handler/types';
 
@@ -10,6 +10,7 @@ export abstract class BaseKiwiCommandHandler implements KiwiCommandHandler {
 	protected readonly interaction: ExtendedInteraction;
 	protected readonly client: ExtendedClient;
 	protected readonly member: GuildMember;
+	protected readonly user: User;
 	private _guild: Guild | null;
 
 	public constructor(options: {
@@ -20,6 +21,7 @@ export abstract class BaseKiwiCommandHandler implements KiwiCommandHandler {
 		this.client = options.client;
 		this._guild = this.interaction.guild;
 		this.member = this.interaction.member;
+		this.user = this.interaction.user;
 	}
 
 	public async init(): Promise<boolean> {
