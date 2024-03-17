@@ -1,0 +1,21 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.6.1/schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"json": {
+		"formatter": {
+			"enabled": true
+		},
+		"parser": { "allowComments": true }
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"performance": {
+				"all": true
+			}
+		}
+	}
+}
