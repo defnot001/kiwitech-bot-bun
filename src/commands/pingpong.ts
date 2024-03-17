@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { handleInteractionError } from '../util/loggers';
 
 export default new Command({

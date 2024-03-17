@@ -1,6 +1,6 @@
 import { Client, Guild, TextChannel, inlineCode } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
-import type { ExtendedInteraction } from '../handler/types';
+import type { ExtendedInteraction } from '../util/handler/types';
 import { ChannelConfig, config } from '../config';
 import getAndLogErrorMessage, { getErrorMessage } from './errors';
 

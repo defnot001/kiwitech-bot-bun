@@ -1,6 +1,6 @@
 import { config } from '../config';
 import ApplicationModelController from '../database/model/applicationModelController';
-import { Event } from '../handler/classes/Event';
+import { Event } from '../util/handler/classes/Event';
 import {
   ApplicationBody,
   getGuildMemberFromUsername,

@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, inlineCode, time } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { isAdmin } from '../util/helpers';
 import { ERROR_MESSAGES } from '../util/constants';
@@ -119,7 +119,7 @@ export default new Command({
         return interaction.editReply('No Members found.');
       }
 
-      const memberIDs = members.map((member) => member.discordID);
+      const memberIDs = members.map((member) => member.discord_id);
       const memberCollection = await guild.members.fetch({ user: memberIDs });
 
       const embed = new KoalaEmbedBuilder(interaction.user, {
@@ -149,7 +149,7 @@ export default new Command({
         }
 
         const member = await MemberModelController.getMember(user.id);
-        const profiles = await getProfiles(member.minecraftUUIDs);
+        const profiles = await getProfiles(member.minecraft_uuids);
         const usernames = profiles.map((profile) => [profile.name, profile.id] as [string, string]);
         const skinUrl = `https://crafatar.com/avatars/${usernames[0]![1]}?overlay&size=512`;
 
@@ -159,7 +159,7 @@ export default new Command({
             url: skinUrl,
           },
           fields: [
-            { name: 'Discord ID', value: `${inlineCode(member.discordID)}` },
+            { name: 'Discord ID', value: `${inlineCode(member.discord_id)}` },
             {
               name: 'Minecraft Usernames',
               value: usernames
@@ -168,13 +168,13 @@ export default new Command({
             },
             {
               name: 'Member Since',
-              value: `${time(member.memberSince, 'D')}\n${time(member.memberSince, 'R')}`,
+              value: `${time(member.member_since, 'D')}\n${time(member.member_since, 'R')}`,
             },
             {
               name: 'Last Updated At',
-              value: `${time(member.updatedAt, 'D')}\n${time(member.updatedAt, 'R')}`,
+              value: `${time(member.updated_at, 'D')}\n${time(member.updated_at, 'R')}`,
             },
-            { name: 'Trial Member', value: member.trialMember ? 'Yes' : 'No' },
+            { name: 'Trial Member', value: member.trial_member ? 'Yes' : 'No' },
           ],
         });
 

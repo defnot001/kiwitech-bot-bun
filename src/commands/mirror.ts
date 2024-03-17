@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ApplicationCommandOptionType } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { config } from '../config';
 import type { ServerChoice } from '../config';
 import { getServerState, ptero } from '../util/pterodactyl';

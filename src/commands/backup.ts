@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, bold, inlineCode, TextChannel, time } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config, ServerChoice } from '../config';
 import { formatBytes } from '../util/helpers';

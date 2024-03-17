@@ -1,5 +1,5 @@
 import type { CommandInteractionOptionResolver, TextBasedChannel } from 'discord.js';
-import { Event } from '../handler/classes/Event';
+import { Event } from '../util/handler/classes/Event';
 import { client } from '..';
 import getAndLogErrorMessage from '../util/errors';
 import { ExtendedInteraction } from '../handler/types';

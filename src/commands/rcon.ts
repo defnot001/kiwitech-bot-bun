@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, codeBlock, inlineCode } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { ServerChoice } from '../config';
 import { getServerChoices, isAdmin } from '../util/helpers';
 import { handleInteractionError } from '../util/loggers';

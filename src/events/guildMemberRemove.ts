@@ -1,5 +1,5 @@
 import { AuditLogEvent, inlineCode, time, userMention } from 'discord.js';
-import { Event } from '../handler/classes/Event';
+import { Event } from '../util/handler/classes/Event';
 import { JoinLeaveEmbedBuilder } from '../classes/JoinLeaveEmbedBuilder';
 import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
 import { getJoinedAtComponent } from '../util/helpers';

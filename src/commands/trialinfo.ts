@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, GuildMember, userMention } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { getEmojis } from '../util/components';

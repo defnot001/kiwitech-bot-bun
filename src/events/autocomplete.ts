@@ -1,4 +1,4 @@
-import { Event } from '../handler/classes/Event';
+import { Event } from '../util/handler/classes/Event';
 import { client } from '..';
 import type { ScoreboardChoice } from '../commands/scoreboard';
 import allScboreboards from '../assets/scoreboards_1.19.2';

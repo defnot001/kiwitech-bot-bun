@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 
 export default new Command({
   name: 'help',

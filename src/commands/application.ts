@@ -10,7 +10,6 @@ import {
   time,
   userMention,
 } from 'discord.js';
-import { Command } from '../handler/classes/Command';
 import { ERROR_MESSAGES } from '../util/constants';
 import {
   getTextChannelFromID,
@@ -26,11 +25,12 @@ import { getEmojis } from '../util/components';
 import { config } from '../config';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
-import { ExtendedInteraction } from '../handler/types';
 import ApplicationModelController, {
   ApplicationInDatabase,
 } from '../database/model/applicationModelController';
 import MemberModelController from '../database/model/memberModelController';
+import { Command } from '../util/handler/classes/Command';
+import { ExtendedInteraction } from '../util/handler/types';
 
 type ApplicationSubcommand =
   | 'display_latest'
@@ -274,8 +274,8 @@ export default new Command({
           return interaction.editReply(`Application with ID ${applicationID} not found.`);
         }
 
-        const user = application.discordID
-          ? await interaction.client.users.fetch(application.discordID)
+        const user = application.discord_id
+          ? await interaction.client.users.fetch(application.discord_id)
           : undefined;
 
         const embeds = getApplicationEmbeds(application.content, application.id, user);
@@ -309,13 +309,13 @@ export default new Command({
             return interaction.editReply(`Application with ID ${applicationID} not found.`);
           }
 
-          if (!application.discordID) {
+          if (!application.discord_id) {
             return interaction.editReply(
               `Application with ID ${applicationID} does not have a linked user.`,
             );
           }
 
-          const applicant = await interaction.client.users.fetch(application.discordID);
+          const applicant = await interaction.client.users.fetch(application.discord_id);
           const applicationChannel = await getTextChannelFromID(interaction.guild, 'application');
           const votingChannel = await getTextChannelFromID(interaction.guild, 'applicationVoting');
           const applicationMessage = await applicationChannel.messages.fetch(messageID);
@@ -379,7 +379,7 @@ export default new Command({
 
         const display = applications.map((a) => {
           return `Application ID: ${a.id}\nApplicant: ${a.content.discordName}\nTime: ${time(
-            a.createdAt,
+            a.created_at,
             'D',
           )}`;
         });
@@ -419,18 +419,18 @@ export default new Command({
           return interaction.editReply(`Application with ID ${applicationID} not found.`);
         }
 
-        if (!application.isOpen) {
+        if (!application.is_open) {
           return interaction.editReply(`Application with ID ${applicationID} is not open.`);
         }
 
-        if (!application.discordID) {
+        if (!application.discord_id) {
           return interaction.editReply(
             `Application with ID ${applicationID} does not have a linked user.`,
           );
         }
 
         try {
-          const targetUser = await interaction.client.users.fetch(application.discordID);
+          const targetUser = await interaction.client.users.fetch(application.discord_id);
           const applicationChannel = await getApplicationChannel(
             interaction.guild.channels,
             targetUser,
@@ -448,7 +448,7 @@ export default new Command({
 
           if (!applicationChannel.isTextBased()) {
             return interaction.editReply(
-              `Application channel for ${application.discordID} is not a text channel.`,
+              `Application channel for ${application.discord_id} is not a text channel.`,
             );
           }
 
@@ -459,7 +459,7 @@ export default new Command({
           }
 
           await applicationChannel.send(
-            getAcceptMessage(application.discordID, interaction.client),
+            getAcceptMessage(application.discord_id, interaction.client),
           );
 
           await ApplicationModelController.closeApplication(applicationID);
@@ -514,14 +514,14 @@ export default new Command({
           return interaction.editReply(`Application with ID ${applicationID} not found.`);
         }
 
-        if (!application.discordID) {
+        if (!application.discord_id) {
           return interaction.editReply(
             `Application with ID ${applicationID} does not have a linked user.`,
           );
         }
 
         try {
-          const targetUser = await interaction.client.users.fetch(application.discordID);
+          const targetUser = await interaction.client.users.fetch(application.discord_id);
 
           try {
             await notifyUserApplicationDenied(targetUser);

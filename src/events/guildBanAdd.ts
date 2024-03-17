@@ -1,5 +1,5 @@
 import { AuditLogEvent } from 'discord.js';
-import { Event } from '../handler/classes/Event';
+import { Event } from '../util/handler/classes/Event';
 import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
 import { getTextChannelFromID, handleEventError } from '../util/loggers';
 export default new Event('guildBanAdd', async (guildBan) => {

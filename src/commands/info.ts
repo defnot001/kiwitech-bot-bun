@@ -7,7 +7,7 @@ import {
   type Role,
   type Snowflake,
 } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
 import { capitalizeFirstLetter } from '../util/helpers';

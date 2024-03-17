@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, EmbedBuilder, inlineCode, WebhookClient } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { config } from '../config';
 import { getTextChannelFromID, handleInteractionError } from '../util/loggers';
 import { ERROR_MESSAGES } from '../util/constants';

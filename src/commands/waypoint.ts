@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, AttachmentBuilder, inlineCode, time } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { createHash } from 'crypto';
 import { ptero } from '../util/pterodactyl';
 import { config } from '../config';

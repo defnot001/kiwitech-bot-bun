@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, Client, Guild } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import { handleInteractionError, logErrorToBotLogChannel } from '../util/loggers';
 import { ERROR_MESSAGES } from '../util/constants';
 

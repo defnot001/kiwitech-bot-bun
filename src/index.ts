@@ -1,5 +1,5 @@
 import { GatewayIntentBits, Partials } from 'discord.js';
-import { ExtendedClient } from './handler/classes/ExtendedClient';
+import { ExtendedClient } from './util/handler/classes/ExtendedClient';
 import { projectPaths } from './config';
 import { Client } from 'pg';
 

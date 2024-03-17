@@ -1,5 +1,8 @@
-import { env } from 'process';
+import { env } from 'bun';
 import path from 'path';
+
+const nodeEnv = Bun.env.NODE_ENV || 'development';
+console.log(`Loaded ${nodeEnv} config.`);
 
 export const config = {
   bot: {
@@ -139,3 +142,5 @@ if (!isConfigFullySet(config)) {
 
 export type Config = typeof config;
 export type ServerChoice = keyof Config['mcConfig'];
+export type ChannelConfig = (typeof config)['channels'];
+export type EmojiConfig = (typeof config)['emoji'];

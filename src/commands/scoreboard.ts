@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, inlineCode } from 'discord.js';
-import { Command } from '../handler/classes/Command';
+import { Command } from '../util/handler/classes/Command';
 import path from 'path';
 import allScoreboards from '../assets/scoreboards_1.19.2';
 import { projectPaths } from '../config';

@@ -7,9 +7,9 @@ import {
   GuildEmoji,
   TextChannel,
 } from 'discord.js';
-import type { ExtendedInteraction } from '../handler/types';
 import { config, EmojiConfig } from '../config';
 import { getServerChoices } from './helpers';
+import { ExtendedInteraction } from './handler/types';
 
 type ConfigEmojis = {
   [key in keyof EmojiConfig]: GuildEmoji;
