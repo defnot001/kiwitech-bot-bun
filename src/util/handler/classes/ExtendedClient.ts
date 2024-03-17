@@ -1,126 +1,121 @@
 import { pathToFileURL } from 'bun';
-import { glob } from 'glob';
 import {
-  ApplicationCommandDataResolvable,
-  Client,
-  ClientEvents,
-  ClientOptions,
-  Collection,
+	type ApplicationCommandDataResolvable,
+	Client,
+	type ClientEvents,
+	Collection,
 } from 'discord.js';
-import { ClientStartOptions, CommandOptions, RegisterCommandOptions } from '../types';
-import { Event } from './Event';
+import { glob } from 'glob';
+import type { ClientStartOptions, CommandOptions, RegisterCommandOptions } from '../types';
+import type { Event } from './Event';
 
 export class ExtendedClient extends Client {
-  public commands: Collection<string, CommandOptions> = new Collection();
+	public commands: Collection<string, CommandOptions> = new Collection();
 
-  constructor(options: ClientOptions) {
-    super(options);
-  }
+	public async start(options: ClientStartOptions) {
+		const { botToken, guildID, commandsPath, eventsPath, globalCommands, registerCommands } =
+			options;
 
-  public async start(options: ClientStartOptions) {
-    const { botToken, guildID, commandsPath, eventsPath, globalCommands, registerCommands } =
-      options;
+		await this.setModules(commandsPath, eventsPath);
 
-    await this.setModules(commandsPath, eventsPath);
+		if (registerCommands) {
+			const slashCommands: ApplicationCommandDataResolvable[] = this.commands.map(
+				(command) => command,
+			);
 
-    if (registerCommands) {
-      const slashCommands: ApplicationCommandDataResolvable[] = this.commands.map(
-        (command) => command,
-      );
+			this.once('ready', () => {
+				if (globalCommands) {
+					this.registerCommands({
+						commands: slashCommands,
+					});
+				} else {
+					this.registerCommands({
+						guildID,
+						commands: slashCommands,
+					});
+				}
+			});
+		}
 
-      this.once('ready', () => {
-        if (globalCommands) {
-          this.registerCommands({
-            commands: slashCommands,
-          });
-        } else {
-          this.registerCommands({
-            guildID,
-            commands: slashCommands,
-          });
-        }
-      });
-    }
+		await this.login(botToken);
+	}
 
-    await this.login(botToken);
-  }
+	/**
+	 * Removes all the commands from the guild or globally.
+	 * If there is no `guildID` being passed, it will remove the global application commands.
+	 */
+	public async removeCommands(guildID?: string) {
+		if (guildID) {
+			const guild = this.guilds.cache.get(guildID);
 
-  /**
-   * Removes all the commands from the guild or globally.
-   * If there is no `guildID` being passed, it will remove the global application commands.
-   */
-  public async removeCommands(guildID?: string) {
-    if (guildID) {
-      const guild = this.guilds.cache.get(guildID);
+			if (!guild) {
+				throw new Error('Cannot find the guild to remove the commands from!');
+			}
 
-      if (!guild) {
-        throw new Error('Cannot find the guild to remove the commands from!');
-      }
+			await guild.commands.set([]);
 
-      await guild.commands.set([]);
+			console.log(`Removing commands from ${guild.name}...`);
+		} else {
+			if (!this.application) {
+				throw new Error('Cannot find the application to remove the commands from!');
+			}
 
-      console.log(`Removing commands from ${guild.name}...`);
-    } else {
-      if (!this.application) {
-        throw new Error('Cannot find the application to remove the commands from!');
-      }
+			await this.application.commands.set([]);
 
-      await this.application.commands.set([]);
+			console.log('Removing global commands...');
+		}
+	}
 
-      console.log('Removing global commands...');
-    }
-  }
+	private async registerCommands(options: RegisterCommandOptions) {
+		const { commands, guildID } = options;
 
-  private async registerCommands(options: RegisterCommandOptions) {
-    const { commands, guildID } = options;
+		if (guildID) {
+			const guild = this.guilds.cache.get(guildID);
 
-    if (guildID) {
-      const guild = this.guilds.cache.get(guildID);
+			if (!guild) {
+				throw new Error('Cannot find the guild to register the commands to');
+			}
 
-      if (!guild) {
-        throw new Error('Cannot find the guild to register the commands to');
-      }
+			await guild.commands.set(commands);
 
-      await guild.commands.set(commands);
+			console.log(`Registered ${commands.length} commands to ${guild.name}...`);
+		} else {
+			if (!this.application) {
+				throw new Error('Cannot find the application to register the commands to');
+			}
 
-      console.log(`Registered ${commands.length} commands to ${guild.name}...`);
-    } else {
-      if (!this.application) {
-        throw new Error('Cannot find the application to register the commands to');
-      }
+			await this.application.commands.set(commands);
 
-      await this.application.commands.set(commands);
+			console.log(`Registered ${commands.length}} global commands...`);
+		}
+	}
 
-      console.log(`Registered ${commands.length}} global commands...`);
-    }
-  }
+	private async setModules(commandsPath: string, eventsPath: string) {
+		const commandPaths: string[] = await glob.glob(`${commandsPath.toString()}/*{.ts,.js}`);
 
-  private async setModules(commandsPath: string, eventsPath: string) {
-    const commandPaths: string[] = await glob.glob(`${commandsPath.toString()}/*{.ts,.js}`);
+		for await (const path of commandPaths) {
+			const fileURL = pathToFileURL(path);
+			const command: CommandOptions = await this.importFile(fileURL.toString());
 
-    for await (const path of commandPaths) {
-      const fileURL = pathToFileURL(path);
-      const command: CommandOptions = await this.importFile(fileURL.toString());
+			if (!command.name) {
+				throw new Error(`Command at path ${path} is missing the name property.`);
+			}
 
-      if (!command.name) {
-        throw new Error(`Command at path ${path} is missing the name property.`);
-      }
+			this.commands.set(command.name, command);
+		}
 
-      this.commands.set(command.name, command);
-    }
+		const eventPaths: string[] = await glob.glob(`${eventsPath.toString()}/*{.ts,.js}`);
 
-    const eventPaths: string[] = await glob.glob(`${eventsPath.toString()}/*{.ts,.js}`);
+		for await (const path of eventPaths) {
+			const fileURL = pathToFileURL(path);
+			const event: Event<keyof ClientEvents> = await this.importFile(fileURL.toString());
 
-    for await (const path of eventPaths) {
-      const fileURL = pathToFileURL(path);
-      const event: Event<keyof ClientEvents> = await this.importFile(fileURL.toString());
+			this.on(event.name, event.execute);
+		}
+	}
 
-      this.on(event.name, event.execute);
-    }
-  }
-
-  private async importFile(filePath: string) {
-    const file = await import(filePath);
-    return file.default;
-  }
+	private async importFile(filePath: string) {
+		const file = await import(filePath);
+		return file.default;
+	}
 }

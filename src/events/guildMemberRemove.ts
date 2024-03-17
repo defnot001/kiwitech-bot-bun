@@ -3,8 +3,8 @@ import { JoinLeaveEmbedBuilder } from '../classes/JoinLeaveEmbedBuilder';
 import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
 import { Event } from '../util/handler/classes/Event';
 import { getJoinedAtComponent } from '../util/helpers';
-import { getTextChannelFromID } from '../util/loggers';
 import { LOGGER } from '../util/logger';
+import { getTextChannelFromID } from '../util/loggers';
 
 export default new Event('guildMemberRemove', async (member) => {
 	try {

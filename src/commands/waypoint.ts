@@ -4,8 +4,8 @@ import sharp from 'sharp';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
 import { Command } from '../util/handler/classes/Command';
-import { ptero } from '../util/pterodactyl';
 import { LOGGER } from '../util/logger';
+import { ptero } from '../util/pterodactyl';
 
 export default new Command({
 	name: 'waypoint',

@@ -9,7 +9,6 @@ type MCMember = {
 	updated_at: Date;
 };
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default abstract class MemberModelController {
 	static async getMember(discordID: Snowflake) {
 		const query = await pgClient.query('SELECT * FROM members WHERE discord_id = $1', [discordID]);

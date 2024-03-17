@@ -1,7 +1,7 @@
 import type { CommandInteractionOptionResolver, TextBasedChannel } from 'discord.js';
 import { client } from '..';
-import type { ExtendedInteraction } from '../util/handler/types';
 import { Event } from '../util/handler/classes/Event';
+import type { ExtendedInteraction } from '../util/handler/types';
 import { LOGGER } from '../util/logger';
 
 export default new Event('interactionCreate', async (interaction) => {

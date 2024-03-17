@@ -3,8 +3,8 @@ import { config } from '../config';
 import TodoModelController, { type Todo } from '../database/model/todoModelController';
 import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
-import { getTextChannelFromID } from '../util/loggers';
 import { LOGGER } from '../util/logger';
+import { getTextChannelFromID } from '../util/loggers';
 
 export default new Command({
 	name: 'todo',

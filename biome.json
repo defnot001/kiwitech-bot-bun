@@ -15,6 +15,9 @@
 			"recommended": true,
 			"performance": {
 				"all": true
+			},
+			"complexity": {
+				"noStaticOnlyClass": "off"
 			}
 		}
 	},

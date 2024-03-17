@@ -5,8 +5,8 @@ import { Rcon } from '../rcon/rcon';
 import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { escapeMarkdown, getServerChoices } from '../util/helpers';
-import RCONUtil from '../util/rcon';
 import { LOGGER } from '../util/logger';
+import RCONUtil from '../util/rcon';
 
 export default new Command({
 	name: 'whitelist',

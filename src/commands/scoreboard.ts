@@ -4,8 +4,8 @@ import { ApplicationCommandOptionType, inlineCode } from 'discord.js';
 import allScoreboards from '../assets/scoreboards_1.19.2';
 import { projectPaths } from '../config';
 import { Command } from '../util/handler/classes/Command';
-import RCONUtil from '../util/rcon';
 import { LOGGER } from '../util/logger';
+import RCONUtil from '../util/rcon';
 
 const scoreboardMap = allScoreboards;
 export type Scoreboard = (typeof allScoreboards)[number]['stat'];

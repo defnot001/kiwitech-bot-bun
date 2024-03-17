@@ -11,7 +11,6 @@ export type ApplicationInDatabase = {
 	updated_at: Date;
 };
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default abstract class ApplicationModelController {
 	static async getApplications(kind: 'open' | 'closed' | 'all', limit = 20) {
 		let query: { rows: ApplicationInDatabase[] };

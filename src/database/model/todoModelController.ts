@@ -10,7 +10,6 @@ export type Todo = {
 	updated_at: Date;
 };
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default abstract class TodoModelController {
 	static async getAllTodos() {
 		const query = await pgClient.query('SELECT * FROM todos');

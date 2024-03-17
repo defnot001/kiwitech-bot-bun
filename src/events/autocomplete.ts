@@ -7,8 +7,8 @@ import { getWhitelist } from '../commands/whitelist';
 import { type ServerChoice, config } from '../config';
 import TodoModelController from '../database/model/todoModelController';
 import { Event } from '../util/handler/classes/Event';
-import { getModNames, ptero } from '../util/pterodactyl';
 import { LOGGER } from '../util/logger';
+import { getModNames, ptero } from '../util/pterodactyl';
 
 export default new Event('interactionCreate', async (interaction) => {
 	if (!interaction.isAutocomplete()) return;

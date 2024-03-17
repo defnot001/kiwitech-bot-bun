@@ -4,10 +4,10 @@ import { type ServerChoice, config } from '../config';
 import { ERROR_MESSAGES } from '../util/constants';
 import { Command } from '../util/handler/classes/Command';
 import { getServerChoices } from '../util/helpers';
+import { LOGGER } from '../util/logger';
 import MCStatus from '../util/mcstatus';
 import { getServerState } from '../util/pterodactyl';
 import RCONUtil from '../util/rcon';
-import { LOGGER } from '../util/logger';
 
 export default new Command({
 	name: 'status',
