@@ -17,5 +17,13 @@
 				"all": true
 			}
 		}
+	},
+	"javascript": {
+		"formatter": {
+			"enabled": true,
+			"lineWidth": 100,
+			"quoteStyle": "single",
+			"jsxQuoteStyle": "single"
+		}
 	}
 }
