@@ -1,14 +1,14 @@
 import {
-	TextChannel,
+	type ChatInputCommandInteraction,
 	type CommandInteractionOptionResolver,
 	type Snowflake,
-	type ChatInputCommandInteraction,
+	TextChannel,
 } from 'discord.js';
 import { client } from '..';
-import { LOGGER } from '../util/logger';
-import type { ExtendedInteraction } from '../util/handler/types';
-import { Event } from '../util/handler/classes/Event';
 import { display } from '../util/format';
+import { Event } from '../util/handler/classes/Event';
+import type { ExtendedInteraction } from '../util/handler/types';
+import { LOGGER } from '../util/logger';
 
 export const interactionCreate = new Event('interactionCreate', async (interaction) => {
 	if (!interaction.isChatInputCommand()) {

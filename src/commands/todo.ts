@@ -2,8 +2,8 @@ import { ApplicationCommandOptionType, EmbedBuilder, WebhookClient, inlineCode }
 import { config } from '../config';
 import TodoModelController, { type Todo } from '../database/model/todoModelController';
 import { Command } from '../util/handler/classes/Command';
-import { LOGGER } from '../util/logger';
 import { getTextChannelFromConfig } from '../util/helpers';
+import { LOGGER } from '../util/logger';
 
 export const todo = new Command({
 	name: 'todo',

@@ -1,4 +1,4 @@
-import type { User, Guild, GuildMember } from 'discord.js';
+import type { Guild, GuildMember, User } from 'discord.js';
 import type { ExtendedClient } from './handler/classes/ExtendedClient';
 import type { ExtendedInteraction } from './handler/types';
 

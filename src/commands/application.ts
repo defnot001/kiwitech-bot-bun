@@ -1,15 +1,15 @@
 import {
+	type APIEmbedField,
 	ApplicationCommandOptionType,
+	Embed,
 	EmbedBuilder,
+	type Emoji,
+	type Message,
 	type Snowflake,
+	TextChannel,
 	type User,
 	time,
 	userMention,
-	type Message,
-	Embed,
-	TextChannel,
-	type Emoji,
-	type APIEmbedField,
 } from 'discord.js';
 import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
@@ -18,13 +18,13 @@ import ApplicationModelController, {
 	type ApplicationInDatabase,
 } from '../database/model/applicationModelController';
 import MemberModelController from '../database/model/memberModelController';
-import { notifyUserApplicationRecieved, buildApplicationEmbeds } from '../util/application';
-import { type ConfigEmojis, getEmojis } from '../util/components';
-import { Command } from '../util/handler/classes/Command';
-import { LOGGER } from '../util/logger';
-import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpers';
+import { buildApplicationEmbeds, notifyUserApplicationRecieved } from '../util/application';
 import { BaseKiwiCommandHandler } from '../util/commandhandler';
+import { type ConfigEmojis, getEmojis } from '../util/components';
 import { display, displayFormatted } from '../util/format';
+import { Command } from '../util/handler/classes/Command';
+import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpers';
+import { LOGGER } from '../util/logger';
 import MojangAPI from '../util/mojang';
 
 type ApplicationSubcommand =

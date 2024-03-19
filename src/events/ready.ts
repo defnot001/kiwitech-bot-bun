@@ -1,8 +1,8 @@
 import { ActivityType, TextChannel } from 'discord.js';
 import { config } from '../config';
+import { display } from '../util/format';
 import { Event } from '../util/handler/classes/Event';
 import { LOGGER } from '../util/logger';
-import { display } from '../util/format';
 // import { client } from '../index';
 // import { config } from '../config';
 

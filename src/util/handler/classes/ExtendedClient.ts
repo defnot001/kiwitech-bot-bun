@@ -1,6 +1,6 @@
 import { type ApplicationCommandDataResolvable, Client, Collection } from 'discord.js';
-import type { ClientStartOptions, CommandOptions, RegisterCommandOptions } from '../types';
 import { LOGGER } from '../../logger';
+import type { ClientStartOptions, CommandOptions, RegisterCommandOptions } from '../types';
 
 import { animal } from '../../../commands/animal';
 import { application } from '../../../commands/application';

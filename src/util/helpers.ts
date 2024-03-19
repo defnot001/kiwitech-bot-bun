@@ -3,18 +3,18 @@ import {
 	type Guild,
 	type GuildMember,
 	type GuildMemberManager,
+	type Message,
 	type PartialGuildMember,
 	PermissionFlagsBits,
 	type Snowflake,
 	TextChannel,
-	time,
 	type User,
-	type Message,
+	time,
 } from 'discord.js';
 import { type ChannelConfig, config } from '../config';
+import { display } from './format';
 import type { ExtendedClient } from './handler/classes/ExtendedClient';
 import { LOGGER } from './logger';
-import { display } from './format';
 
 export function getServerChoices(): ApplicationCommandOptionChoiceData<string>[] {
 	const choices = [];
