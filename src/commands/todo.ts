@@ -3,9 +3,9 @@ import { config } from '../config';
 import TodoModelController, { type Todo } from '../database/model/todoModelController';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/helpers';
+import { getTextChannelFromConfig } from '../util/helpers';
 
-export default new Command({
+export const todo = new Command({
 	name: 'todo',
 	description: 'Add, update, or complete a todo item.',
 	options: [

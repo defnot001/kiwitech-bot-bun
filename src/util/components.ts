@@ -11,7 +11,7 @@ import { type EmojiConfig, config } from '../config';
 import type { ExtendedInteraction } from './handler/types';
 import { getServerChoices } from './helpers';
 
-type ConfigEmojis = {
+export type ConfigEmojis = {
 	[key in keyof EmojiConfig]: GuildEmoji;
 };
 

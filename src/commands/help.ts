@@ -4,7 +4,7 @@ import { ApplicationCommandOptionType } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { Command } from '../util/handler/classes/Command';
 
-export default new Command({
+export const help = new Command({
 	name: 'help',
 	description: 'Get information on how to use things on SMP.',
 	options: [

@@ -25,7 +25,7 @@ const choices = [
 
 export type ScoreboardChoice = (typeof choices)[number]['value'];
 
-export default new Command({
+export const scoreboard = new Command({
 	name: 'scoreboard',
 	description: 'Shows the scoreboard for a given objective.',
 	options: [

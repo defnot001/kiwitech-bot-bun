@@ -4,7 +4,7 @@ import { getEmojis } from '../util/components';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 
-export default new Command({
+export const poll = new Command({
 	name: 'poll',
 	description: 'Create a poll.',
 	options: [

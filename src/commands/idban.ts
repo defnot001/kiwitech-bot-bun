@@ -4,7 +4,7 @@ import { confirmCancelRow, getButtonCollector } from '../util/components';
 import { Command } from '../util/handler/classes/Command';
 import { escapeMarkdown } from '../util/helpers';
 
-export default new Command({
+export const idban = new Command({
 	name: 'idban',
 	description: 'Bans a user by their ID.',
 	options: [

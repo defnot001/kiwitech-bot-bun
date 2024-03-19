@@ -3,7 +3,7 @@ import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 import MojangAPI from '../util/mojang';
 
-export default new Command({
+export const mcskin = new Command({
 	name: 'mcskin',
 	description: 'Get the minecraft skin of a player.',
 	options: [

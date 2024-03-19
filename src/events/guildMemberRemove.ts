@@ -4,9 +4,8 @@ import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
 import { Event } from '../util/handler/classes/Event';
 import { getJoinedAtComponent } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/helpers';
 
-export default new Event('guildMemberRemove', async (member) => {
+export const guildMemberRemove = new Event('guildMemberRemove', async (member) => {
 	try {
 		LOGGER.info(`${member.user.username} left ${member.guild.name}`);
 

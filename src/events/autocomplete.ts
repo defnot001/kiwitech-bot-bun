@@ -10,7 +10,7 @@ import { Event } from '../util/handler/classes/Event';
 import { LOGGER } from '../util/logger';
 import { getModNames, ptero } from '../util/pterodactyl';
 
-export default new Event('interactionCreate', async (interaction) => {
+export const autocomplete = new Event('interactionCreate', async (interaction) => {
 	if (!interaction.isAutocomplete()) return;
 	if (!interaction.guild) return;
 

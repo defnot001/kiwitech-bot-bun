@@ -7,7 +7,7 @@ import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 import { ptero } from '../util/pterodactyl';
 
-export default new Command({
+export const waypoint = new Command({
 	name: 'waypoint',
 	description: 'Get the coordinates of a waypoint.',
 	options: [

@@ -7,7 +7,7 @@ import { capitalizeFirstLetter, formatBytes } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import { ptero } from '../util/pterodactyl';
 
-export default new Command({
+export const mcserver = new Command({
 	name: 'mcserver',
 	description: 'Control a minecraft server.',
 	options: [

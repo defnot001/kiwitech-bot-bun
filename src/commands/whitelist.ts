@@ -7,7 +7,7 @@ import { escapeMarkdown, getServerChoices } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import RCONUtil from '../util/rcon';
 
-export default new Command({
+export const whitelist = new Command({
 	name: 'whitelist',
 	description: 'Get information about the whitelist & add/remove users.',
 	options: [

@@ -8,8 +8,13 @@ import {
 	type Snowflake,
 	TextChannel,
 	time,
+	type User,
+	type Message,
 } from 'discord.js';
 import { type ChannelConfig, config } from '../config';
+import type { ExtendedClient } from './handler/classes/ExtendedClient';
+import { LOGGER } from './logger';
+import { display } from './format';
 
 export function getServerChoices(): ApplicationCommandOptionChoiceData<string>[] {
 	const choices = [];
@@ -58,15 +63,77 @@ export function escapeMarkdown(text: string): string {
 	return unescaped.replace(/(\*|_|`|~|\\)/g, '\\$1');
 }
 
-export async function getTextChannelFromID(
+/**
+ * Fetches a TextChannel from the configured channels.
+ * @returns The fetched TextChannel, or null if an error occurred.
+ * @sideeffect Logs the error if one occurs.
+ */
+export async function getTextChannelFromConfig(
 	guild: Guild,
 	channel: keyof ChannelConfig,
-): Promise<TextChannel> {
-	const fetchedChannel = await guild.channels.fetch(config.channels[channel]);
+): Promise<TextChannel | null> {
+	LOGGER.debug(
+		`Fetching config channel #${channel} (${config.channels[channel]}) in guild ${display(guild)}`,
+	);
 
-	if (!fetchedChannel || !(fetchedChannel instanceof TextChannel)) {
-		throw new Error('Failed to fetch text channel!');
+	const fetchedChannel = await guild.channels.fetch(config.channels[channel]).catch(async (e) => {
+		await LOGGER.error(
+			e,
+			`Error fetching config channel #${channel} (${config.channels[channel]}) in guild ${display(
+				guild,
+			)}`,
+		);
+		return null;
+	});
+
+	if (!fetchedChannel) return null;
+
+	if (!(fetchedChannel instanceof TextChannel)) {
+		await LOGGER.error(
+			`Config channel #${channel} (${config.channels[channel]}) in guild ${display(
+				guild,
+			)} is not a text channel`,
+		);
+		return null;
 	}
 
 	return fetchedChannel;
+}
+
+/**
+ * Fetches a User.
+ * @returns The fetched User, or null if an error occurred.
+ * @sideeffect Logs the error if one occurs.
+ */
+export async function fetchUser(id: Snowflake, client: ExtendedClient): Promise<User | null> {
+	try {
+		LOGGER.debug(`Fetching user with ID: ${id}`);
+		return await client.users.fetch(id);
+	} catch (e) {
+		await LOGGER.error(e, 'Error fetching user');
+		return null;
+	}
+}
+
+/**
+ * Fetches a Message from a Channel.
+ * @returns The fetched Message, or null if an error occurred.
+ * @sideeffect Logs the error if one occurs.
+ */
+export async function fetchMessage(options: {
+	channel: TextChannel;
+	messageID: Snowflake;
+}): Promise<Message | null> {
+	const { channel, messageID } = options;
+
+	try {
+		LOGGER.debug(`Fetching message with ID: ${messageID} from channel ${display(channel)}`);
+		return await channel.messages.fetch(messageID);
+	} catch (e) {
+		await LOGGER.error(
+			e,
+			`Error fetching message with ID: ${messageID} from channel ${display(channel)}`,
+		);
+		return null;
+	}
 }

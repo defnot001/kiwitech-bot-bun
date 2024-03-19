@@ -5,7 +5,7 @@ import { getEmojis } from '../util/components';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 
-export default new Command({
+export const trialinfo = new Command({
 	name: 'trialinfo',
 	description: 'Posts an embed with information for a new trial member.',
 	options: [

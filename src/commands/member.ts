@@ -6,7 +6,7 @@ import { isAdmin } from '../util/helpers';
 import { escapeMarkdown } from '../util/helpers';
 import MojangAPI from '../util/mojang';
 
-export default new Command({
+export const member = new Command({
 	name: 'member',
 	description: 'Command to interact with Members.',
 	options: [

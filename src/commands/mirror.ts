@@ -7,7 +7,7 @@ import { LOGGER } from '../util/logger';
 import MCStatus from '../util/mcstatus';
 import { getServerState, ptero } from '../util/pterodactyl';
 
-export default new Command({
+export const mirror = new Command({
 	name: 'mirror',
 	description: 'Copy region files from one server to another.',
 	options: [

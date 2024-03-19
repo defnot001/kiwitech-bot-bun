@@ -2,7 +2,7 @@ import { config } from '../config';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 
-export default new Command({
+export const pingpong = new Command({
 	name: 'pingpong',
 	description:
 		'Toggle the PingPong role to receive or stop receiving notifications about applications.',

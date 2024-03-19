@@ -10,7 +10,7 @@ import {
 import { Event } from '../util/handler/classes/Event';
 import { LOGGER } from '../util/logger';
 
-export default new Event('ready', async (client) => {
+export const application = new Event('ready', async (client) => {
 	const guild = client.guilds.cache.get(config.bot.guildID);
 
 	if (!guild) {

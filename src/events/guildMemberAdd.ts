@@ -3,9 +3,8 @@ import { JoinLeaveEmbedBuilder } from '../classes/JoinLeaveEmbedBuilder';
 import { Event } from '../util/handler/classes/Event';
 import { getJoinedAtComponent } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import { getTextChannelFromID } from '../util/helpers';
 
-export default new Event('guildMemberAdd', async (member) => {
+export const guildMemberAdd = new Event('guildMemberAdd', async (member) => {
 	try {
 		LOGGER.info(`${member.user.username} joined ${member.guild.name}.`);
 

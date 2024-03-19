@@ -10,7 +10,7 @@ import type { ExtendedInteraction } from '../util/handler/types';
 import { Event } from '../util/handler/classes/Event';
 import { display } from '../util/format';
 
-export default new Event('interactionCreate', async (interaction) => {
+export const interactionCreate = new Event('interactionCreate', async (interaction) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}

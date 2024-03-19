@@ -9,7 +9,7 @@ import { ptero } from '../util/pterodactyl';
 
 type BackupSubcommand = 'list' | 'create' | 'delete' | 'details';
 
-export default new Command({
+export const backup = new Command({
 	name: 'backup',
 	description: 'Control backups on a minecraft server.',
 	options: [

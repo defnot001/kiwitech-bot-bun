@@ -1,4 +1,4 @@
-import type { Snowflake } from 'discord.js';
+import type { Snowflake, User } from 'discord.js';
 import { pgClient } from '../..';
 import type { ApplicationObject } from '../../util/application';
 
@@ -70,10 +70,24 @@ export default abstract class ApplicationModelController {
 		return query.rows[0] as ApplicationInDatabase;
 	}
 
-	static async updateApplicationDiscordID(applicationID: number, discordID: Snowflake) {
+	static async linkApplication(options: {
+		applicationID: number;
+		newUser: User;
+	}) {
+		const newDiscordID = options.newUser.id;
+		const newUsername = options.newUser.globalName ?? options.newUser.username;
+
 		const query = await pgClient.query(
-			'UPDATE applications SET discord_id = $1 WHERE id = $2 RETURNING *',
-			[discordID, applicationID],
+			`
+			UPDATE applications
+			SET
+				discord_id = $1,
+				content = jsonb_set(content::jsonb, '{discordName}', $2::jsonb),
+				updated_at = NOW()
+			WHERE id = $3
+			RETURNING *;
+			`,
+			[newDiscordID, JSON.stringify(newUsername), options.applicationID],
 		);
 
 		return query.rows[0] as ApplicationInDatabase;

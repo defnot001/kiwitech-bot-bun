@@ -6,7 +6,7 @@ import { display } from '../util/format';
 // import { client } from '../index';
 // import { config } from '../config';
 
-export default new Event('ready', async (c) => {
+export const ready = new Event('ready', async (c) => {
 	c.user.setActivity('Commands', { type: ActivityType.Listening });
 	LOGGER.info(`Bot is ready! Logged in as ${display(c.user)}.`);
 

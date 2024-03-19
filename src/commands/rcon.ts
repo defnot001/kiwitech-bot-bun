@@ -5,7 +5,7 @@ import { getServerChoices, isAdmin } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import RCONUtil from '../util/rcon';
 
-export default new Command({
+export const rcon = new Command({
 	name: 'run',
 	description: 'Runs a command on a Minecraft Server.',
 	options: [

@@ -14,7 +14,7 @@ import { capitalizeFirstLetter } from '../util/helpers';
 import { escapeMarkdown } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 
-export default new Command({
+export const info = new Command({
 	name: 'info',
 	description: 'Get information.',
 	options: [

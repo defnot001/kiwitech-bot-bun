@@ -14,7 +14,7 @@ const modnameOption = {
 	autocomplete: true,
 };
 
-export default new Command({
+export const mods = new Command({
 	name: 'mods',
 	description: 'Lists and enables/disables mods.',
 	options: [

@@ -8,7 +8,7 @@ import MCStatus from '../util/mcstatus';
 import { getServerState } from '../util/pterodactyl';
 import RCONUtil from '../util/rcon';
 
-export default new Command({
+export const status = new Command({
 	name: 'status',
 	description: 'Get the status of a Minecraft Server.',
 	options: [

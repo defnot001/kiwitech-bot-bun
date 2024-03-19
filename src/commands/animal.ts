@@ -5,7 +5,7 @@ import { LOGGER } from '../util/logger';
 
 type AnimalChoice = 'fox' | 'cat' | 'dog';
 
-export default new Command({
+export const animal = new Command({
 	name: 'animal',
 	description: 'Get random pictures from animals.',
 	options: [

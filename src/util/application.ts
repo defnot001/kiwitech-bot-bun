@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { client } from '..';
 import { config } from '../config';
 import { getEmojis } from './components';
-import { escapeMarkdown, getTextChannelFromID } from './helpers';
+import { escapeMarkdown, getTextChannelFromConfig } from './helpers';
 import { LOGGER } from './logger';
 
 export type ApplicationObject = {
@@ -99,7 +99,7 @@ export function parseApplication(body: ApplicationBody): ApplicationObject | nul
 }
 
 export async function postApplicationToChannel(
-	application: ApplicationObject,
+	applicationObject: ApplicationObject,
 	guild: Guild,
 	applicationID: number,
 	pingMembers: boolean,
@@ -110,18 +110,26 @@ export async function postApplicationToChannel(
 			throw new Error('Client user not found');
 		}
 
-		const botLogChannel = await getTextChannelFromID(guild, 'botLog');
-		const applicationChannel = await getTextChannelFromID(guild, 'application');
+		const botLogChannel = await getTextChannelFromConfig(guild, 'botLog');
+		const applicationChannel = await getTextChannelFromConfig(guild, 'application');
 
-		if (!member) {
-			notifyApplicationMissingMember(application, applicationID, client.user, botLogChannel);
+		if (!applicationChannel) {
+			throw new Error('Application channel not found');
 		}
 
-		const applicationEmbeds = buildApplicationEmbeds(
-			application,
+		if (!botLogChannel) {
+			throw new Error('Bot log channel not found');
+		}
+
+		if (!member) {
+			notifyApplicationMissingMember(applicationObject, applicationID, client.user, botLogChannel);
+		}
+
+		const applicationEmbeds = buildApplicationEmbeds({
+			applicationObject,
 			applicationID,
-			member?.user ?? null,
-		);
+			user: member?.user ?? null,
+		});
 
 		if (!pingMembers) {
 			await applicationChannel.send({ embeds: applicationEmbeds });
@@ -144,94 +152,96 @@ export async function postApplicationToChannel(
 	return;
 }
 
-export function buildApplicationEmbeds(
-	application: ApplicationObject,
-	applicationID: number,
-	user: User | null,
-) {
+export function buildApplicationEmbeds(options: {
+	applicationObject: ApplicationObject;
+	applicationID: number;
+	user: User | null;
+}) {
+	const { applicationObject, applicationID, user } = options;
+
 	const title = user
 		? `${escapeMarkdown(user.globalName ?? user.username)} Application`
-		: `${application.discordName} Application`;
+		: `${applicationObject.discordName} Application`;
 
-	const discordName = user ? user.globalName ?? user.username : application.discordName;
+	const discordName = user ? user.globalName ?? user.username : applicationObject.discordName;
 
 	const embedOne = new EmbedBuilder({
 		title,
 		color: config.embedColors.default,
 		fields: [
 			{ name: 'Discord Name', value: discordName, inline: true },
-			{ name: 'IGN', value: application.ign, inline: true },
-			{ name: 'Pronouns', value: application.pronouns, inline: true },
-			{ name: 'Age', value: application.age, inline: true },
-			{ name: 'Timezone', value: application.timezone, inline: true },
-			{ name: 'Languages', value: application.languages, inline: true },
+			{ name: 'IGN', value: applicationObject.ign, inline: true },
+			{ name: 'Pronouns', value: applicationObject.pronouns, inline: true },
+			{ name: 'Age', value: applicationObject.age, inline: true },
+			{ name: 'Timezone', value: applicationObject.timezone, inline: true },
+			{ name: 'Languages', value: applicationObject.languages, inline: true },
 			{
 				name: 'How long have you been playing Minecraft?',
-				value: application.minecraftExperienceTime,
+				value: applicationObject.minecraftExperienceTime,
 			},
 			{
 				name: 'What is your experience on other technical minecraft servers?',
-				value: application.otherExperience,
+				value: applicationObject.otherExperience,
 			},
 			{
 				name: 'What fields of TMC are you specialised in?',
-				value: application.fields.join(', '),
+				value: applicationObject.fields.join(', '),
 			},
 			{
 				name: 'Where did you hear about KiwiTech?',
-				value: application.informationSource,
+				value: applicationObject.informationSource,
 			},
 			{
 				name: 'Why do you want to apply to KiwiTech?',
-				value: application.reason,
+				value: applicationObject.reason,
 			},
 			{
 				name: 'How much time can you dedicate to KiwiTech per week?',
-				value: application.timeAvailable,
+				value: applicationObject.timeAvailable,
 			},
 		],
 		footer: {
 			text: `1/3 General Information | ID: ${applicationID}`,
 		},
-		timestamp: application.timestamp,
+		timestamp: applicationObject.timestamp,
 	});
 
 	const embedTwo = new EmbedBuilder({
 		color: config.embedColors.default,
 		fields: [
-			{ name: 'MSPT & TPS', value: application.msptAndTps },
+			{ name: 'MSPT & TPS', value: applicationObject.msptAndTps },
 			{
 				name: 'Mob Spawning',
-				value: application.mobSpawning,
+				value: applicationObject.mobSpawning,
 			},
 			{
 				name: 'Update Suppression',
-				value: application.updateSuppression,
+				value: applicationObject.updateSuppression,
 			},
 			{
 				name: 'Zero Ticking',
-				value: application.zeroTick,
+				value: applicationObject.zeroTick,
 			},
 		],
 		footer: {
 			text: `2/3 Technical Knowledge | ID: ${applicationID}`,
 		},
-		timestamp: application.timestamp,
+		timestamp: applicationObject.timestamp,
 	});
 
 	const embedThree = new EmbedBuilder({
 		color: config.embedColors.default,
 		fields: [
-			{ name: 'Images', value: application.pastBuilds },
+			{ name: 'Images', value: applicationObject.pastBuilds },
 			{
 				name: 'Suggestions',
-				value: application.suggestions,
+				value: applicationObject.suggestions,
 			},
 		],
 		footer: {
 			text: `3/3 Images & Suggestions | ID: ${applicationID}`,
 		},
-		timestamp: application.timestamp,
+		timestamp: applicationObject.timestamp,
 	});
 
 	if (user) {
@@ -298,12 +308,14 @@ export async function getGuildMemberFromUsername(
 	}
 }
 
-export async function notifyUserApplicationRecieved(user: User): Promise<void> {
+export async function notifyUserApplicationRecieved(user: User): Promise<boolean> {
 	try {
 		await user.send(
-			'Thank you for applying to KiwiTech! Your application has been received and will be reviewed shortly. If you have any questions, please contact a staff member.',
+			'Thank you for applying to KiwiTech! Your application has been received and will be reviewed shortly. If you have any questions, please contact an admin.',
 		);
+		return true;
 	} catch (e) {
 		await LOGGER.error(e, "Error sending application recieved message to users DM's");
+		return false;
 	}
 }
