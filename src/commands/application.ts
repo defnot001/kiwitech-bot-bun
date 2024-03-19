@@ -268,7 +268,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			args.listType,
 			args.amount,
 		).catch(async (e) => {
-			await LOGGER.error(e, 'Failed to get applications.');
+			await LOGGER.error(e, 'Failed to get applications');
 			return null;
 		});
 
@@ -318,7 +318,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		).catch(async (e) => {
 			await LOGGER.error(
 				e,
-				`Failed to get latest application for ${displayFormatted(args.targetUser)}.`,
+				`Failed to get latest application for ${displayFormatted(args.targetUser)}`,
 			);
 			return null;
 		});
@@ -376,12 +376,12 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				e,
 				`Failed to delete application message with ID ${args.messageID} from ${displayFormatted(
 					applicationChannel,
-				)}.`,
+				)}`,
 			);
 		}
 
 		const postedApp = await applicationChannel.send({ embeds }).catch(async (e) => {
-			await LOGGER.error(e, 'Failed to post updated application.');
+			await LOGGER.error(e, 'Failed to post updated application');
 			return null;
 		});
 
@@ -462,7 +462,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				parent: config.channels.applicationCategory,
 			})
 			.catch(async (e) => {
-				await LOGGER.error(e, `Failed to create channel for ${displayFormatted(applicantUser)}.`);
+				await LOGGER.error(e, `Failed to create channel for ${displayFormatted(applicantUser)}`);
 				return null;
 			});
 
@@ -485,7 +485,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				MentionEveryone: false,
 			});
 		} catch (e) {
-			await LOGGER.error(e, `Failed to set permissions for ${displayFormatted(applicantUser)}.`);
+			await LOGGER.error(e, `Failed to set permissions for ${displayFormatted(applicantUser)}`);
 			await this.interaction.followUp(
 				`Failed to set permissions for ${displayFormatted(applicantUser)}. Please do so manually.`,
 			);
@@ -494,7 +494,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			await newChannel.send({ embeds: applicationMessage.embeds });
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to send application message to new channel.');
+			await LOGGER.error(e, 'Failed to send application message to new channel');
 			await this.interaction.followUp(
 				'Failed to send application message to new channel. Please do so manually.',
 			);
@@ -503,7 +503,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			await applicationMessage.delete();
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to delete application message.');
+			await LOGGER.error(e, 'Failed to delete application message');
 			await this.interaction.followUp(
 				'Failed to delete application message. Please do so manually.',
 			);
@@ -516,7 +516,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				)}! You can use this channel to communicate with the members about your application and share more images and information. Don't hesistate to ask questions! There is a vote active on our application where every member can vote on your application.`,
 			);
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to send welcome message to new channel.');
+			await LOGGER.error(e, 'Failed to send welcome message to new channel');
 			await this.interaction.followUp(
 				'Failed to send welcome message to new channel. Please do so manually.',
 			);
@@ -537,7 +537,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		});
 
 		const voteMessage = await votingChannel.send({ embeds: [voteEmbed] }).catch(async (e) => {
-			await LOGGER.error(e, 'Failed to send vote message.');
+			await LOGGER.error(e, 'Failed to send vote message');
 			return null;
 		});
 
@@ -596,7 +596,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				)} We are happy to inform you that your application has been accepted. Welcome to the community!`,
 			);
 		} catch (e) {
-			await LOGGER.error(e, `Failed to send welcome message to ${display(applicantChannel)}.`);
+			await LOGGER.error(e, `Failed to send welcome message to ${display(applicantChannel)}`);
 			await this.interaction.editReply(
 				`Failed to send welcome message to ${display(applicantChannel)}.`,
 			);
@@ -608,7 +608,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			await ApplicationModelController.closeApplication(args.applicationID);
 		} catch (e) {
-			await LOGGER.error(e, `Failed to close application ID ${args.applicationID}.`);
+			await LOGGER.error(e, `Failed to close application ID ${args.applicationID}`);
 			await this.interaction.followUp(
 				`Failed to close application ID ${args.applicationID} from ${displayFormatted(
 					targetUser,
@@ -626,7 +626,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 
 		const minecraftProfile = await MojangAPI.getUUID(application.content.ign.trim()).catch(
 			async (e) => {
-				await LOGGER.error(e, `Failed to get UUID for ${application.content.ign}.`);
+				await LOGGER.error(e, `Failed to get UUID for ${application.content.ign}`);
 				return null;
 			},
 		);
@@ -646,7 +646,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				await MemberModelController.addMember(targetUser.id, true, []);
 			}
 		} catch (e) {
-			await LOGGER.error(e, `Failed to add member ${displayFormatted(targetUser)}.`);
+			await LOGGER.error(e, `Failed to add member ${displayFormatted(targetUser)}`);
 			await this.interaction.followUp(
 				`Failed to add member ${displayFormatted(
 					targetUser,
@@ -695,7 +695,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		} catch (e) {
 			await LOGGER.error(
 				e,
-				`Failed to close application ID ${args.applicationID} from ${display(targetUser)}.`,
+				`Failed to close application ID ${args.applicationID} from ${display(targetUser)}`,
 			);
 			await this.interaction.editReply(
 				`Failed to close application ID ${args.applicationID} from ${displayFormatted(
@@ -710,7 +710,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				'We are sorry to inform you that your application to KiwiTech has been denied. Thank you again for your interest in our community! Of course you are welcome to stay in our server to chat with members and ask anything that interests you. We wish you the best of luck in your future endeavours!',
 			);
 		} catch (e) {
-			await LOGGER.error(e, `Failed to notify ${display(targetUser)} in DMs.`);
+			await LOGGER.error(e, `Failed to notify ${display(targetUser)} in DMs`);
 
 			await this.interaction.followUp(
 				`Failed to notify ${displayFormatted(
@@ -739,7 +739,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			await ApplicationModelController.deleteApplication(args.applicationID);
 		} catch (e) {
-			await LOGGER.error(e, `Failed to delete application ID ${args.applicationID}.`);
+			await LOGGER.error(e, `Failed to delete application ID ${args.applicationID}`);
 			await this.interaction.editReply(`Failed to delete application ID ${args.applicationID}.`);
 			return;
 		}
@@ -759,7 +759,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 	private async getApplicationFromID(applicationID: number): Promise<ApplicationInDatabase | null> {
 		const application = await ApplicationModelController.getApplication(applicationID).catch(
 			async (e) => {
-				await LOGGER.error(e, `Failed to get application with ID ${applicationID}.`);
+				await LOGGER.error(e, `Failed to get application with ID ${applicationID}`);
 				return null;
 			},
 		);
@@ -793,7 +793,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		} catch (e) {
 			await LOGGER.error(
 				e,
-				`Failed to update application ID ${options.applicationID} with member ${display(newUser)}.`,
+				`Failed to update application ID ${options.applicationID} with member ${display(newUser)}`,
 			);
 
 			return null;
@@ -810,7 +810,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			emojis = getEmojis(this.client);
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to get config emojis.');
+			await LOGGER.error(e, 'Failed to get config emojis');
 		}
 
 		if (!emojis) return;
@@ -819,7 +819,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			await message.react(emojis.frogYes);
 			await message.react(emojis.frogNo);
 		} catch (e) {
-			await LOGGER.error(e, `Failed to react to message ${message.id}.`);
+			await LOGGER.error(e, `Failed to react to message ${message.id}`);
 		}
 	}
 
@@ -902,7 +902,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			await this.guild.channels.fetch();
 		} catch (e) {
-			await LOGGER.error(e, `Failed to fetch channels for ${display(this.guild)}.`);
+			await LOGGER.error(e, `Failed to fetch channels for ${display(this.guild)}`);
 			return null;
 		}
 
@@ -910,11 +910,11 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			this.guild.channels.cache.find((c) => c.name === `${user.username}-application`) ?? null;
 
 		if (!channel) {
-			await LOGGER.error(`Failed to find application channel for ${display(user)}.`);
+			await LOGGER.error(`Failed to find application channel for ${display(user)}`);
 		}
 
 		if (!(channel instanceof TextChannel)) {
-			await LOGGER.error(`Application channel for ${display(user)} is not a text channel.`);
+			await LOGGER.error(`Application channel for ${display(user)} is not a text channel`);
 			return null;
 		}
 
@@ -932,7 +932,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			kiwiEmoji = getEmojis(this.interaction.client).kiwi;
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to get guild emojis.');
+			await LOGGER.error(e, 'Failed to get guild emojis');
 			return false;
 		}
 
@@ -940,7 +940,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		if (!memberGeneralChannel) return false;
 
 		if (!kiwiEmoji) {
-			await LOGGER.error(new Error('Failed to get guild emojis.'));
+			await LOGGER.error(new Error('Failed to get guild emojis'));
 			return false;
 		}
 
@@ -949,7 +949,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			trialWelcomeMessage = getTrialWelcomeMessage(this.interaction.client);
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to get trial welcome message.');
+			await LOGGER.error(e, 'Failed to get trial welcome message');
 			return false;
 		}
 
@@ -969,10 +969,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				embeds: [trialEmbed],
 			})
 			.catch(async (e) => {
-				await LOGGER.error(
-					e,
-					`Failed to send welcome message to ${display(memberGeneralChannel)}.`,
-				);
+				await LOGGER.error(e, `Failed to send welcome message to ${display(memberGeneralChannel)}`);
 				return null;
 			});
 
@@ -981,7 +978,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			await message.edit({ content: '\u200b' });
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to edit welcome message.');
+			await LOGGER.error(e, 'Failed to edit welcome message');
 		}
 
 		return true;
@@ -993,7 +990,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 	 */
 	private async setTrialMemberRoles(targetUser: User) {
 		const targetMember = await this.guild.members.fetch(targetUser.id).catch(async (e) => {
-			await LOGGER.error(e, `Failed to fetch member ${displayFormatted(targetUser)}.`);
+			await LOGGER.error(e, `Failed to fetch member ${displayFormatted(targetUser)}`);
 			return null;
 		});
 
@@ -1022,7 +1019,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			await targetMember.roles.set([trialMemberRole, membersRole, kiwiIncRole]);
 		} catch (e) {
-			await LOGGER.error(e, `Failed to set roles for ${display(targetUser)}.`);
+			await LOGGER.error(e, `Failed to set roles for ${display(targetUser)}`);
 			await this.interaction.followUp(
 				`Failed to set trial member roles for ${displayFormatted(
 					targetUser,
@@ -1048,7 +1045,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		const message = await applicationChannel.messages.fetch(messageID).catch(async (e) => {
 			await LOGGER.error(
 				e,
-				`Failed to fetch message with ID ${messageID} from ${display(applicationChannel)}.`,
+				`Failed to fetch message with ID ${messageID} from ${display(applicationChannel)}`,
 			);
 			return null;
 		});
@@ -1070,7 +1067,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				e,
 				`Failed to delete application message with ID ${messageID} from ${display(
 					applicationChannel,
-				)}.`,
+				)}`,
 			);
 			await this.interaction.followUp(
 				`Failed to delete application message with ID ${messageID} from ${display(
