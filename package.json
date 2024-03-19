@@ -13,7 +13,6 @@
   "dependencies": {
     "@napi-rs/canvas": "^0.1.44",
     "discord.js": "^14.14.1",
-    "glob": "^10.3.10",
     "pg": "^8.11.3",
     "ptero-client": "^1.1.3",
     "sharp": "^0.33.1"
