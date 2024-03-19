@@ -61,7 +61,7 @@ export const application = new DiscordEvent('ready', async (client) => {
 						statusText: 'OK',
 					});
 				} catch (e) {
-					await LOGGER.error(e, 'Failed to handle application submission.');
+					await LOGGER.error(e, 'Failed to handle application submission');
 					return new Response('Internal server error', {
 						status: 500,
 						statusText: 'INTERNAL SERVER ERROR',

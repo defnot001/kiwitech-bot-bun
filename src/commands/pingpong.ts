@@ -37,7 +37,7 @@ export const pingpong = new Command({
 
 			return;
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to execute the pingpong command!');
+			await LOGGER.error(e, 'Failed to execute the pingpong command');
 
 			return;
 		}

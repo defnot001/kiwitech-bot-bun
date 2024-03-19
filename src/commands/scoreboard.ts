@@ -131,7 +131,7 @@ export const scoreboard = new Command({
 				);
 			}
 		} catch (e) {
-			LOGGER.error(e, 'Failed to get scoreboard.');
+			LOGGER.error(e, 'Failed to get scoreboard');
 		}
 
 		return;

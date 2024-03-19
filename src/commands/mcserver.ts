@@ -169,7 +169,7 @@ export const mcserver = new Command({
 			});
 		} catch (e) {
 			await interaction.editReply(`Failed to ${subcommand} ${guild.name} ${bold(serverChoice)}!`);
-			LOGGER.error(e, `Failed to ${subcommand} ${guild.name} ${serverChoice}.`);
+			LOGGER.error(e, `Failed to ${subcommand} ${guild.name} ${serverChoice}`);
 		}
 	},
 });

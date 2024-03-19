@@ -89,7 +89,7 @@ export const status = new Command({
 
 			return interaction.editReply({ embeds: [statusEmbed] });
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to get server status.');
+			await LOGGER.error(e, 'Failed to get server status');
 			return interaction.editReply('Failed to get server status.');
 		}
 	},

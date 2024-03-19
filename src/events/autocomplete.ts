@@ -18,7 +18,7 @@ export const autocomplete = new DiscordEvent('interactionCreate', async (interac
 	const command = client.commands.get(interaction.commandName);
 
 	if (!command) {
-		await LOGGER.error(`No command matching ${interaction.commandName} was found.`);
+		await LOGGER.error(`No command matching ${interaction.commandName} was found`);
 		return;
 	}
 
@@ -111,7 +111,7 @@ export const autocomplete = new DiscordEvent('interactionCreate', async (interac
 			);
 		}
 	} catch (e) {
-		await LOGGER.error(e, `Failed to autocomplete for command ${interaction.commandName}!`);
+		await LOGGER.error(e, `Failed to autocomplete for command ${interaction.commandName}`);
 	}
 
 	return;

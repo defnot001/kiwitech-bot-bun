@@ -46,6 +46,6 @@ export const guildBanAdd = new DiscordEvent('guildBanAdd', async (guildBan) => {
 			);
 		}
 	} catch (e) {
-		await LOGGER.error(e, 'Failed to log the ban event.');
+		await LOGGER.error(e, 'Failed to log the ban event');
 	}
 });

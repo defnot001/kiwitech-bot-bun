@@ -176,7 +176,7 @@ export const todo = new Command({
 			await todoLogChannel.send({ embeds: [todoLogEmbed] });
 		} catch (e) {
 			await interaction.editReply('Failed to update todo item.');
-			await LOGGER.error(e, 'Failed to update todo item.');
+			await LOGGER.error(e, 'Failed to update todo item');
 		}
 
 		return;

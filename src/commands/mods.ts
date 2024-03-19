@@ -136,7 +136,7 @@ export const mods = new Command({
 				`Successfully disabled mod: ${targetMod.name.replace('.jar', '')}!`,
 			);
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to execute the mods command!');
+			await LOGGER.error(e, 'Failed to execute the mods command');
 			await interaction.editReply('An error occurred while trying to execute the mods command!');
 			return;
 		}

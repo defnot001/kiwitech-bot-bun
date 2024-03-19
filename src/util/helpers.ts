@@ -90,9 +90,11 @@ export async function getTextChannelFromConfig(
 
 	if (!(fetchedChannel instanceof TextChannel)) {
 		await LOGGER.error(
-			`Config channel #${channel} (${config.channels[channel]}) in guild ${display(
-				guild,
-			)} is not a text channel`,
+			new Error(
+				`Config channel #${channel} (${config.channels[channel]}) in guild ${display(
+					guild,
+				)} is not a text channel`,
+			),
 		);
 		return null;
 	}

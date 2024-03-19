@@ -315,7 +315,7 @@ export const backup = new Command({
 				return;
 			}
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to execute backup command.');
+			await LOGGER.error(e, 'Failed to execute backup command');
 		}
 
 		return;

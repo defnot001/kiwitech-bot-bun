@@ -228,7 +228,7 @@ export const info = new Command({
 				interaction.editReply({ files: [avatarURL] });
 			}
 		} catch (e) {
-			LOGGER.error(e, 'Failed to execute the info command.');
+			LOGGER.error(e, 'Failed to execute the info command');
 		}
 
 		return;

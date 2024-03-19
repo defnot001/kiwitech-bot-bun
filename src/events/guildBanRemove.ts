@@ -46,6 +46,6 @@ export const guildBanRemove = new DiscordEvent('guildBanRemove', async (guildUnb
 			);
 		}
 	} catch (e) {
-		await LOGGER.error(e, 'Failed to log the unban event.');
+		await LOGGER.error(e, 'Failed to log the unban event');
 	}
 });

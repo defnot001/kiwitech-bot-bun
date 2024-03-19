@@ -141,7 +141,7 @@ export const whitelist = new Command({
 			await interaction.editReply(
 				`There was an error trying to execute the whitlist ${subcommand} command!`,
 			);
-			await LOGGER.error(e, `Failed to execute the whitelist ${subcommand} command!`);
+			await LOGGER.error(e, `Failed to execute the whitelist ${subcommand} command`);
 		}
 
 		return;

@@ -106,7 +106,7 @@ export const mirror = new Command({
 
 					await stopServerAndWait(targetServer);
 				} catch (e) {
-					await LOGGER.error(e, 'Failed to get server status.');
+					await LOGGER.error(e, 'Failed to get server status');
 					await interaction.editReply('Failed to get server status. Aborting...');
 					return;
 				}
@@ -132,7 +132,7 @@ export const mirror = new Command({
 				} region files and started ${targetServer.toUpperCase()}!`,
 			);
 		} catch (e) {
-			LOGGER.error(e, 'Failed to mirror region files.');
+			LOGGER.error(e, 'Failed to mirror region files');
 			return interaction.editReply('An error occurred while trying to mirror the region files.');
 		}
 	},

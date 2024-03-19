@@ -72,7 +72,7 @@ class AnimalCommandHandler extends BaseKiwiCommandHandler {
 
 	private async fetchImage(url: string, animalChoice: AnimalChoice) {
 		const response = await fetch(url).catch(async (e) => {
-			await LOGGER.error(e, `Failed to fetch ${animalChoice} image.`);
+			await LOGGER.error(e, `Failed to fetch ${animalChoice} image`);
 			return null;
 		});
 
@@ -86,7 +86,7 @@ class AnimalCommandHandler extends BaseKiwiCommandHandler {
 
 	private async parseJSON(response: Response, animalChoice: AnimalChoice) {
 		const jsonResponse = (await response.json().catch(async (e) => {
-			await LOGGER.error(e, `Failed to parse JSON for ${animalChoice} image.`);
+			await LOGGER.error(e, `Failed to parse JSON for ${animalChoice} image`);
 			return null;
 		})) as FoxResponseJSON | DogCatResponseJSON | null;
 

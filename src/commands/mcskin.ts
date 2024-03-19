@@ -65,7 +65,7 @@ export const mcskin = new Command({
 			await interaction.editReply({ files: [skin] });
 		} catch (e) {
 			await interaction.editReply('An error occurred while trying to get the skin!');
-			await LOGGER.error(e, 'Failed to get the skin of a player.');
+			await LOGGER.error(e, 'Failed to get the skin of a player');
 
 			return;
 		}
@@ -92,7 +92,7 @@ async function getPlayerSkin(uuid: string, name: string, imageType: ImageType) {
 
 		return skinAttachment;
 	} catch (e) {
-		await LOGGER.error(e, `Failed to get the skin of ${name} from the crafatar API.`);
+		await LOGGER.error(e, `Failed to get the skin of ${name} from the crafatar API`);
 		return null;
 	}
 }

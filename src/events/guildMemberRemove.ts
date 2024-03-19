@@ -57,6 +57,6 @@ export const guildMemberRemove = new DiscordEvent('guildMemberRemove', async (me
 			modLog.send({ embeds: [kickEmbed] });
 		}
 	} catch (e) {
-		await LOGGER.error(e, 'Failed to log the leave event.');
+		await LOGGER.error(e, 'Failed to log the leave event');
 	}
 });

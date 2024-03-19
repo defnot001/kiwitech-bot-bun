@@ -175,7 +175,7 @@ export const waypoint = new Command({
 			}
 		} catch (e) {
 			await interaction.editReply(`Something went wrong trying to get the waypoint ${name}`);
-			await LOGGER.error(e, `Failed to get waypoint ${name}.`);
+			await LOGGER.error(e, `Failed to get waypoint ${name}`);
 		}
 	},
 });

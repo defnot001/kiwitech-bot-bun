@@ -19,7 +19,7 @@ await client.start({
 	botToken: process.env.DISCORD_BOT_TOKEN,
 	guildID: process.env.DISCORD_GUILD_ID,
 	globalCommands: false,
-	registerCommands: true,
+	registerCommands: false,
 });
 
 export const pgClient = await new Client({
@@ -29,7 +29,7 @@ export const pgClient = await new Client({
 pgClient
 	.connect()
 	.then(() => LOGGER.info('Connected to the database.'))
-	.catch(async (e) => await LOGGER.error(e));
+	.catch(async (e) => await LOGGER.error(e, 'Failed to connect to the database'));
 
 process.on('SIGINT', () => {
 	pgClient.connect();

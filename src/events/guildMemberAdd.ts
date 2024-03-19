@@ -31,7 +31,7 @@ export const guildMemberAdd = new DiscordEvent('guildMemberAdd', async (member) 
 
 		memberLog.send({ embeds: [joinEmbed] });
 	} catch (e) {
-		await LOGGER.error(e, 'Failed to log the join event.');
+		await LOGGER.error(e, 'Failed to log the join event');
 	}
 });
 

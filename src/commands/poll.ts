@@ -98,7 +98,7 @@ export const poll = new Command({
 				await message.react(emoji);
 			}
 		} catch (e) {
-			await LOGGER.error(e, 'Failed to execute the poll command.');
+			await LOGGER.error(e, 'Failed to execute the poll command');
 			await interaction.editReply('An error occurred while trying to create the poll!');
 		}
 

@@ -26,7 +26,7 @@ export const interactionCreate = new DiscordEvent('interactionCreate', async (in
 		await LOGGER.error(
 			`${display(
 				interaction.user,
-			)} used /${commandName}${channelAddon}${guildAddon} but the command does not exist.`,
+			)} used /${commandName}${channelAddon}${guildAddon} but the command does not exist`,
 		);
 
 		await interaction.reply({
@@ -48,7 +48,7 @@ export const interactionCreate = new DiscordEvent('interactionCreate', async (in
 	} catch (e) {
 		await LOGGER.error(
 			e,
-			`An uncaught error occurred while executing /${commandName}${channelAddon}${guildAddon}.`,
+			`An uncaught error occurred while executing /${commandName}${channelAddon}${guildAddon}`,
 		);
 
 		await interaction.reply({
