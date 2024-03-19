@@ -6,11 +6,12 @@ import {
 } from 'discord.js';
 import { client } from '..';
 import { display } from '../util/format';
-import { Event } from '../util/handler/classes/Event';
+import { DiscordEvent } from '../util/handler/classes/Event';
+
 import type { ExtendedInteraction } from '../util/handler/types';
 import { LOGGER } from '../util/logger';
 
-export const interactionCreate = new Event('interactionCreate', async (interaction) => {
+export const interactionCreate = new DiscordEvent('interactionCreate', async (interaction) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}

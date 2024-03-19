@@ -7,10 +7,10 @@ import {
 	parseApplication,
 	postApplicationToChannel,
 } from '../util/application';
-import { Event } from '../util/handler/classes/Event';
+import { DiscordEvent } from '../util/handler/classes/Event';
 import { LOGGER } from '../util/logger';
 
-export const application = new Event('ready', async (client) => {
+export const application = new DiscordEvent('ready', async (client) => {
 	const guild = client.guilds.cache.get(config.bot.guildID);
 
 	if (!guild) {

@@ -1,14 +1,18 @@
 import { inlineCode, time, userMention } from 'discord.js';
 import { JoinLeaveEmbedBuilder } from '../classes/JoinLeaveEmbedBuilder';
-import { Event } from '../util/handler/classes/Event';
-import { getJoinedAtComponent } from '../util/helpers';
+import { DiscordEvent } from '../util/handler/classes/Event';
+
+import { getJoinedAtComponent, getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 
-export const guildMemberAdd = new Event('guildMemberAdd', async (member) => {
+export const guildMemberAdd = new DiscordEvent('guildMemberAdd', async (member) => {
 	try {
 		LOGGER.info(`${member.user.username} joined ${member.guild.name}.`);
 
-		const memberLog = await getTextChannelFromID(member.guild, 'memberLog');
+		const memberLog = await getTextChannelFromConfig(member.guild, 'memberLog');
+
+		if (!memberLog) throw new Error('Cannot find memberLog channel.');
+
 		const joinedAt = getJoinedAtComponent(member);
 
 		const accountAge = new Date().valueOf() - member.user.createdAt.valueOf();

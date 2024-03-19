@@ -1,22 +1,25 @@
 import { AuditLogEvent, inlineCode, time, userMention } from 'discord.js';
 import { JoinLeaveEmbedBuilder } from '../classes/JoinLeaveEmbedBuilder';
 import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
-import { Event } from '../util/handler/classes/Event';
-import { getJoinedAtComponent } from '../util/helpers';
+import { DiscordEvent } from '../util/handler/classes/Event';
+
+import { getJoinedAtComponent, getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 
-export const guildMemberRemove = new Event('guildMemberRemove', async (member) => {
+export const guildMemberRemove = new DiscordEvent('guildMemberRemove', async (member) => {
 	try {
 		LOGGER.info(`${member.user.username} left ${member.guild.name}`);
 
 		const joinedAt = getJoinedAtComponent(member);
-		const memberLog = await getTextChannelFromID(member.guild, 'memberLog');
+		const memberLog = await getTextChannelFromConfig(member.guild, 'memberLog');
 
 		const userLeaveEmbed = new JoinLeaveEmbedBuilder(member, 'left', {
 			description: `Username: ${userMention(member.user.id)}\nUser ID: ${inlineCode(
 				member.user.id,
 			)}${joinedAt}\nLeft at: ${time(new Date(), 'f')} (${time(new Date(), 'R')})`,
 		});
+
+		if (!memberLog) throw new Error('Cannot find memberLog channel.');
 
 		memberLog.send({ embeds: [userLeaveEmbed] });
 
@@ -40,7 +43,9 @@ export const guildMemberRemove = new Event('guildMemberRemove', async (member) =
 			LOGGER.info(`${member.user.username} was kicked from ${member.guild.name}.`);
 
 			const executingMember = await member.guild.members.fetch(executor.id);
-			const modLog = await getTextChannelFromID(member.guild, 'modLog');
+			const modLog = await getTextChannelFromConfig(member.guild, 'modLog');
+
+			if (!modLog) throw new Error('Cannot find modLog channel.');
 
 			const kickEmbed = new ModerationEmbedBuilder({
 				target: member.user,

@@ -1,9 +1,11 @@
 import { AuditLogEvent } from 'discord.js';
 import { ModerationEmbedBuilder } from '../classes/ModerationEmbedBuilder';
-import { Event } from '../util/handler/classes/Event';
+import { DiscordEvent } from '../util/handler/classes/Event';
+
+import { getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 
-export const guildBanAdd = new Event('guildBanAdd', async (guildBan) => {
+export const guildBanAdd = new DiscordEvent('guildBanAdd', async (guildBan) => {
 	try {
 		const ban = guildBan.partial ? await guildBan.fetch() : guildBan;
 
@@ -25,7 +27,9 @@ export const guildBanAdd = new Event('guildBanAdd', async (guildBan) => {
 		}
 
 		const executingMember = await ban.guild.members.fetch(executor.id);
-		const modLog = await getTextChannelFromID(ban.guild, 'modLog');
+		const modLog = await getTextChannelFromConfig(ban.guild, 'modLog');
+
+		if (!modLog) throw new Error('Cannot find modLog channel.');
 
 		if (target.id === ban.user.id) {
 			const banEmbed = new ModerationEmbedBuilder({

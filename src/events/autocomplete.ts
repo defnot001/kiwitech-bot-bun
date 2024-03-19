@@ -6,11 +6,12 @@ import { getWaypoints } from '../commands/waypoint';
 import { getWhitelist } from '../commands/whitelist';
 import { type ServerChoice, config } from '../config';
 import TodoModelController from '../database/model/todoModelController';
-import { Event } from '../util/handler/classes/Event';
+import { DiscordEvent } from '../util/handler/classes/Event';
+
 import { LOGGER } from '../util/logger';
 import { getModNames, ptero } from '../util/pterodactyl';
 
-export const autocomplete = new Event('interactionCreate', async (interaction) => {
+export const autocomplete = new DiscordEvent('interactionCreate', async (interaction) => {
 	if (!interaction.isAutocomplete()) return;
 	if (!interaction.guild) return;
 

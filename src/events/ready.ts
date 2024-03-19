@@ -1,12 +1,12 @@
 import { ActivityType, TextChannel } from 'discord.js';
 import { config } from '../config';
 import { display } from '../util/format';
-import { Event } from '../util/handler/classes/Event';
+import { DiscordEvent } from '../util/handler/classes/Event';
 import { LOGGER } from '../util/logger';
 // import { client } from '../index';
 // import { config } from '../config';
 
-export const ready = new Event('ready', async (c) => {
+export const ready = new DiscordEvent('ready', async (c) => {
 	c.user.setActivity('Commands', { type: ActivityType.Listening });
 	LOGGER.info(`Bot is ready! Logged in as ${display(c.user)}.`);
 
