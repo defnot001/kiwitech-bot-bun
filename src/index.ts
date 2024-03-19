@@ -1,6 +1,5 @@
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Client } from 'pg';
-import { projectPaths } from './config';
 import { ExtendedClient } from './util/handler/classes/ExtendedClient';
 import { LOGGER } from './util/logger';
 
@@ -19,8 +18,6 @@ export const client = new ExtendedClient({
 await client.start({
 	botToken: process.env.DISCORD_BOT_TOKEN,
 	guildID: process.env.DISCORD_GUILD_ID,
-	commandsPath: projectPaths.commands,
-	eventsPath: projectPaths.events,
 	globalCommands: false,
 	registerCommands: true,
 });

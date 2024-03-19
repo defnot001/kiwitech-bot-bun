@@ -1,24 +1,78 @@
-import { pathToFileURL } from 'bun';
-import {
-	type ApplicationCommandDataResolvable,
-	Client,
-	type ClientEvents,
-	Collection,
-} from 'discord.js';
-import { glob } from 'glob';
+import { type ApplicationCommandDataResolvable, Client, Collection } from 'discord.js';
 import type { ClientStartOptions, CommandOptions, RegisterCommandOptions } from '../types';
-import type { Event } from './Event';
 import { LOGGER } from '../../logger';
-import { display } from '../../format';
+
+import { animal } from '../../../commands/animal';
+import { application } from '../../../commands/application';
+import { backup } from '../../../commands/backup';
+import { help } from '../../../commands/help';
+import { idban } from '../../../commands/idban';
+import { info } from '../../../commands/info';
+import { mcserver } from '../../../commands/mcserver';
+import { mcskin } from '../../../commands/mcskin';
+import { member } from '../../../commands/member';
+import { mirror } from '../../../commands/mirror';
+import { mods } from '../../../commands/mods';
+import { pingpong } from '../../../commands/pingpong';
+import { poll } from '../../../commands/poll';
+import { rcon } from '../../../commands/rcon';
+import { scoreboard } from '../../../commands/scoreboard';
+import { status } from '../../../commands/status';
+import { todo } from '../../../commands/todo';
+import { trialinfo } from '../../../commands/trialinfo';
+import { waypoint } from '../../../commands/waypoint';
+import { whitelist } from '../../../commands/whitelist';
+
+import { application as applicationEvent } from '../../../events/application';
+import { autocomplete } from '../../../events/autocomplete';
+import { guildBanAdd } from '../../../events/guildBanAdd';
+import { guildBanRemove } from '../../../events/guildBanRemove';
+import { guildMemberAdd } from '../../../events/guildMemberAdd';
+import { guildMemberRemove } from '../../../events/guildMemberRemove';
+import { interactionCreate } from '../../../events/interactionCreate';
+import { ready } from '../../../events/ready';
+
+const COMMANDS = [
+	animal,
+	application,
+	backup,
+	help,
+	idban,
+	info,
+	mcserver,
+	mcskin,
+	member,
+	mirror,
+	mods,
+	pingpong,
+	poll,
+	rcon,
+	scoreboard,
+	status,
+	todo,
+	trialinfo,
+	waypoint,
+	whitelist,
+];
+
+const EVENTS = [
+	applicationEvent,
+	autocomplete,
+	guildBanAdd,
+	guildBanRemove,
+	guildMemberAdd,
+	guildMemberRemove,
+	interactionCreate,
+	ready,
+];
 
 export class ExtendedClient extends Client {
 	public commands: Collection<string, CommandOptions> = new Collection();
 
 	public async start(options: ClientStartOptions) {
-		const { botToken, guildID, commandsPath, eventsPath, globalCommands, registerCommands } =
-			options;
+		const { botToken, guildID, globalCommands, registerCommands } = options;
 
-		await this.setModules(commandsPath, eventsPath);
+		await this.setModules();
 
 		if (registerCommands) {
 			const slashCommands: ApplicationCommandDataResolvable[] = this.commands.map(
@@ -56,7 +110,7 @@ export class ExtendedClient extends Client {
 
 			await guild.commands.set([]);
 
-			LOGGER.info(`Removed all commands from ${display(guild)}.`);
+			LOGGER.info(`Successfully removed commands from ${guild.name}.`);
 		} else {
 			if (!this.application) {
 				throw new Error('Cannot find the application to remove the commands from!');
@@ -64,7 +118,7 @@ export class ExtendedClient extends Client {
 
 			await this.application.commands.set([]);
 
-			LOGGER.info('Removed all global commands.');
+			LOGGER.info('Successfully removed all commands.');
 		}
 	}
 
@@ -80,7 +134,7 @@ export class ExtendedClient extends Client {
 
 			await guild.commands.set(commands);
 
-			LOGGER.info(`Registered ${commands.length} commands to ${display(guild)}.`);
+			LOGGER.info(`Successfully registered ${commands.length} commands to ${guild.name}.`);
 		} else {
 			if (!this.application) {
 				throw new Error('Cannot find the application to register the commands to');
@@ -88,36 +142,22 @@ export class ExtendedClient extends Client {
 
 			await this.application.commands.set(commands);
 
-			LOGGER.info(`Registered ${commands.length}} global commands.`);
+			LOGGER.info(`Successfully registered ${commands.length} global commands.`);
 		}
 	}
 
-	private async setModules(commandsPath: string, eventsPath: string) {
-		const commandPaths: string[] = await glob.glob(`${commandsPath.toString()}/*{.ts,.js}`);
-
-		for await (const path of commandPaths) {
-			const fileURL = pathToFileURL(path);
-			const command: CommandOptions = await this.importFile(fileURL.toString());
-
+	private async setModules() {
+		for (const command of COMMANDS) {
 			if (!command.name) {
-				throw new Error(`Command at path ${path} is missing the name property.`);
+				throw new Error('Command is missing the name property.');
 			}
 
 			this.commands.set(command.name, command);
 		}
 
-		const eventPaths: string[] = await glob.glob(`${eventsPath.toString()}/*{.ts,.js}`);
-
-		for await (const path of eventPaths) {
-			const fileURL = pathToFileURL(path);
-			const event: Event<keyof ClientEvents> = await this.importFile(fileURL.toString());
-
-			this.on(event.name, event.execute);
+		for (const event of EVENTS) {
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			this.on(event.name, event.execute as any);
 		}
-	}
-
-	private async importFile(filePath: string) {
-		const file = await import(filePath);
-		return file.default;
 	}
 }
