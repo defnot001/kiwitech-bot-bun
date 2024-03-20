@@ -1,4 +1,4 @@
-import type { Guild, GuildMember, User } from 'discord.js';
+import { type Channel, type Guild, type GuildMember, TextChannel, type User } from 'discord.js';
 import type { ExtendedClient } from './handler/classes/ExtendedClient';
 import type { ExtendedInteraction } from './handler/types';
 
@@ -12,6 +12,7 @@ export abstract class BaseKiwiCommandHandler implements KiwiCommandHandler {
 	protected readonly member: GuildMember;
 	protected readonly user: User;
 	private _guild: Guild | null;
+	private _channel: Channel | null;
 
 	public constructor(options: {
 		interaction: ExtendedInteraction;
@@ -19,9 +20,10 @@ export abstract class BaseKiwiCommandHandler implements KiwiCommandHandler {
 	}) {
 		this.interaction = options.interaction;
 		this.client = options.client;
-		this._guild = this.interaction.guild;
 		this.member = this.interaction.member;
 		this.user = this.interaction.user;
+		this._guild = this.interaction.guild;
+		this._channel = this.interaction.channel;
 	}
 
 	public async init(): Promise<boolean> {
@@ -30,6 +32,16 @@ export abstract class BaseKiwiCommandHandler implements KiwiCommandHandler {
 				await this.interaction.editReply('This command can only be used in a server.');
 			} else {
 				await this.interaction.reply('This command can only be used in a server.');
+			}
+
+			return false;
+		}
+
+		if (!this._channel || !(this._channel instanceof TextChannel)) {
+			if (this.interaction.deferred || this.interaction.replied) {
+				await this.interaction.editReply('This command can only be used in a text channel.');
+			} else {
+				await this.interaction.reply('This command can only be used in a text channel.');
 			}
 
 			return false;
@@ -46,5 +58,15 @@ export abstract class BaseKiwiCommandHandler implements KiwiCommandHandler {
 		}
 
 		return this._guild;
+	}
+
+	protected get channel(): TextChannel {
+		if (!this._channel || !(this._channel instanceof TextChannel)) {
+			throw new Error(
+				'Channel is not available. Ensure init() is called and the command is used in a text channel context.',
+			);
+		}
+
+		return this._channel as TextChannel;
 	}
 }
