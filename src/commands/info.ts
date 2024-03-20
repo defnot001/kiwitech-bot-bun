@@ -1,18 +1,11 @@
-import {
-	ApplicationCommandOptionType,
-	type Collection,
-	type EmbedField,
-	GuildMember,
-	type Role,
-	type Snowflake,
-	time,
-} from 'discord.js';
+import { ApplicationCommandOptionType, type Role, type User } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
 import { Command } from '../util/handler/classes/Command';
-import { capitalizeFirstLetter } from '../util/helpers';
 import { escapeMarkdown } from '../util/helpers';
 import { LOGGER } from '../util/logger';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
+import { display, displayFormatted, displayTime } from '../util/format';
 
 export const info = new Command({
 	name: 'info',
@@ -60,177 +53,240 @@ export const info = new Command({
 			],
 		},
 	],
-	execute: async ({ interaction, args }) => {
+	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply();
 		const subcommand = args.getSubcommand() as 'server' | 'user' | 'members' | 'admins' | 'avatar';
-		const { guild } = interaction;
 
-		if (!guild) {
-			return interaction.reply('This command can only be used in a server!');
+		const handler = new InfoCommandHandler({ interaction, client });
+		if (!(await handler.init())) return;
+
+		if (subcommand === 'server') {
+			await handler.handleServer();
+			return;
 		}
 
-		const guildIconURL: string | null = guild.iconURL();
+		if (subcommand === 'user') {
+			const targetUser = args.getUser('target');
 
-		if (!guildIconURL) {
-			return interaction.reply(`Cannot find the server icon of ${interaction.guild}!`);
-		}
-
-		try {
-			if (subcommand === 'server') {
-				// generates an invite link, unless there there is already one that satisfies the specifications.
-				const inviteLink = await guild.invites.create(config.channels.invite, {
-					maxAge: 0,
-					maxUses: 0,
-					unique: false,
-				});
-
-				const serverEmbed = new KoalaEmbedBuilder(interaction.user, {
-					title: `Server Info ${guild.name}`,
-					thumbnail: {
-						url: guildIconURL,
-					},
-					fields: [
-						{
-							name: 'Membercount',
-							value: `${guild.memberCount}`,
-						},
-						{
-							name: 'Guild created',
-							value: `${time(guild.createdAt, 'D')}\n(${time(guild.createdAt, 'R')})`,
-						},
-						{
-							name: 'Permanent Invite Link',
-							value: inviteLink.url,
-						},
-					],
-				});
-
-				interaction.editReply({ embeds: [serverEmbed] });
-
+			if (!targetUser) {
+				await interaction.editReply('Cannot find that user!');
 				return;
 			}
 
-			if (subcommand === 'user') {
-				const targetMember = args.getMember('target');
-				const targetUser = args.getUser('target');
-
-				if (!targetUser) {
-					interaction.reply('Cannot find that user!');
-					return;
-				}
-
-				const userFields: EmbedField[] = [
-					{ name: 'Username', value: targetUser.username, inline: false },
-					{ name: 'User ID', value: targetUser.id, inline: false },
-					{
-						name: 'Joined Discord on',
-						value: `${time(targetUser.createdAt, 'D')}\n(${time(targetUser.createdAt, 'R')})`,
-						inline: true,
-					},
-				];
-
-				const userEmbed = new KoalaEmbedBuilder(interaction.user, {
-					title: 'User Info',
-					thumbnail: {
-						url: targetUser.displayAvatarURL(),
-					},
-					fields: userFields,
-				});
-
-				if (targetMember instanceof GuildMember) {
-					const memberFields: EmbedField[] = [];
-
-					if (targetMember.joinedAt) {
-						const joinedField: EmbedField = {
-							name: 'Joined this server on',
-							value: `${time(targetMember.joinedAt, 'D')}\n(${time(targetMember.joinedAt, 'R')})`,
-							inline: true,
-						};
-
-						memberFields.push(joinedField);
-					}
-
-					const roles: Collection<Snowflake, Role> = targetMember.roles.cache
-						.filter((role) => role.name !== '@everyone')
-						.sort((roleA, roleB) => roleB.position - roleA.position);
-
-					const roleField: EmbedField = {
-						name: 'Roles',
-						value: roles.toJSON().join(', ') || 'None',
-						inline: false,
-					};
-
-					memberFields.push(roleField);
-
-					userEmbed.setFields([...userFields, ...memberFields]);
-				}
-
-				interaction.editReply({ embeds: [userEmbed] });
-
-				return;
-			}
-
-			if (subcommand === 'members' || subcommand === 'admins') {
-				const allMembers: Collection<Snowflake, GuildMember> = await guild.members.fetch();
-
-				const targetMembers: GuildMember[] = [];
-
-				for (const memberTuple of allMembers) {
-					const member = memberTuple[1];
-
-					if (member.roles.cache.has(config.roles[subcommand])) {
-						targetMembers.push(member);
-					}
-				}
-
-				const sortedMemberNamesString: string = escapeMarkdown(
-					targetMembers
-						.map((m) => m.user.username)
-						.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-						.join('\n'),
-				);
-
-				// using nullish coalescing to protect the function from strings that are less than 2 characters long
-				const capitalizedSubcommand = capitalizeFirstLetter(subcommand) ?? subcommand;
-
-				const roleEmbed = new KoalaEmbedBuilder(interaction.user, {
-					title: `Info ${capitalizedSubcommand}`,
-					thumbnail: {
-						url: guildIconURL,
-					},
-					fields: [
-						{
-							name: `Count ${capitalizedSubcommand}`,
-							value: `${targetMembers.length}`,
-						},
-						{
-							name: `List ${capitalizedSubcommand}`,
-							value: sortedMemberNamesString,
-						},
-					],
-				});
-
-				interaction.editReply({ embeds: [roleEmbed] });
-
-				return;
-			}
-
-			if (subcommand === 'avatar') {
-				const target = args.getUser('target');
-
-				if (!target) {
-					interaction.editReply('Cannot find that user!');
-					return;
-				}
-
-				const avatarURL: string = target.displayAvatarURL({ size: 4096 });
-
-				interaction.editReply({ files: [avatarURL] });
-			}
-		} catch (e) {
-			LOGGER.error(e, 'Failed to execute the info command');
+			await handler.handleUser({ targetUser });
+			return;
 		}
 
-		return;
+		if (subcommand === 'members') {
+			await handler.handleMembers();
+			return;
+		}
+
+		if (subcommand === 'admins') {
+			await handler.handleAdmins();
+			return;
+		}
+
+		if (subcommand === 'avatar') {
+			const targetUser = args.getUser('target');
+
+			if (!targetUser) {
+				await interaction.editReply('Cannot find that user!');
+				return;
+			}
+
+			await handler.handleAvatar({ targetUser });
+			return;
+		}
 	},
 });
+
+class InfoCommandHandler extends BaseKiwiCommandHandler {
+	public async handleServer() {
+		const inviteLink = await this.guild.invites
+			.create(config.channels.invite, {
+				maxAge: 0,
+				maxUses: 0,
+				unique: false,
+			})
+			.catch(async (e) => {
+				await LOGGER.error(e, `Failed to create an invite link for the ${display(this.guild)}`);
+				return null;
+			});
+
+		if (!inviteLink) {
+			await this.interaction.editReply(
+				`Failed to create an invite link for the ${display(this.guild)}`,
+			);
+			return;
+		}
+
+		const serverEmbed = new KoalaEmbedBuilder(this.interaction.user, {
+			title: `Server Info ${this.guild.name}`,
+			fields: [
+				{
+					name: 'Membercount',
+					value: `${this.guild.memberCount}`,
+				},
+				{
+					name: 'Guild created',
+					value: displayTime(this.guild.createdAt),
+				},
+				{
+					name: 'Permanent Invite Link',
+					value: inviteLink.url,
+				},
+			],
+		});
+
+		if (this.guild.iconURL()) {
+			serverEmbed.setThumbnail(this.guild.iconURL());
+		}
+
+		await this.interaction.editReply({ embeds: [serverEmbed] });
+	}
+	public async handleUser(args: { targetUser: User }) {
+		const targetUser = args.targetUser;
+
+		const targetMember = await this.guild.members.fetch(args.targetUser.id).catch(() => {
+			LOGGER.debug(
+				`${display(args.targetUser)} is not a member of ${display(
+					this.guild,
+				)}. Fetching user info instead.`,
+			);
+			return null;
+		});
+
+		const userEmbed = new KoalaEmbedBuilder(this.interaction.user, {
+			title: `User Info ${targetUser.globalName ?? targetUser.username}`,
+			thumbnail: {
+				url: targetUser.displayAvatarURL(),
+			},
+			fields: [
+				{ name: 'Username', value: targetUser.username, inline: false },
+				{ name: 'User ID', value: targetUser.id, inline: false },
+				{
+					name: 'Joined Discord on',
+					value: displayTime(args.targetUser.createdAt),
+					inline: true,
+				},
+			],
+		});
+
+		if (targetMember) {
+			if (targetMember.joinedAt) {
+				userEmbed.addFields({
+					name: `Joined ${this.guild.name} on`,
+					value: displayTime(targetMember.joinedAt),
+					inline: true,
+				});
+			}
+
+			const roles = targetMember.roles.cache
+				.filter((role) => role.id !== this.guild.id)
+				.sort((roleA, roleB) => roleB.position - roleA.position)
+				.map((role) => `<@&${role.id}>`)
+				.join(', ');
+
+			userEmbed.addFields({
+				name: 'Roles',
+				value: roles.length ? roles : 'None',
+				inline: false,
+			});
+		}
+	}
+	public async handleMembers() {
+		const membersRole = await this.getGuildRole('members');
+		if (!membersRole) return;
+
+		const membersEntries = this.getEmbedEntriesForRoleMembers(membersRole);
+
+		const membersEmbed = new KoalaEmbedBuilder(this.interaction.user, {
+			title: 'Info Members',
+			fields: [
+				{
+					name: 'Members Count',
+					value: `${membersRole.members.size}`,
+				},
+				{
+					name: 'Members List',
+					value: membersEntries.join('\n'),
+				},
+			],
+		});
+
+		if (this.guild.iconURL()) {
+			membersEmbed.setThumbnail(this.guild.iconURL());
+		}
+
+		await this.interaction.editReply({ embeds: [membersEmbed] });
+	}
+	public async handleAdmins() {
+		const adminRole = await this.getGuildRole('admins');
+		if (!adminRole) return;
+
+		const adminEntries = this.getEmbedEntriesForRoleMembers(adminRole);
+
+		const adminEmbed = new KoalaEmbedBuilder(this.interaction.user, {
+			title: 'Info Admins',
+			fields: [
+				{
+					name: 'Admins List',
+					value: adminEntries.join('\n'),
+				},
+			],
+		});
+
+		if (this.guild.iconURL()) {
+			adminEmbed.setThumbnail(this.guild.iconURL());
+		}
+
+		await this.interaction.editReply({ embeds: [adminEmbed] });
+	}
+	public async handleAvatar(args: { targetUser: User }) {
+		await this.interaction.editReply({ files: [args.targetUser.displayAvatarURL({ size: 4096 })] });
+	}
+
+	/**
+	 * Returns the role of the specified type from the guild.
+	 * @sideeffect Logs errors and edits the interaction reply if there are any errors.
+	 */
+	private async getGuildRole(role: 'admins' | 'members') {
+		const roleId = config.roles[role];
+
+		const guildRole = await this.guild.roles.fetch(roleId).catch(async (e) => {
+			await LOGGER.error(
+				e,
+				`Failed to fetch the ${role} role (${roleId}) of ${display(this.guild)}`,
+			);
+			return null;
+		});
+
+		if (!guildRole) {
+			await this.interaction.editReply(
+				`Failed to fetch the ${role} role (${roleId}) of ${displayFormatted(this.guild)}`,
+			);
+			return null;
+		}
+
+		return guildRole;
+	}
+
+	/**
+	 * Returns an array of strings that contain the members of the specified role.
+	 * @sideeffect No side effects.
+	 */
+	private getEmbedEntriesForRoleMembers(role: Role): string[] {
+		const members = role.members
+			.sort((a, b) => {
+				return a.user.username
+					.toLocaleLowerCase()
+					.localeCompare(b.user.username.toLocaleLowerCase());
+			})
+			.map((member) => {
+				return `${escapeMarkdown(member.user.username)} (${escapeMarkdown(member.user.id)})`;
+			});
+
+		return members;
+	}
+}
