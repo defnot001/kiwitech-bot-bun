@@ -85,6 +85,8 @@ export const backup = new Command({
 			serverChoice: args.getString('server', true) as ServerChoice,
 		});
 
+		if (!(await handler.init())) return;
+
 		if (subcommand === 'list') {
 			await handler.handleList();
 			return;
