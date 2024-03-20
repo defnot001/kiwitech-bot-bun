@@ -1,30 +1,31 @@
 {
-  "name": "kiwitech-bot",
-  "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "@biomejs/biome": "1.6.1",
-    "@types/pg": "^8.11.2",
-    "bun-types": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "@napi-rs/canvas": "^0.1.44",
-    "discord.js": "^14.14.1",
-    "pg": "^8.11.3",
-    "ptero-client": "^1.1.3",
-    "sharp": "^0.33.1"
-  },
-  "scripts": {
-    "dev": "bun run src/index.ts",
-    "dev:watch": "bun run --watch src/index.ts",
-    "format": "bunx @biomejs/biome format src --write",
-    "lint": "bunx @biomejs/biome check --apply src",
-    "build:prod": "NODE_ENV=production bun build src/index.ts --target=bun --outfile=src/bot.js --minify",
-    "deploy:prod": "bun run build && NODE_ENV=production bun run src/bot.js",
-    "migrate:dev": "bun run src/database/migration.ts",
-    "migrate:prod": "NODE_ENV=production bun run src/database/migration.ts"
-  }
+	"name": "kiwitech-bot",
+	"module": "index.ts",
+	"type": "module",
+	"devDependencies": {
+		"@biomejs/biome": "1.6.1",
+		"@types/pg": "^8.11.2",
+		"bun-types": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@napi-rs/canvas": "^0.1.44",
+		"discord.js": "^14.14.1",
+		"pg": "^8.11.3",
+		"ptero-client": "^1.1.3",
+		"sharp": "^0.33.1"
+	},
+	"scripts": {
+		"dev": "bun run src/index.ts",
+		"dev:watch": "bun run --watch src/index.ts",
+		"check:ts": "bunx tsc --noEmit",
+		"format": "bunx @biomejs/biome format src --write",
+		"lint": "bunx @biomejs/biome check --apply src",
+		"build:prod": "NODE_ENV=production bun build src/index.ts --target=bun --outfile=src/bot.js --minify",
+		"deploy:prod": "bun run build && NODE_ENV=production bun run src/bot.js",
+		"migrate:dev": "bun run src/database/migration.ts",
+		"migrate:prod": "NODE_ENV=production bun run src/database/migration.ts"
+	}
 }
