@@ -11,15 +11,15 @@ import { mcserver } from '../../../commands/mcserver';
 import { mcskin } from '../../../commands/mcskin';
 import { member } from '../../../commands/member';
 import { mirror } from '../../../commands/mirror';
-import { mods } from '../../../commands/mods';
-import { pingpong } from '../../../commands/pingpong';
-import { rcon } from '../../../commands/rcon';
-import { scoreboard } from '../../../commands/scoreboard';
-import { status } from '../../../commands/status';
-import { todo } from '../../../commands/todo';
-import { trialinfo } from '../../../commands/trialinfo';
-import { waypoint } from '../../../commands/waypoint';
-import { whitelist } from '../../../commands/whitelist';
+// import { mods } from '../../../commands/mods';
+// import { pingpong } from '../../../commands/pingpong';
+// import { rcon } from '../../../commands/rcon';
+// import { scoreboard } from '../../../commands/scoreboard';
+// import { status } from '../../../commands/status';
+// import { todo } from '../../../commands/todo';
+// import { trialinfo } from '../../../commands/trialinfo';
+// import { waypoint } from '../../../commands/waypoint';
+// import { whitelist } from '../../../commands/whitelist';
 
 import { application as applicationEvent } from '../../../events/application';
 import { autocomplete } from '../../../events/autocomplete';
@@ -40,15 +40,15 @@ const COMMANDS = [
 	mcskin,
 	member,
 	mirror,
-	mods,
-	pingpong,
-	rcon,
-	scoreboard,
-	status,
-	todo,
-	trialinfo,
-	waypoint,
-	whitelist,
+	// mods,
+	// pingpong,
+	// rcon,
+	// scoreboard,
+	// status,
+	// todo,
+	// trialinfo,
+	// waypoint,
+	// whitelist,
 ];
 
 const EVENTS = [
