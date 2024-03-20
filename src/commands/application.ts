@@ -641,9 +641,19 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 
 		try {
 			if (minecraftProfile) {
-				await MemberModelController.addMember(targetUser.id, true, [minecraftProfile.id]);
+				await MemberModelController.addMember({
+					discordID: targetUser.id,
+					trialMember: true,
+					minecraftUUIDs: [minecraftProfile.id],
+					memberSince: new Date(),
+				});
 			} else {
-				await MemberModelController.addMember(targetUser.id, true, []);
+				await MemberModelController.addMember({
+					discordID: targetUser.id,
+					trialMember: true,
+					minecraftUUIDs: [],
+					memberSince: new Date(),
+				});
 			}
 		} catch (e) {
 			await LOGGER.error(e, `Failed to add member ${displayFormatted(targetUser)}`);

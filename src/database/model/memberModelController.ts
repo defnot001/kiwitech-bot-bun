@@ -22,15 +22,17 @@ export default abstract class MemberModelController {
 		return query.rows as MCMember[];
 	}
 
-	static async addMember(
-		discordID: Snowflake,
-		trialMember: boolean,
-		minecraftUUIDs: string[],
-		memberSince?: Date,
-	) {
+	static async addMember(options: {
+		discordID: Snowflake;
+		trialMember: boolean;
+		minecraftUUIDs: string[];
+		memberSince: Date;
+	}) {
+		const { discordID, trialMember, minecraftUUIDs, memberSince } = options;
+
 		const query = await pgClient.query(
 			'INSERT INTO members (discord_id, trial_member, minecraft_uuids, member_since) VALUES ($1, $2, $3, $4) RETURNING *',
-			[discordID, trialMember, minecraftUUIDs, memberSince ?? new Date()],
+			[discordID, trialMember, minecraftUUIDs, memberSince],
 		);
 
 		return query.rows[0] as MCMember;
@@ -39,22 +41,31 @@ export default abstract class MemberModelController {
 	static async updateMember(
 		discordID: Snowflake,
 		updates: {
-			trialMember?: boolean;
-			minecraftUUIDs?: string[];
-			memberSince?: Date;
+			trialMember?: boolean | null;
+			minecraftUUIDs?: string[] | null;
+			memberSince?: Date | null;
 		},
 	) {
 		const currentMember = await MemberModelController.getMember(discordID);
 
+		const trialMember =
+			updates.trialMember !== undefined && updates.trialMember === null
+				? updates.trialMember
+				: currentMember.trial_member;
+
+		const minecraftUUIDs =
+			updates.minecraftUUIDs !== undefined && updates.minecraftUUIDs === null
+				? updates.minecraftUUIDs
+				: currentMember.minecraft_uuids;
+
+		const memberSince =
+			updates.memberSince !== undefined && updates.memberSince === null
+				? updates.memberSince
+				: currentMember.member_since;
+
 		const query = await pgClient.query(
 			'UPDATE members SET trial_member = $1, minecraft_uuids = $2, member_since = $3, updated_at = $4 WHERE discord_id = $5 RETURNING *',
-			[
-				updates.trialMember ?? currentMember.trial_member,
-				updates.minecraftUUIDs ?? currentMember.minecraft_uuids,
-				updates.memberSince ?? currentMember.member_since,
-				new Date(),
-				discordID,
-			],
+			[trialMember, minecraftUUIDs, memberSince, new Date(), discordID],
 		);
 
 		return query.rows[0] as MCMember;
