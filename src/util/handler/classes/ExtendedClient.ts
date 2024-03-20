@@ -6,7 +6,6 @@ import { animal } from '../../../commands/animal';
 import { application } from '../../../commands/application';
 import { backup } from '../../../commands/backup';
 import { help } from '../../../commands/help';
-import { idban } from '../../../commands/idban';
 import { info } from '../../../commands/info';
 import { mcserver } from '../../../commands/mcserver';
 import { mcskin } from '../../../commands/mcskin';
@@ -37,7 +36,6 @@ const COMMANDS = [
 	application,
 	backup,
 	help,
-	idban,
 	info,
 	mcserver,
 	mcskin,
