@@ -19,7 +19,7 @@ await client.start({
 	botToken: process.env.DISCORD_BOT_TOKEN,
 	guildID: process.env.DISCORD_GUILD_ID,
 	globalCommands: false,
-	registerCommands: false,
+	registerCommands: true,
 });
 
 export const pgClient = await new Client({
