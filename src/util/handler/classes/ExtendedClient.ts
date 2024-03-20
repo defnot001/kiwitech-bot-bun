@@ -13,7 +13,6 @@ import { member } from '../../../commands/member';
 import { mirror } from '../../../commands/mirror';
 import { mods } from '../../../commands/mods';
 import { pingpong } from '../../../commands/pingpong';
-import { poll } from '../../../commands/poll';
 import { rcon } from '../../../commands/rcon';
 import { scoreboard } from '../../../commands/scoreboard';
 import { status } from '../../../commands/status';
@@ -43,7 +42,6 @@ const COMMANDS = [
 	mirror,
 	mods,
 	pingpong,
-	poll,
 	rcon,
 	scoreboard,
 	status,
