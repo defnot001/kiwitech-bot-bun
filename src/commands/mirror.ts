@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ApplicationCommandOptionType } from 'discord.js';
 import { config } from '../config';
 import type { ServerChoice } from '../config';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
-import MCStatus from '../util/mcstatus';
-import { getServerState, ptero } from '../util/pterodactyl';
+import { ptero } from '../util/pterodactyl';
 
 export const mirror = new Command({
 	name: 'mirror',
@@ -55,231 +54,263 @@ export const mirror = new Command({
 			required: true,
 		},
 	],
-	execute: async ({ interaction, args }) => {
+	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply();
 
-		const server = args.getString('server', true) as 'survival' | 'creative';
-		const dimension = args.getString('dimension', true) as 'overworld' | 'nether' | 'end';
-		const regionsArg = args.getString('regions', true);
+		const handler = new MirrorCommandHandler({ interaction, client });
+		if (!(await handler.init())) return;
 
-		const sourceServer = server === 'survival' ? 'smp' : 'cmp';
-		const targetServer = server === 'survival' ? 'copy' : 'cmp2';
-
-		try {
-			const fileNames = parseMinecraftRegions(regionsArg);
-
-			if (!fileNames || fileNames.length === 0) {
-				return interaction.editReply('Please provide valid regions to mirror!');
-			}
-
-			if (fileNames.length > 12) {
-				return interaction.editReply('You can only mirror 12 regions at a time!');
-			}
-
-			await interaction.editReply('Checking if regions exist...');
-
-			if (!(await areRegionsIncluded(fileNames, dimension, sourceServer))) {
-				return interaction.editReply('One or more regions do not exist on the source server!');
-			}
-
-			await interaction.editReply(
-				'User provided regions are valid! Checking if target server is offline...',
-			);
-
-			const serverState = await getServerState(targetServer);
-
-			if (serverState !== 'offline') {
-				try {
-					const playerCount = await getPlayerCount(targetServer);
-
-					if (playerCount === null) {
-						return interaction.editReply('Failed to get the current playercount. Aborting... ');
-					}
-
-					if (playerCount > 0) {
-						return interaction.editReply(
-							`There are currently players on ${targetServer}! Please wait until they are all offline before mirroring.`,
-						);
-					}
-
-					await interaction.editReply('Stopping target server...');
-
-					await stopServerAndWait(targetServer);
-				} catch (e) {
-					await LOGGER.error(e, 'Failed to get server status');
-					await interaction.editReply('Failed to get server status. Aborting...');
-					return;
-				}
-			}
-
-			await interaction.editReply(
-				`Mirroring ${fileNames.length} region file(s) from ${sourceServer} to ${targetServer}...`,
-			);
-
-			const mirrorPromises = fileNames.map((fileName) =>
-				mirrorRegionFiles(sourceServer, targetServer, dimension, fileName),
-			);
-
-			await Promise.all(mirrorPromises);
-
-			await interaction.editReply('All files copied! Starting target server...');
-
-			await startServerAndWait(targetServer);
-
-			return interaction.editReply(
-				`Successfully mirrored ${
-					fileNames.length
-				} region files and started ${targetServer.toUpperCase()}!`,
-			);
-		} catch (e) {
-			LOGGER.error(e, 'Failed to mirror region files');
-			return interaction.editReply('An error occurred while trying to mirror the region files.');
-		}
+		await handler.handleMirror({
+			serverType: args.getString('server', true) as ServerType,
+			dimension: args.getString('dimension', true) as Dimension,
+			regions: args.getString('regions', true),
+		});
 	},
 });
 
+class MirrorCommandHandler extends BaseKiwiCommandHandler {
+	public async handleMirror(args: {
+		serverType: ServerType;
+		dimension: Dimension;
+		regions: string;
+	}) {
+		const fileNames = this.parseRegions(args.regions);
+
+		if (!fileNames || fileNames.length === 0) {
+			await LOGGER.error(new Error('Failed to parse regions'));
+			await this.interaction.editReply('Please provide valid regions to mirror!');
+			return;
+		}
+
+		if (fileNames.length > 12) {
+			await this.interaction.editReply('You can only mirror 12 regions at a time!');
+			return;
+		}
+
+		const sourceServer = args.serverType === 'survival' ? 'smp' : 'cmp';
+		const targetServer = args.serverType === 'survival' ? 'copy' : 'cmp2';
+
+		await this.interaction.editReply('Checking if regions exist...');
+
+		if (
+			!(await this.doRegionsExist({
+				dimension: args.dimension,
+				regionFileNames: fileNames,
+				serverChoice: sourceServer,
+			}))
+		) {
+			return;
+		}
+
+		await this.interaction.editReply(
+			'User provided regions are valid! Checking if target server is offline...',
+		);
+
+		const serverState = await ptero.servers
+			.getResourceUsage(config.mcConfig[targetServer].serverId)
+			.catch(async (e) => {
+				await LOGGER.error(e, `Failed to get server status for ${targetServer}`);
+				return null;
+			});
+
+		if (!serverState) {
+			await this.interaction.editReply(
+				`Failed to get server status for ${targetServer}. Aborted mirror.`,
+			);
+			return;
+		}
+
+		if (serverState.current_state !== 'offline') {
+			await this.interaction.editReply(
+				`Target server ${targetServer} must be offline to mirror regions. Please stop the server and try again.`,
+			);
+			return;
+		}
+
+		await this.interaction.editReply(
+			`Target server ${targetServer} is offline. Starting mirror...`,
+		);
+
+		const mirrorSuccess = await this.mirrorRegionFiles({
+			originServer: sourceServer,
+			targetServer,
+			dimension: args.dimension,
+			regionNames: fileNames,
+		});
+
+		if (!mirrorSuccess) {
+			await this.interaction.editReply('Failed to mirror region files.');
+			return;
+		}
+
+		await this.interaction.editReply(`Successfully mirrored ${fileNames.length} region files!`);
+	}
+
+	/**
+	 * parses the input string into an array of region file names and returns it or null if the input is invalid
+	 */
+	private parseRegions(input: string): string[] | null {
+		const regions = input.split(',').map((s) => s.trim());
+		const parsedRegions: { x: number; z: number }[] = [];
+
+		for (const region of regions) {
+			const parts = region.split('.');
+
+			if (parts.length !== 2) {
+				return null;
+			}
+
+			const [xStr, zStr] = parts;
+
+			if (!xStr || !zStr) {
+				return null;
+			}
+
+			const x = Number.parseInt(xStr, 10);
+			const z = Number.parseInt(zStr, 10);
+
+			if (Number.isNaN(x) || Number.isNaN(z)) {
+				return null;
+			}
+
+			parsedRegions.push({ x, z });
+		}
+
+		return parsedRegions.map((region) => `r.${region.x}.${region.z}.mca`);
+	}
+
+	/**
+	 * Checks if the provided regions exist on the source server
+	 * @sideeffect Logs errors and edits the interaction reply if the regions do not exist
+	 */
+	private async doRegionsExist(options: {
+		serverChoice: ServerChoice;
+		dimension: Dimension;
+		regionFileNames: string[];
+	}) {
+		const dimensionPath = {
+			overworld: '',
+			nether: 'DIM-1/',
+			end: 'DIM1/',
+		}[options.dimension];
+
+		const regionFiles = await ptero.files
+			.list(config.mcConfig[options.serverChoice].serverId, `world/${dimensionPath}region`)
+			.catch(async (e) => {
+				await LOGGER.error(e, `Failed to list region files from ${options.serverChoice}`);
+				return null;
+			});
+
+		if (!regionFiles || !regionFiles.length) {
+			await this.interaction.editReply(`Failed to list region files from ${options.serverChoice}.`);
+			return false;
+		}
+
+		const regionFileNames = regionFiles.map((file) => file.name);
+		const missingRegions = options.regionFileNames.filter(
+			(regionFileName) => !regionFileNames.includes(regionFileName),
+		);
+
+		if (missingRegions.length > 0) {
+			await this.interaction.editReply(
+				`The following regions do not exist on ${options.serverChoice}: ${missingRegions.join(
+					', ',
+				)}`,
+			);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Mirrors a region file from one server to another.
+	 * @throws if anything goes wrong
+	 */
+	private async mirrorRegionFile(options: {
+		originServer: ServerChoice;
+		targetServer: ServerChoice;
+		dimension: Dimension;
+		regionName: string;
+	}) {
+		const { originServer, targetServer, dimension, regionName } = options;
+
+		const dimensionPath = {
+			overworld: '',
+			nether: 'DIM-1/',
+			end: 'DIM1/',
+		}[dimension];
+
+		const filePaths = ['region', 'entities', 'poi'].map(
+			(type) => `world/${dimensionPath}${type}/${regionName}`,
+		);
+
+		const downloadLinks = await Promise.all(
+			filePaths.map((path) =>
+				ptero.files.getDownloadLink(config.mcConfig[originServer].serverId, path),
+			),
+		);
+
+		for (const link of downloadLinks) {
+			if (link === null) {
+				throw new Error(
+					`Failed to get download link for ${dimension} region ${regionName} from ${originServer}`,
+				);
+			}
+		}
+
+		const files = await Promise.all(
+			downloadLinks.map(async (link) => {
+				const arrayBuffer = await (await fetch(link)).arrayBuffer();
+				return Buffer.from(arrayBuffer);
+			}),
+		);
+
+		await Promise.all(
+			files.map((file, index) => {
+				const serverID = config.mcConfig[targetServer].serverId;
+				const filePath = filePaths[index];
+
+				if (!filePath) {
+					throw new Error(`Couldn't get the path for ${dimension} region: ${regionName}`);
+				}
+
+				return ptero.files.write(serverID, filePath, file);
+			}),
+		);
+	}
+
+	/**
+	 * Mirrors multiple region files from one server to another and returns true if all files were copied successfully
+	 * @sideeffect Logs errors.
+	 */
+	private async mirrorRegionFiles(options: {
+		originServer: ServerChoice;
+		targetServer: ServerChoice;
+		dimension: Dimension;
+		regionNames: string[];
+	}): Promise<boolean> {
+		const { originServer, targetServer, dimension, regionNames } = options;
+
+		try {
+			await Promise.all(
+				regionNames.map((regionName) =>
+					this.mirrorRegionFile({
+						originServer,
+						targetServer,
+						dimension,
+						regionName,
+					}),
+				),
+			);
+
+			return true;
+		} catch (e) {
+			await LOGGER.error(e, 'Failed to mirror region files');
+			return false;
+		}
+	}
+}
+
+type ServerType = 'survival' | 'creative';
 type Dimension = 'overworld' | 'nether' | 'end';
-
-async function getPlayerCount(server: ServerChoice): Promise<number | null> {
-	const queryResponse = await MCStatus.queryFull(server);
-
-	if (!queryResponse.online) {
-		return null;
-	}
-
-	const playerList = queryResponse.players;
-
-	if (playerList === null || playerList === undefined) {
-		return null;
-	}
-
-	return playerList.online;
-}
-
-async function mirrorRegionFiles(
-	server: ServerChoice,
-	targetServer: ServerChoice,
-	dimension: Dimension,
-	regionName: string,
-) {
-	const dimensionPath = {
-		overworld: '',
-		nether: 'DIM-1/',
-		end: 'DIM1/',
-	}[dimension];
-
-	const fileTypes = ['region', 'entities', 'poi'] as const;
-	const filePaths = fileTypes.map((type) => `world/${dimensionPath}${type}/${regionName}`);
-
-	const linkPromises = filePaths.map((path) =>
-		ptero.files.getDownloadLink(config.mcConfig[server].serverId, path),
-	);
-
-	const links = await Promise.all(linkPromises);
-
-	for (const link of links) {
-		if (link === null) {
-			throw new Error(`Failed to get download link for ${dimension} region: ${regionName}`);
-		}
-	}
-
-	const fileFetchAndWritePromises = links.map(async (link, index) => {
-		const arrayBuffer = await (await fetch(link)).arrayBuffer();
-		const fileBuffer = Buffer.from(arrayBuffer);
-
-		const path = filePaths[index];
-
-		if (!path) {
-			throw new Error(`Couldn't get the path for ${dimension} region: ${regionName}`);
-		}
-
-		await ptero.files.write(config.mcConfig[targetServer].serverId, path, fileBuffer);
-	});
-
-	await Promise.all(fileFetchAndWritePromises);
-}
-
-function parseMinecraftRegions(input: string) {
-	const regions = input.split(',').map((s) => s.trim());
-	const parsedRegions: { x: number; z: number }[] = [];
-
-	for (const region of regions) {
-		const parts = region.split('.');
-
-		if (parts.length !== 2) {
-			return null;
-		}
-
-		const [xStr, zStr] = parts;
-
-		if (!xStr || !zStr) {
-			return null;
-		}
-
-		const x = Number.parseInt(xStr, 10);
-		const z = Number.parseInt(zStr, 10);
-
-		if (Number.isNaN(x) || Number.isNaN(z)) {
-			return null;
-		}
-
-		parsedRegions.push({ x, z });
-	}
-
-	return parsedRegions.map((region) => `r.${region.x}.${region.z}.mca`);
-}
-
-async function areRegionsIncluded(
-	regionNames: string[],
-	dimension: Dimension,
-	server: ServerChoice,
-) {
-	const dimensionPath = {
-		overworld: '',
-		nether: 'DIM-1/',
-		end: 'DIM1/',
-	}[dimension];
-
-	const regionFiles = await ptero.files.list(
-		config.mcConfig[server].serverId,
-		`world/${dimensionPath}region`,
-	);
-
-	const regionFileNames = regionFiles.map((file) => file.name);
-
-	return regionNames.every((regionName) => regionFileNames.includes(regionName));
-}
-
-async function startServerAndWait(serverChoice: ServerChoice) {
-	await ptero.servers.start(config.mcConfig[serverChoice].serverId);
-
-	let serverState = await getServerState(serverChoice);
-	let counter = 0;
-
-	while (serverState !== 'running') {
-		await new Promise((resolve) => setTimeout(resolve, 2500));
-		serverState = await getServerState(serverChoice);
-		counter++;
-
-		if (counter > 15) {
-			throw new Error('Server failed to start.');
-		}
-	}
-}
-
-async function stopServerAndWait(serverChoice: ServerChoice) {
-	await ptero.servers.stop(config.mcConfig[serverChoice].serverId);
-
-	let serverState = await getServerState(serverChoice);
-	let counter = 0;
-
-	while (serverState !== 'offline') {
-		await new Promise((resolve) => setTimeout(resolve, 2500));
-		serverState = await getServerState(serverChoice);
-		counter++;
-
-		if (counter > 15) {
-			throw new Error('Server failed to stop.');
-		}
-	}
-}
