@@ -1,4 +1,12 @@
-import { Guild, GuildMember, TextChannel, User, escapeMarkdown, inlineCode } from 'discord.js';
+import {
+	Guild,
+	GuildMember,
+	TextChannel,
+	User,
+	escapeMarkdown,
+	inlineCode,
+	time,
+} from 'discord.js';
 
 type Displayable = Guild | User | GuildMember | TextChannel;
 
@@ -40,4 +48,8 @@ export function displayFormatted(obj: Displayable): string {
 	}
 
 	return 'Unknown object type.';
+}
+
+export function displayTime(dateTime: Date): string {
+	return `${time(dateTime, 'D')}\n(${time(dateTime, 'R')})`;
 }
