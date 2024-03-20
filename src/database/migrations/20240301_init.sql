@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS members (
   discord_id VARCHAR(20) PRIMARY KEY,
   trial_member BOOLEAN NOT NULL,
   minecraft_uuids UUID[],
-  member_since TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  member_since TIMESTAMP NOT NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
