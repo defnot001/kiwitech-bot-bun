@@ -1,9 +1,16 @@
-import { ApplicationCommandOptionType, inlineCode, time } from 'discord.js';
+import {
+	ApplicationCommandOptionType,
+	PermissionFlagsBits,
+	type User,
+	inlineCode,
+} from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import MemberModelController from '../database/model/memberModelController';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
+import { displayFormatted, displayTime } from '../util/format';
 import { Command } from '../util/handler/classes/Command';
-import { isAdmin } from '../util/helpers';
 import { escapeMarkdown } from '../util/helpers';
+import { LOGGER } from '../util/logger';
 import MojangAPI from '../util/mojang';
 
 export const member = new Command({
@@ -100,221 +107,360 @@ export const member = new Command({
 			],
 		},
 	],
-	execute: async ({ interaction, args }) => {
+	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply();
 
-		const guild = interaction.guild;
-
-		if (!guild) {
-			return interaction.editReply('This command can only be used in a server!');
-		}
+		const handler = new MemberCommandHandler({ interaction, client });
+		if (!(await handler.init())) return;
 
 		const subcommand = args.getSubcommand() as 'list' | 'info' | 'add' | 'update' | 'remove';
 
 		if (subcommand === 'list') {
-			const members = await MemberModelController.getAllMembers();
-
-			if (!members.length) {
-				return interaction.editReply('No Members found.');
-			}
-
-			const memberIDs = members.map((member) => member.discord_id);
-			const memberCollection = await guild.members.fetch({ user: memberIDs });
-
-			const embed = new KoalaEmbedBuilder(interaction.user, {
-				title: `Member List for ${guild.name}`,
-				description: memberCollection
-					.map((member) => escapeMarkdown(member.user.username))
-					.join('\n'),
-			});
-
-			if (guild.iconURL()) {
-				embed.setThumbnail(guild.iconURL());
-			}
-
-			await interaction.editReply({
-				embeds: [embed],
-			});
+			await handler.handleList();
+			return;
 		}
 
 		if (subcommand === 'info') {
-			const user = args.getUser('member', true);
+			const user = args.getUser('member');
 
-			try {
-				try {
-					await guild.members.fetch(user.id);
-				} catch {
-					return interaction.editReply(`${user.username} is not a member of ${guild.name}.`);
-				}
+			if (!user) {
+				await interaction.editReply('You must provide a valid member to get info about.');
+				return;
+			}
 
-				const member = await MemberModelController.getMember(user.id);
-				const profiles = await getProfiles(member.minecraft_uuids);
-				const usernames = profiles.map((profile) => [profile.name, profile.id] as [string, string]);
+			await handler.handleInfo({ targetUser: user });
+			return;
+		}
 
-				if (!usernames[0] || !usernames[0][1]) {
-					await interaction.editReply(
-						`${escapeMarkdown(user.username)} does not seem to have a minecraft account.`,
-					);
-
-					return;
-				}
-
-				const skinUrl = `https://crafatar.com/avatars/${usernames[0][1]}?overlay&size=512`;
-
-				const embed = new KoalaEmbedBuilder(interaction.user, {
-					title: `Member Info ${escapeMarkdown(user.username)}`,
-					thumbnail: {
-						url: skinUrl,
-					},
-					fields: [
-						{ name: 'Discord ID', value: `${inlineCode(member.discord_id)}` },
-						{
-							name: 'Minecraft Usernames',
-							value: usernames
-								.map(([name, uuid]) => `${escapeMarkdown(name)} (${inlineCode(uuid)})`)
-								.join('\n'),
-						},
-						{
-							name: 'Member Since',
-							value: `${time(member.member_since, 'D')}\n${time(member.member_since, 'R')}`,
-						},
-						{
-							name: 'Last Updated At',
-							value: `${time(member.updated_at, 'D')}\n${time(member.updated_at, 'R')}`,
-						},
-						{ name: 'Trial Member', value: member.trial_member ? 'Yes' : 'No' },
-					],
-				});
-
-				await interaction.editReply({
-					embeds: [embed],
-				});
-			} catch {
-				interaction.editReply(`${escapeMarkdown(user.username)} is not a member of ${guild.name}.`);
+		if (subcommand === 'add' || subcommand === 'update' || subcommand === 'remove') {
+			if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+				await interaction.editReply('You must be an Administrator to use this command.');
+				return;
 			}
 		}
 
-		if (subcommand === 'add' || subcommand === 'update') {
-			if (!isAdmin(interaction.member)) {
-				return interaction.editReply('You must be an Administrator to use this command.');
+		if (subcommand === 'add') {
+			const targetUser = args.getUser('member');
+
+			if (!targetUser) {
+				await interaction.editReply('You must provide a valid member to add.');
+				return;
 			}
 
-			const user = args.getUser('member', true);
-			const ign = args.getString('ign');
-			const trial = args.getBoolean('trial');
-			const memberSince = args.getString('member_since');
+			await handler.handleAdd({
+				targetUser,
+				ign: args.getString('ign', true),
+				trial: args.getBoolean('trial', true),
+				memberSince: args.getString('member_since') ?? new Date().toISOString(),
+			});
 
-			if (subcommand === 'add') {
-				if ((await isMemberInDatabase(user.id)) === true) {
-					return interaction.editReply({
-						content: `${user.username} is already a member of ${guild.name}.`,
-					});
-				}
+			return;
+		}
 
-				if (!ign) {
-					await interaction.editReply('You must provide at least one IGN.');
-					return;
-				}
+		if (subcommand === 'update') {
+			const targetUser = args.getUser('member');
 
-				const igns = ign.split(',').map((name) => name.trim());
-
-				if (igns.length === 0) {
-					return interaction.editReply('You must provide at least one IGN.');
-				}
-
-				const profiles = await MojangAPI.getUUIDs(igns);
-				const memberSinceDate = new Date(memberSince ?? new Date().toISOString());
-
-				try {
-					await MemberModelController.addMember(
-						user.id,
-						trial ?? true,
-						profiles.map((profile) => profile.id),
-						memberSinceDate,
-					);
-
-					interaction.editReply({
-						content: `Successfully added ${inlineCode(user.username)} to the Memberlist.`,
-					});
-				} catch {
-					interaction.editReply({
-						content: `Failed to add ${user.username} to the Memberlist.`,
-					});
-				}
+			if (!targetUser) {
+				await interaction.editReply('You must provide a valid member to update.');
+				return;
 			}
 
-			if (subcommand === 'update') {
-				if (!(await isMemberInDatabase(user.id))) {
-					return interaction.editReply(`${user.username} is not a member of ${guild.name}.`);
-				}
+			await handler.handleUpdate({
+				targetUser,
+				ign: args.getString('ign'),
+				trial: args.getBoolean('trial'),
+				memberSince: args.getString('member_since'),
+			});
 
-				let uuids: string[] | undefined = undefined;
-				let trialMember: boolean | undefined = undefined;
-				let memberSinceDate: Date | undefined = undefined;
-
-				if (ign !== null) {
-					const igns = ign.split(',').map((name) => name.trim());
-					const profiles = await MojangAPI.getUUIDs(igns);
-					uuids = profiles.map((profile) => profile.id);
-				}
-
-				if (trial !== null) {
-					trialMember = trial;
-				}
-
-				if (memberSince !== null) {
-					memberSinceDate = new Date(memberSince);
-				}
-
-				try {
-					await MemberModelController.updateMember(user.id, {
-						trialMember,
-						memberSince: memberSinceDate,
-						minecraftUUIDs: uuids,
-					});
-
-					interaction.editReply({
-						content: `Successfully updated ${user.username} in the Memberlist.`,
-					});
-				} catch {
-					interaction.editReply({
-						content: `Failed to update ${user.username} in the Memberlist.`,
-					});
-				}
-			}
+			return;
 		}
 
 		if (subcommand === 'remove') {
-			if (!isAdmin(interaction.member)) {
-				return interaction.editReply('You must be an Administrator to use this command.');
+			const targetUser = args.getUser('member');
+
+			if (!targetUser) {
+				await interaction.editReply('You must provide a valid member to remove.');
+				return;
 			}
 
-			if (!(await isMemberInDatabase(interaction.user.id))) {
-				return interaction.editReply(
-					`${interaction.user.username} is not a member of ${guild.name}.`,
-				);
-			}
-
-			const user = args.getUser('member', true);
-
-			try {
-				await MemberModelController.removeMember(user.id);
-
-				interaction.editReply(`Successfully removed ${user.username} from the Memberlist.`);
-			} catch (err) {
-				interaction.editReply(`Failed to remove ${user.username} from ${guild.name}.`);
-			}
+			await handler.handleRemove({ targetUser });
+			return;
 		}
-
-		return;
 	},
 });
 
-async function getProfiles(uuids: string[]) {
-	const promises = uuids.map((uuid) => MojangAPI.getProfile(uuid));
-	return await Promise.all(promises);
-}
+class MemberCommandHandler extends BaseKiwiCommandHandler {
+	public async handleList() {
+		const members = await MemberModelController.getAllMembers().catch(async (e) => {
+			await LOGGER.error(e, 'Failed to get all Members from the database');
+			return null;
+		});
 
-async function isMemberInDatabase(discordID: string) {
-	return (await MemberModelController.getMember(discordID)) !== null;
+		if (!members) {
+			await this.interaction.editReply('Failed to get members from the database.');
+			return;
+		}
+
+		if (!members.length) {
+			await this.interaction.editReply('There are no members in the database.');
+		}
+
+		const memberUsers = await this.guild.members
+			.fetch({
+				user: members.map((member) => member.discord_id),
+			})
+			.catch(async (e) => {
+				await LOGGER.error(e, 'Failed to fetch members from the guild');
+				return null;
+			});
+
+		if (!memberUsers) {
+			await this.interaction.editReply('Failed to fetch members from the guild.');
+			return;
+		}
+
+		const memberNames = memberUsers
+			.sort((a, b) =>
+				a.user.displayName.toLocaleLowerCase().localeCompare(b.user.username.toLocaleLowerCase()),
+			)
+			.map(
+				(member) =>
+					`${escapeMarkdown(member.user.displayName)} (${
+						member.user.globalName ?? member.user.username
+					})`,
+			)
+			.join('\n');
+
+		const embed = new KoalaEmbedBuilder(this.interaction.user, {
+			title: `Member List for ${this.guild.name}`,
+			description: memberNames,
+		});
+
+		if (this.guild.iconURL()) {
+			embed.setThumbnail(this.guild.iconURL());
+		}
+
+		await this.interaction.editReply({
+			embeds: [embed],
+		});
+	}
+	public async handleInfo(args: { targetUser: User }) {
+		const memberUser = await this.guild.members.fetch(args.targetUser.id).catch(async (e) => {
+			await LOGGER.error(e, 'Failed to fetch member from the guild');
+			return null;
+		});
+
+		if (!memberUser) {
+			await this.interaction.editReply(
+				`${displayFormatted(this.user)} is not a member of ${displayFormatted(this.guild)}.`,
+			);
+			return;
+		}
+
+		const dbMember = await MemberModelController.getMember(args.targetUser.id).catch(async (e) => {
+			await LOGGER.error(e, 'Failed to get member from the database');
+			return null;
+		});
+
+		if (!dbMember) {
+			await this.interaction.editReply('Failed to get member from the database.');
+			return;
+		}
+
+		const uuids = dbMember.minecraft_uuids;
+
+		if (!uuids.length) {
+			await this.interaction.editReply(
+				`${displayFormatted(this.user)} does not seem to have a minecraft account.`,
+			);
+			return;
+		}
+
+		const profiles = await Promise.all(
+			dbMember.minecraft_uuids.map((uuid) => {
+				return MojangAPI.getProfile(uuid);
+			}),
+		).catch(async (e) => {
+			await LOGGER.error(e, 'Failed to get profiles from Mojang API');
+			return null;
+		});
+
+		if (!profiles || !profiles.length || !profiles[0]) {
+			await this.interaction.editReply('Failed to get profiles from Mojang API.');
+			return;
+		}
+
+		const profileEntries = profiles.map((profile) => {
+			return `${escapeMarkdown(profile.name)} (${inlineCode(profile.id)})`;
+		});
+
+		const embed = new KoalaEmbedBuilder(this.interaction.user, {
+			title: `Member Info for ${args.targetUser.displayName}`,
+			thumbnail: {
+				url: `https://visage.surgeplay.com/face/256/${profiles[0].id}`,
+			},
+			fields: [
+				{ name: 'Discord ID', value: `${inlineCode(dbMember.discord_id)}` },
+				{
+					name: 'Minecraft Usernames',
+					value: profileEntries.join('\n'),
+				},
+				{
+					name: 'Member Since',
+					value: displayTime(dbMember.member_since),
+				},
+				{
+					name: 'Last Updated At',
+					value: displayTime(dbMember.updated_at),
+				},
+				{ name: 'Trial Member', value: dbMember.trial_member ? 'Yes' : 'No' },
+			],
+		});
+
+		await this.interaction.editReply({
+			embeds: [embed],
+		});
+	}
+	public async handleAdd(args: {
+		targetUser: User;
+		ign: string;
+		trial: boolean;
+		memberSince: string;
+	}) {
+		const memberSinceDate = await this.getDateFromString(args.memberSince);
+		if (!memberSinceDate) return;
+
+		const profiles = await this.getProfilesFromString(args.ign);
+		if (!profiles) return;
+
+		try {
+			await MemberModelController.addMember({
+				discordID: args.targetUser.id,
+				trialMember: args.trial,
+				minecraftUUIDs: profiles.map((profile) => profile.id),
+				memberSince: memberSinceDate,
+			});
+		} catch (e) {
+			await this.handleCreateMemberError(e);
+			return;
+		}
+
+		await this.interaction.editReply({
+			content: `Successfully added ${displayFormatted(args.targetUser)} to the Memberlist.`,
+		});
+	}
+	public async handleUpdate(args: {
+		targetUser: User;
+		ign: string | null;
+		trial: boolean | null;
+		memberSince: string | null;
+	}) {
+		const memberSince = args.memberSince ? await this.getDateFromString(args.memberSince) : null;
+		if (args.memberSince && !memberSince) return;
+
+		const profiles = args.ign ? await this.getProfilesFromString(args.ign) : null;
+		if (args.ign && !profiles) return;
+
+		try {
+			await MemberModelController.updateMember(args.targetUser.id, {
+				trialMember: args.trial,
+				memberSince: memberSince,
+				minecraftUUIDs: profiles?.map((profile) => profile.id),
+			});
+		} catch (e) {
+			await LOGGER.error(e, 'Failed to update member in the database');
+			await this.interaction.editReply('Failed to update member in the database.');
+			return;
+		}
+
+		await this.interaction.editReply({
+			content: `Successfully updated ${displayFormatted(args.targetUser)} in the Memberlist.`,
+		});
+	}
+	public async handleRemove(args: { targetUser: User }) {
+		try {
+			await MemberModelController.removeMember(args.targetUser.id);
+		} catch (e) {
+			await LOGGER.error(e, 'Failed to remove member from the database');
+			await this.interaction.editReply('Failed to remove member from the database.');
+			return;
+		}
+
+		await this.interaction.editReply({
+			content: `Successfully removed ${displayFormatted(args.targetUser)} from the Memberlist.`,
+		});
+	}
+
+	private async handleCreateMemberError(e: unknown) {
+		if (
+			e &&
+			e !== null &&
+			typeof e === 'object' &&
+			'message' in e &&
+			typeof e.message === 'string' &&
+			e.message.includes('unique constraint')
+		) {
+			this.interaction.editReply('This member already exists in the database.');
+			await LOGGER.warn('Member already exists in the database');
+		} else {
+			this.interaction.editReply('An error occurred while adding the member to the database.');
+			await LOGGER.error(e, 'Error adding member to database');
+		}
+	}
+
+	/**
+	 * Gets the minecraft profiles from a string of IGNs and returns them as an array of objects or null if the string is invalid or the profiles cannot be fetched.
+	 * @sideeffect Logs Errors and edits the interaction reply if the string is invalid or the profiles cannot be fetched.
+	 */
+	private async getProfilesFromString(
+		ignString: string,
+	): Promise<{ id: string; name: string }[] | null> {
+		const igns = ignString.split(',').map((name) => name.trim());
+
+		if (igns.length === 0 || !igns[0]) {
+			await this.interaction.editReply('You must provide at least one IGN.');
+			return null;
+		}
+
+		let profiles: { id: string; name: string }[] | null = null;
+
+		if (igns.length > 1) {
+			profiles = await MojangAPI.getUUIDs(igns).catch(async (e) => {
+				await LOGGER.error(e, 'Failed to get profiles from Mojang API');
+				return null;
+			});
+		} else {
+			const profile = await MojangAPI.getUUID(igns[0]).catch(async (e) => {
+				await LOGGER.error(e, 'Failed to get profile from Mojang API');
+				return null;
+			});
+
+			if (profile) {
+				profiles = [profile];
+			}
+		}
+
+		if (!profiles || profiles.length !== igns.length) {
+			await this.interaction.editReply('Failed to get profiles from Mojang API.');
+			return null;
+		}
+
+		return profiles;
+	}
+
+	/**
+	 * Tries to create a Date object from a string.
+	 * @sideeffect Logs an error and edits the interaction reply if the date string is invalid.
+	 */
+	private async getDateFromString(dateTime: string): Promise<Date | null> {
+		try {
+			return new Date(dateTime);
+		} catch (e) {
+			await LOGGER.error(e, `Failed to parse date from string: ${dateTime}`);
+			await this.interaction.editReply(
+				'Failed to parse date from string. Please use the format YYYY-MM-DD.',
+			);
+			return null;
+		}
+	}
 }
