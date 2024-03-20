@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { GlobalFonts, createCanvas } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType, inlineCode } from 'discord.js';
-import allScoreboards from '../assets/scoreboards_1.19.2';
+import allScoreboards from '../util/scoreboards_1.19.2';
 import { projectPaths } from '../config';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';

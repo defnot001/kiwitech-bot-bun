@@ -1,6 +1,6 @@
 import type { AutocompleteFocusedOption } from 'discord.js';
 import { client } from '..';
-import allScboreboards from '../assets/scoreboards_1.19.2';
+import allScboreboards from '../util/scoreboards_1.19.2';
 import type { ScoreboardChoice } from '../commands/scoreboard';
 import { getWaypoints } from '../commands/waypoint';
 import { getWhitelist } from '../commands/whitelist';

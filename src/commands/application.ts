@@ -11,7 +11,7 @@ import {
 	time,
 	userMention,
 } from 'discord.js';
-import { getTrialWelcomeMessage } from '../assets/welcomeMessage';
+import { getTrialWelcomeMessage } from '../util/welcomeMessage';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
 import ApplicationModelController, {
