@@ -1,11 +1,11 @@
 import { ApplicationCommandOptionType, type Role, type User } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
+import { display, displayFormatted, displayTime } from '../util/format';
 import { Command } from '../util/handler/classes/Command';
 import { escapeMarkdown } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import { BaseKiwiCommandHandler } from '../util/commandhandler';
-import { display, displayFormatted, displayTime } from '../util/format';
 
 export const info = new Command({
 	name: 'info',

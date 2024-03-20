@@ -1,15 +1,15 @@
 import { ApplicationCommandOptionType, bold, inlineCode, time } from 'discord.js';
+import type { PterodactylBackup, PterodactylBackupListMeta } from 'ptero-client';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { type ServerChoice, config } from '../config';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { confirmCancelRow, getButtonCollector, mcServerChoice } from '../util/components';
 import { Command } from '../util/handler/classes/Command';
+import type { ExtendedClient } from '../util/handler/classes/ExtendedClient';
+import type { ExtendedInteraction } from '../util/handler/types';
 import { formatBytes } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import { ptero } from '../util/pterodactyl';
-import { BaseKiwiCommandHandler } from '../util/commandhandler';
-import type { ExtendedInteraction } from '../util/handler/types';
-import type { ExtendedClient } from '../util/handler/classes/ExtendedClient';
-import type { PterodactylBackup, PterodactylBackupListMeta } from 'ptero-client';
 
 type BackupSubcommand = 'list' | 'create' | 'delete' | 'details';
 
