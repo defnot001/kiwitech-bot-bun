@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
-import { BaseKiwiCommandHandler } from '../util/commandhandler';
 
 const SKIN_RENDER_TYPES = {
 	default: ['full', 'bust', 'face'],
