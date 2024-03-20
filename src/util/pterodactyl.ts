@@ -37,9 +37,3 @@ export async function getModNames(serverChoice: ServerChoice) {
 		disabled: mods.disabled.map((mod) => mod.name.replace('.disabled', '')),
 	};
 }
-
-export async function getServerState(serverChoice: ServerChoice) {
-	const serverStats = await ptero.servers.getResourceUsage(config.mcConfig[serverChoice].serverId);
-
-	return serverStats.current_state;
-}
