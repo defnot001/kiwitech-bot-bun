@@ -75,7 +75,7 @@ export const mcskin = new Command({
 		await handler.handleMCSkin({
 			playerName,
 			renderPosition: args.getString('position', true) as keyof typeof SKIN_RENDER_TYPES,
-			imageType: args.getString('type', false) as ImageType,
+			imageType: (args.getString('type', false) as ImageType) ?? 'full',
 		});
 	},
 });
