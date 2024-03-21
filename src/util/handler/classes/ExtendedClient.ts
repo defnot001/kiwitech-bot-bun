@@ -11,8 +11,8 @@ import { mcserver } from '../../../commands/mcserver';
 import { mcskin } from '../../../commands/mcskin';
 import { member } from '../../../commands/member';
 import { mirror } from '../../../commands/mirror';
-// import { mods } from '../../../commands/mods';
-// import { pingpong } from '../../../commands/pingpong';
+import { mods } from '../../../commands/mods';
+import { pingpong } from '../../../commands/pingpong';
 // import { rcon } from '../../../commands/rcon';
 // import { scoreboard } from '../../../commands/scoreboard';
 // import { status } from '../../../commands/status';
@@ -40,8 +40,8 @@ const COMMANDS = [
 	mcskin,
 	member,
 	mirror,
-	// mods,
-	// pingpong,
+	mods,
+	pingpong,
 	// rcon,
 	// scoreboard,
 	// status,
