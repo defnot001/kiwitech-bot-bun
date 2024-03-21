@@ -24,7 +24,7 @@ export class ModerationEmbedBuilder extends EmbedBuilder {
 		const { target, executor, action, reason, expiration } = options;
 
 		const descriptionObject: ModerationDescription = {
-			member: `**Member**: ${displayFormatted(target)})`,
+			member: `**Member**: ${displayFormatted(target)}`,
 			action: `**Action**: ${action}`,
 		};
 
