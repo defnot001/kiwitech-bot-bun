@@ -202,7 +202,7 @@ class ScoreboardCommandHandler extends BaseKiwiCommandHandler {
 		await this.interaction.editReply(
 			`Player ${escapeMarkdown(args.playerName)} has ${inlineCode(
 				displayValue.toString(),
-			)} for scoreboard: ${bold(displayAction)}s.`,
+			)} for scoreboard: ${bold(displayAction)}.`,
 		);
 	}
 
