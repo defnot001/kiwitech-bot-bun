@@ -67,15 +67,10 @@ export const mcskin = new Command({
 
 		const playerName = args.getString('name', true);
 
-		if (!playerName.trim().length) {
-			await interaction.editReply('Please provide a valid username!');
-			return;
-		}
-
 		await handler.handleMCSkin({
 			playerName,
 			renderPosition: args.getString('position', true) as keyof typeof SKIN_RENDER_TYPES,
-			imageType: (args.getString('type', false) as ImageType) ?? 'full',
+			imageType: args.getString('type', false) as ImageType | null,
 		});
 	},
 });
@@ -84,18 +79,19 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 	public async handleMCSkin(args: {
 		playerName: string;
 		renderPosition: keyof typeof SKIN_RENDER_TYPES;
-		imageType: ImageType;
+		imageType: ImageType | null;
 	}) {
-		const { playerName, renderPosition, imageType } = args;
+		const { playerName, renderPosition } = args;
 
-		if (SKIN_RENDER_TYPES[renderPosition].includes(imageType)) {
-			await this.interaction.editReply(
-				`Invalid image type for render position ${renderPosition}! Only ${SKIN_RENDER_TYPES[
-					renderPosition
-				].join(', ')} are allowed for this position!`,
-			);
+		if (!playerName.trim().length) {
+			await this.interaction.editReply('Please provide a valid username!');
 			return;
 		}
+
+		const imageType =
+			args.imageType === null ? this.getDefaultImageType(renderPosition) : args.imageType;
+
+		if (!(await this.checkImageType(renderPosition, imageType))) return;
 
 		const url = `https://starlightskins.lunareclipse.studio/render/${renderPosition}/${playerName}/${imageType}`;
 
@@ -109,7 +105,7 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		if (!res.ok) {
+		if (!res.ok || !res.headers.get('content-type')?.includes('image')) {
 			await LOGGER.error(
 				new Error(`${res.status}: ${res.statusText}`),
 				`Failed to get the skin of ${playerName}`,
@@ -118,24 +114,47 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		const arrBuffer = await res.arrayBuffer().catch(async (e) => {
-			await LOGGER.error(e, `Failed to transform the skin of ${playerName} to an array buffer`);
-			return null;
-		});
+		if (res.headers.get('content-type')?.includes('png')) {
+			const skinAttachment = new AttachmentBuilder(url, {
+				name: `${playerName}.png`,
+				description: `Minecraft Skin of the player ${playerName}`,
+			});
 
-		if (!arrBuffer) {
-			await this.interaction.editReply('Failed to get the skin of the player!');
+			await this.interaction.editReply({ files: [skinAttachment] });
 			return;
 		}
 
-		const buffer = Buffer.from(arrBuffer);
+		if (res.headers.get('content-type')?.includes('webp')) {
+			const skinAttachment = new AttachmentBuilder(url, {
+				name: `${playerName}.webp`,
+				description: `Minecraft Skin of the player ${playerName}`,
+			});
 
-		const skinAttachment = new AttachmentBuilder(buffer, {
-			name: `${playerName}`,
-			description: `Minecraft Skin of the player ${playerName}`,
-		});
+			await this.interaction.editReply({ files: [skinAttachment] });
+			return;
+		}
 
-		await this.interaction.editReply({ files: [skinAttachment] });
+		await this.interaction.editReply('Failed to get the skin of the player!');
+	}
+
+	private getDefaultImageType(renderPosition: keyof typeof SKIN_RENDER_TYPES): ImageType {
+		return SKIN_RENDER_TYPES[renderPosition][0] as ImageType;
+	}
+
+	private async checkImageType(
+		renderPosition: keyof typeof SKIN_RENDER_TYPES,
+		imageType: ImageType | null,
+	) {
+		if (imageType && !SKIN_RENDER_TYPES[renderPosition].includes(imageType)) {
+			await this.interaction.editReply(
+				`Invalid image type for render position ${renderPosition}! Only ${SKIN_RENDER_TYPES[
+					renderPosition
+				].join(', ')} are allowed for this position!`,
+			);
+			return false;
+		}
+
+		return true;
 	}
 }
 
