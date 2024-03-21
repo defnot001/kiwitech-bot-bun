@@ -11,7 +11,6 @@ import {
 	time,
 	userMention,
 } from 'discord.js';
-import { getTrialWelcomeMessage } from '../util/welcomeMessage';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
 import ApplicationModelController, {
@@ -26,6 +25,7 @@ import { Command } from '../util/handler/classes/Command';
 import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import MojangAPI from '../util/mojang';
+import { getTrialWelcomeMessage } from '../util/welcomeMessage';
 
 type ApplicationSubcommand =
 	| 'list'

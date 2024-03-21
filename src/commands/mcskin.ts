@@ -1,9 +1,9 @@
 import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
 import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
+import { escapeMarkdown } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import MojangAPI from '../util/mojang';
-import { escapeMarkdown } from '../util/helpers';
 
 const SKIN_RENDER_TYPES = {
 	default: ['full', 'bust', 'face'],
