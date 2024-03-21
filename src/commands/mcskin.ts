@@ -89,12 +89,12 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		const uuid = await MojangAPI.getUUID(playerName).catch(async (e) => {
+		const profile = await MojangAPI.getUUID(playerName).catch(async (e) => {
 			await LOGGER.error(e, `Failed to get the UUID of ${playerName}`);
 			return null;
 		});
 
-		if (!uuid) {
+		if (!profile) {
 			await this.interaction.editReply('Failed to get the UUID of the player!');
 			return;
 		}
@@ -104,7 +104,7 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 
 		if (!(await this.checkImageType(renderPosition, imageType))) return;
 
-		const url = `https://starlightskins.lunareclipse.studio/render/${renderPosition}/${uuid}/${imageType}`;
+		const url = `https://starlightskins.lunareclipse.studio/render/${renderPosition}/${profile.id}/${imageType}`;
 
 		const res = await fetch(url).catch(async (e) => {
 			await LOGGER.error(e, `Failed to get the skin of ${playerName} from the starlightskins API`);
@@ -124,8 +124,6 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 			await this.interaction.editReply('Failed to get the skin of the player!');
 			return;
 		}
-
-		console.log(res);
 
 		if (!res.headers.get('content-type')) {
 			await this.interaction.editReply('Failed to get the skin of the player!');
