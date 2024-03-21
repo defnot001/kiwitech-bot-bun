@@ -98,6 +98,7 @@ export abstract class LOGGER {
 		const logLevelString = `${LOGGER.displayLogLevel(logLevel)}:`;
 		const coloredPrefix = `${colors[logLevel]}${timeString} ${logLevelString}${colors.reset}`;
 
+		// biome-ignore lint/suspicious/noConsoleLog: we need to use console.log for this
 		console.log(`${coloredPrefix} ${message}`);
 	}
 

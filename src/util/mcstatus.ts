@@ -17,11 +17,11 @@ export default abstract class MCStatus {
 			);
 		}
 
-		return (await fetched.json()) as MCStatusResponse;
+		return (await fetched.json()) as McStatusResponse;
 	}
 }
 
-type MCStatusResponse = {
+type McStatusResponse = {
 	online: boolean;
 	host: string;
 	port: number;
@@ -29,8 +29,8 @@ type MCStatusResponse = {
 	eula_blocked: boolean;
 	retrieved_at: number;
 	expires_at: number;
-	version?: MCStatusVersionResponse | null;
-	players?: MCStatusPlayersResponse | null;
+	version?: McStatusVersionResponse | null;
+	players?: McStatusPlayersResponse | null;
 	motd?: {
 		raw: string;
 		clean: string;
@@ -52,14 +52,14 @@ type MCStatusResponse = {
 	};
 };
 
-type MCStatusVersionResponse = {
+type McStatusVersionResponse = {
 	name_raw: string;
 	name_clean: string;
 	name_html: string;
 	protocol: number;
 };
 
-type MCStatusPlayersResponse = {
+type McStatusPlayersResponse = {
 	online: number;
 	max: number;
 	list: {

@@ -18,7 +18,9 @@ export const guildBanRemove = new DiscordEvent('guildBanRemove', async (guildUnb
 
 		const unbanLog = fetchedLogs.entries.first();
 
-		if (!unbanLog) throw new Error('Cannot find UnbanLog.');
+		if (!unbanLog) {
+			throw new Error('Cannot find UnbanLog.');
+		}
 
 		const { executor, target, action, reason } = unbanLog;
 
@@ -29,7 +31,9 @@ export const guildBanRemove = new DiscordEvent('guildBanRemove', async (guildUnb
 		const executingMember = await unban.guild.members.fetch(executor.id);
 		const modLog = await getTextChannelFromConfig(unban.guild, 'modLog');
 
-		if (!modLog) throw new Error('Cannot find modLog channel.');
+		if (!modLog) {
+			throw new Error('Cannot find modLog channel.');
+		}
 
 		if (target.id === unban.user.id) {
 			const banEmbed = new ModerationEmbedBuilder({

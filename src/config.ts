@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { env } from 'bun';
 
+// biome-ignore lint/correctness/noUndeclaredVariables: we need to use bun for this
 const nodeEnv = Bun.env.NODE_ENV || 'development';
 console.info(`Loaded ${nodeEnv} config.`);
 

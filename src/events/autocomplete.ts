@@ -1,30 +1,31 @@
 import type { AutocompleteFocusedOption } from 'discord.js';
 import { client } from '..';
-import allScboreboards from '../util/scoreboards_1.19.2';
 import type { ScoreboardChoice } from '../commands/scoreboard';
 import { getWaypoints } from '../commands/waypoint';
 import { getWhitelist } from '../commands/whitelist';
 import { type ServerChoice, config } from '../config';
 import TodoModelController from '../database/model/todoModelController';
 import { DiscordEvent } from '../util/handler/classes/Event';
+import allScboreboards from '../util/scoreboards_1.19.2';
 
 import { LOGGER } from '../util/logger';
 import { getModNames, ptero } from '../util/pterodactyl';
 
 export const autocomplete = new DiscordEvent('interactionCreate', async (interaction) => {
-	if (!interaction.isAutocomplete()) return;
-	if (!interaction.guild) return;
+	if (!interaction.isAutocomplete()) {
+		return;
+	}
+
+	if (!interaction.guild) {
+		return;
+	}
 
 	const command = client.commands.get(interaction.commandName);
 
 	if (!command) {
-		await LOGGER.error(`No command matching ${interaction.commandName} was found`);
+		await LOGGER.error(new Error(`No command matching ${interaction.commandName} was found`));
 		return;
 	}
-
-	const guild = interaction.guild;
-
-	if (!guild) return;
 
 	const focused = interaction.options.getFocused(true);
 
@@ -63,7 +64,9 @@ export const autocomplete = new DiscordEvent('interactionCreate', async (interac
 			const totalWhitelist: string[] = [];
 
 			for (const server in config.mcConfig) {
-				if (server === 'snapshots') continue;
+				if (server === 'snapshots') {
+					continue;
+				}
 
 				const whitelistNames = await getWhitelist(server as ServerChoice);
 
@@ -78,19 +81,29 @@ export const autocomplete = new DiscordEvent('interactionCreate', async (interac
 		}
 
 		if (interaction.commandName === 'mods') {
-			const serverChoice = interaction.options.getString('server') as ServerChoice | undefined;
+			const serverChoice = interaction.options.getString('server') as ServerChoice | null;
 
-			if (!serverChoice) return interaction.respond([]);
+			if (!serverChoice) {
+				await interaction.respond([]);
+				return;
+			}
 
 			const modNames = await getModNames(serverChoice);
+
+			if (!modNames) {
+				await interaction.respond([]);
+				return;
+			}
+
 			const modNamesChoice =
 				interaction.options.getSubcommand() === 'enable' ? modNames.disabled : modNames.enabled;
 
-			interaction.respond(mapChoices(modNamesChoice, focused));
+			await interaction.respond(mapChoices(modNamesChoice, focused));
+			return;
 		}
 
 		if (interaction.commandName === 'backup') {
-			const serverChoice = interaction.options.getString('server') as ServerChoice | undefined;
+			const serverChoice = interaction.options.getString('server') as ServerChoice | null;
 
 			if (!serverChoice) return interaction.respond([]);
 			const backupListResponse = await ptero.backups.list(config.mcConfig[serverChoice].serverId);

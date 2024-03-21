@@ -96,9 +96,9 @@ export class ExtendedClient extends Client {
 	 * Removes all the commands from the guild or globally.
 	 * If there is no `guildID` being passed, it will remove the global application commands.
 	 */
-	public async removeCommands(guildID?: string) {
-		if (guildID) {
-			const guild = this.guilds.cache.get(guildID);
+	public async removeCommands(guildId?: string) {
+		if (guildId) {
+			const guild = this.guilds.cache.get(guildId);
 
 			if (!guild) {
 				throw new Error('Cannot find the guild to remove the commands from!');

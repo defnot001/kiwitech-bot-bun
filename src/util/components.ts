@@ -41,7 +41,10 @@ export const mcServerChoice = {
 
 export function getButtonCollector(interaction: ExtendedInteraction) {
 	const { channel } = interaction;
-	if (!channel) return;
+
+	if (!channel) {
+		return;
+	}
 
 	if (channel instanceof TextChannel) {
 		return channel.createMessageComponentCollector<ComponentType.Button>({

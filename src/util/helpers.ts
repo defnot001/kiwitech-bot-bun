@@ -27,7 +27,9 @@ export function getServerChoices(): ApplicationCommandOptionChoiceData<string>[]
 }
 
 export function formatBytes(bytes: number): string {
-	if (bytes === 0) return '0 Bytes';
+	if (bytes === 0) {
+		return '0 Bytes';
+	}
 
 	const k = 1024;
 	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -86,7 +88,9 @@ export async function getTextChannelFromConfig(
 		return null;
 	});
 
-	if (!fetchedChannel) return null;
+	if (!fetchedChannel) {
+		return null;
+	}
 
 	if (!(fetchedChannel instanceof TextChannel)) {
 		await LOGGER.error(

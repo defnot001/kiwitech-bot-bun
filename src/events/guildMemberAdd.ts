@@ -11,7 +11,9 @@ export const guildMemberAdd = new DiscordEvent('guildMemberAdd', async (member) 
 
 		const memberLog = await getTextChannelFromConfig(member.guild, 'memberLog');
 
-		if (!memberLog) throw new Error('Cannot find memberLog channel.');
+		if (!memberLog) {
+			throw new Error('Cannot find memberLog channel.');
+		}
 
 		const joinedAt = getJoinedAtComponent(member);
 
@@ -36,8 +38,8 @@ export const guildMemberAdd = new DiscordEvent('guildMemberAdd', async (member) 
 });
 
 function colorFromDuration(duration: number): number {
-	const MAX_TRUST_ACCOUNT_AGE = 1_000 * 60 * 60 * 24 * 7 * 4;
-	const percent = Math.min(duration / (MAX_TRUST_ACCOUNT_AGE / 100), 100);
+	const maxTrustAccountAge = 1_000 * 60 * 60 * 24 * 7 * 4;
+	const percent = Math.min(duration / (maxTrustAccountAge / 100), 100);
 	let red: number;
 	let green: number;
 	let blue = 0;

@@ -18,7 +18,9 @@ export const guildBanAdd = new DiscordEvent('guildBanAdd', async (guildBan) => {
 
 		const banLog = fetchedLogs.entries.first();
 
-		if (!banLog) throw new Error('Cannot find BanLog.');
+		if (!banLog) {
+			throw new Error('Cannot find BanLog.');
+		}
 
 		const { executor, target, action, reason } = banLog;
 
@@ -29,7 +31,9 @@ export const guildBanAdd = new DiscordEvent('guildBanAdd', async (guildBan) => {
 		const executingMember = await ban.guild.members.fetch(executor.id);
 		const modLog = await getTextChannelFromConfig(ban.guild, 'modLog');
 
-		if (!modLog) throw new Error('Cannot find modLog channel.');
+		if (!modLog) {
+			throw new Error('Cannot find modLog channel.');
+		}
 
 		if (target.id === ban.user.id) {
 			const banEmbed = new ModerationEmbedBuilder({

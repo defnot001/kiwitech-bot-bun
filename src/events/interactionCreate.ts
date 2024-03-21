@@ -60,8 +60,8 @@ export const interactionCreate = new DiscordEvent('interactionCreate', async (in
 	}
 });
 
-async function getChannelNameAddon(channelID: Snowflake) {
-	const channel = await client.channels.fetch(channelID);
+async function getChannelNameAddon(channelId: Snowflake) {
+	const channel = await client.channels.fetch(channelId);
 
 	if (channel instanceof TextChannel) {
 		return ` in ${display(channel)}`;

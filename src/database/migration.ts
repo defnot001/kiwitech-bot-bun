@@ -17,10 +17,13 @@ async function runMigration(filePath: string) {
 		const split = query.split(';');
 
 		for (const q of split) {
-			if (q.trim() === '') continue;
+			if (q.trim() === '') {
+				continue;
+			}
 			await pgClient.query(q);
 		}
 
+		// biome-ignore lint/suspicious/noConsoleLog: we need it here since the logger isn't initialized when executing this file only
 		console.log(`Migration executed: ${path.basename(filePath)}`);
 	} catch (err) {
 		console.error(`Error executing migration: ${path.basename(filePath)}`, err);
@@ -45,6 +48,7 @@ async function executeMigrations() {
 
 await executeMigrations()
 	.then(() => {
+		// biome-ignore lint/suspicious/noConsoleLog: we need it here since the logger isn't initialized when executing this file only
 		console.log('All migrations executed successfully!');
 		pgClient.end();
 	})

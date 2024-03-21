@@ -17,6 +17,7 @@ export const application = new DiscordEvent('ready', async (client) => {
 		throw new Error('Guild for application handling not found.');
 	}
 
+	// biome-ignore lint/correctness/noUndeclaredVariables: we need to use bun for this
 	Bun.serve({
 		async fetch(req: Request): Promise<Response> {
 			const url = new URL(req.url);

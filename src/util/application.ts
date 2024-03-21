@@ -253,14 +253,14 @@ export function buildApplicationEmbeds(options: {
 
 async function notifyApplicationMissingMember(
 	application: ApplicationObject,
-	applicationID: number,
+	applicationId: number,
 	clientUser: ClientUser,
 	logChannel: TextChannel,
 ) {
 	const errorMessage = `Could not find member ${inlineCode(
 		application.discordName,
 	)} for application ID ${inlineCode(
-		applicationID.toString(10),
+		applicationId.toString(10),
 	)} in the guild. Please link the application to the member manually using the \`/application link\` command.`;
 
 	const memberErrorEmbed = new EmbedBuilder({
@@ -281,8 +281,6 @@ async function notifyApplicationMissingMember(
 		content: `<@&${config.roles.admins}>`,
 	});
 }
-
-export async function notifyUserDMFailed() {}
 
 export async function getGuildMemberFromUsername(
 	username: string,

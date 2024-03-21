@@ -19,7 +19,9 @@ export const guildMemberRemove = new DiscordEvent('guildMemberRemove', async (me
 			)}${joinedAt}\nLeft at: ${time(new Date(), 'f')} (${time(new Date(), 'R')})`,
 		});
 
-		if (!memberLog) throw new Error('Cannot find memberLog channel.');
+		if (!memberLog) {
+			throw new Error('Cannot find memberLog channel.');
+		}
 
 		memberLog.send({ embeds: [userLeaveEmbed] });
 
@@ -31,7 +33,9 @@ export const guildMemberRemove = new DiscordEvent('guildMemberRemove', async (me
 
 		const kickLog = fetchedLogs.entries.first();
 
-		if (!kickLog) return;
+		if (!kickLog) {
+			return;
+		}
 
 		const { executor, target, action, reason } = kickLog;
 
@@ -45,7 +49,9 @@ export const guildMemberRemove = new DiscordEvent('guildMemberRemove', async (me
 			const executingMember = await member.guild.members.fetch(executor.id);
 			const modLog = await getTextChannelFromConfig(member.guild, 'modLog');
 
-			if (!modLog) throw new Error('Cannot find modLog channel.');
+			if (!modLog) {
+				throw new Error('Cannot find modLog channel.');
+			}
 
 			const kickEmbed = new ModerationEmbedBuilder({
 				target: member.user,
