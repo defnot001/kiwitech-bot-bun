@@ -17,7 +17,28 @@
 				"all": true
 			},
 			"complexity": {
-				"noStaticOnlyClass": "off"
+				"noStaticOnlyClass": "off",
+				"noExcessiveCognitiveComplexity": "warn",
+				"noVoid": "warn"
+			},
+			"correctness": {
+				"noUndeclaredVariables": "error",
+				"noUnusedImports": "warn",
+				"noUnusedPrivateClassMembers": "warn",
+				"noUnusedVariables": "warn"
+			},
+			"style": {
+				"noNegationElse": "warn",
+				"useBlockStatements": "warn",
+				"useShorthandArrayType": "warn"
+			},
+			"suspicious": {
+				"noConsoleLog": "warn",
+				"noEmptyBlockStatements": "warn"
+			},
+			"nursery": {
+				"noDuplicateJsonKeys": "warn",
+				"noUselessTernary": "warn"
 			}
 		}
 	},
