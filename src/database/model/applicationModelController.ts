@@ -34,16 +34,16 @@ export default abstract class ApplicationModelController {
 		return query.rows as ApplicationInDatabase[];
 	}
 
-	static async getApplication(applicationID: number) {
-		const query = await pgClient.query('SELECT * FROM applications WHERE id = $1', [applicationID]);
+	static async getApplication(applicationId: number) {
+		const query = await pgClient.query('SELECT * FROM applications WHERE id = $1', [applicationId]);
 
 		return query.rows[0] as ApplicationInDatabase;
 	}
 
-	static async getLatestApplicationByDiscordID(discordID: Snowflake) {
+	static async getLatestApplicationByDiscordID(discordId: Snowflake) {
 		const query = await pgClient.query(
 			'SELECT * FROM applications WHERE discord_id = $1 ORDER BY created_at DESC LIMIT 1',
-			[discordID],
+			[discordId],
 		);
 
 		return query.rows[0] as ApplicationInDatabase;
@@ -52,19 +52,19 @@ export default abstract class ApplicationModelController {
 	static async addApplication(
 		application: ApplicationObject,
 		isOpen: boolean,
-		discordID: Snowflake | null,
+		discordId: Snowflake | null,
 	) {
 		const query = await pgClient.query(
 			'INSERT INTO applications (discord_id, is_open, content) VALUES ($1, $2, $3) RETURNING *',
-			[discordID, isOpen, application],
+			[discordId, isOpen, application],
 		);
 
 		return query.rows[0] as ApplicationInDatabase;
 	}
 
-	static async deleteApplication(applicationID: number) {
+	static async deleteApplication(applicationId: number) {
 		const query = await pgClient.query('DELETE FROM applications WHERE id = $1 RETURNING *', [
-			applicationID,
+			applicationId,
 		]);
 
 		return query.rows[0] as ApplicationInDatabase;
@@ -74,7 +74,7 @@ export default abstract class ApplicationModelController {
 		applicationID: number;
 		newUser: User;
 	}) {
-		const newDiscordID = options.newUser.id;
+		const newDiscordId = options.newUser.id;
 		const newUsername = options.newUser.globalName ?? options.newUser.username;
 
 		const query = await pgClient.query(
@@ -87,30 +87,30 @@ export default abstract class ApplicationModelController {
 			WHERE id = $3
 			RETURNING *;
 			`,
-			[newDiscordID, JSON.stringify(newUsername), options.applicationID],
+			[newDiscordId, JSON.stringify(newUsername), options.applicationID],
 		);
 
 		return query.rows[0] as ApplicationInDatabase;
 	}
 
-	static async closeApplication(applicationID: number) {
+	static async closeApplication(applicationId: number) {
 		const query = await pgClient.query(
 			'UPDATE applications SET is_open = false WHERE id = $1 RETURNING *',
-			[applicationID],
+			[applicationId],
 		);
 
 		return query.rows[0] as ApplicationInDatabase;
 	}
 
 	static async updateApplication(
-		applicationID: number,
+		applicationId: number,
 		updates: {
 			isOpen?: boolean;
 			content?: ApplicationObject;
 			discordID?: Snowflake;
 		},
 	) {
-		const previousApplication = await ApplicationModelController.getApplication(applicationID);
+		const previousApplication = await ApplicationModelController.getApplication(applicationId);
 
 		const query = await pgClient.query(
 			'UPDATE applications SET is_open = $1, content = $2, discord_id = $3, updated_at = $4 WHERE id = $5 RETURNING *',
@@ -119,7 +119,7 @@ export default abstract class ApplicationModelController {
 				updates.content ?? previousApplication.content,
 				updates.discordID ?? previousApplication.discord_id,
 				new Date(),
-				applicationID,
+				applicationId,
 			],
 		);
 

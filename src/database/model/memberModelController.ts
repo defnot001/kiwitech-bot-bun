@@ -1,7 +1,7 @@
 import type { Snowflake } from 'discord.js';
 import { pgClient } from '../..';
 
-type MCMember = {
+type McMember = {
 	discord_id: Snowflake;
 	trial_member: boolean;
 	minecraft_uuids: string[];
@@ -10,16 +10,16 @@ type MCMember = {
 };
 
 export default abstract class MemberModelController {
-	static async getMember(discordID: Snowflake) {
-		const query = await pgClient.query('SELECT * FROM members WHERE discord_id = $1', [discordID]);
+	static async getMember(discordId: Snowflake) {
+		const query = await pgClient.query('SELECT * FROM members WHERE discord_id = $1', [discordId]);
 
-		return query.rows[0] as MCMember;
+		return query.rows[0] as McMember;
 	}
 
 	static async getAllMembers() {
 		const query = await pgClient.query('SELECT * FROM members');
 
-		return query.rows as MCMember[];
+		return query.rows as McMember[];
 	}
 
 	static async addMember(options: {
@@ -35,25 +35,25 @@ export default abstract class MemberModelController {
 			[discordID, trialMember, minecraftUUIDs, memberSince],
 		);
 
-		return query.rows[0] as MCMember;
+		return query.rows[0] as McMember;
 	}
 
 	static async updateMember(
-		discordID: Snowflake,
+		discordId: Snowflake,
 		updates: {
 			trialMember?: boolean | null;
 			minecraftUUIDs?: string[] | null;
 			memberSince?: Date | null;
 		},
 	) {
-		const currentMember = await MemberModelController.getMember(discordID);
+		const currentMember = await MemberModelController.getMember(discordId);
 
 		const trialMember =
 			updates.trialMember !== undefined && updates.trialMember === null
 				? updates.trialMember
 				: currentMember.trial_member;
 
-		const minecraftUUIDs =
+		const minecraftUuiDs =
 			updates.minecraftUUIDs !== undefined && updates.minecraftUUIDs === null
 				? updates.minecraftUUIDs
 				: currentMember.minecraft_uuids;
@@ -65,17 +65,17 @@ export default abstract class MemberModelController {
 
 		const query = await pgClient.query(
 			'UPDATE members SET trial_member = $1, minecraft_uuids = $2, member_since = $3, updated_at = $4 WHERE discord_id = $5 RETURNING *',
-			[trialMember, minecraftUUIDs, memberSince, new Date(), discordID],
+			[trialMember, minecraftUuiDs, memberSince, new Date(), discordId],
 		);
 
-		return query.rows[0] as MCMember;
+		return query.rows[0] as McMember;
 	}
 
-	static async removeMember(discordID: Snowflake) {
+	static async removeMember(discordId: Snowflake) {
 		const query = await pgClient.query('DELETE FROM members WHERE discord_id = $1 RETURNING *', [
-			discordID,
+			discordId,
 		]);
 
-		return query.rows[0] as MCMember;
+		return query.rows[0] as McMember;
 	}
 }

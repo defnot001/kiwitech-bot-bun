@@ -37,10 +37,10 @@ export default abstract class TodoModelController {
 		return query.rows[0] as Todo;
 	}
 
-	static async updateTodoTitle(old_title: string, new_title: string) {
+	static async updateTodoTitle(oldTitle: string, newTitle: string) {
 		const query = await pgClient.query('UPDATE todos SET title = $1 WHERE title = $2 RETURNING *', [
-			new_title,
-			old_title,
+			newTitle,
+			oldTitle,
 		]);
 
 		return query.rows[0] as Todo;
