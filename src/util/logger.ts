@@ -43,7 +43,12 @@ export abstract class LOGGER {
 
 	public static async error(error: unknown, message?: string): Promise<void> {
 		const cleanError = LOGGER.getCleanError(error);
-		const errorMessage = message ? `${message}: ${cleanError.message}` : cleanError.message;
+		let errorMessage = message ? `${message}: ${cleanError.message}` : cleanError.message;
+
+		if (!errorMessage.trim()) {
+			// Handle empty error message scenario by setting a default message
+			errorMessage = 'An error occurred, but no message was provided.';
+		}
 
 		LOGGER.log(errorMessage, 'error');
 
