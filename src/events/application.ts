@@ -72,16 +72,12 @@ async function handleApplication(req: Request, client: Client): Promise<Response
 		});
 	}
 
-	console.log(json);
-
 	if (!isAuthenticatedApplicationRequest(json)) {
 		return new Response('Permission denied', {
 			status: 403,
 			statusText: 'FORBIDDEN',
 		});
 	}
-
-	console.log('Passed authentication');
 
 	const authenticatedApplicationRequest = json as AuthenticatedApplicationRequest;
 	LOGGER.info(`Application recieved at ${new Date().toLocaleString()}.`);
@@ -197,7 +193,7 @@ function createApplicationObject(json: ApplicationRequestBodyJSON): ApplicationO
 		minecraftExperienceTime: json['How long have you been playing Minecraft?'],
 		otherExperience:
 			json['What is your experience on other technical minecraft servers? (please specify)'],
-		fields: json['What fields of TMC are you specialised in?'],
+		fields: json['What fields of TMC are you specialised in? '],
 		informationSource: json['Where did you hear about KiwiTech?'],
 		reason: json['Why do you want to apply on KiwiTech?'],
 		timeAvailable: json['How much time can you dedicate to KiwiTech per week? (rough estimate)'],
@@ -501,7 +497,7 @@ type ApplicationRequestBodyJSON = {
 	'What languages do you speak?': string;
 	'How long have you been playing Minecraft?': string;
 	'What is your experience on other technical minecraft servers? (please specify)': string;
-	'What fields of TMC are you specialised in?': string[];
+	'What fields of TMC are you specialised in? ': string[];
 	'Where did you hear about KiwiTech?': string;
 	'Why do you want to apply on KiwiTech?': string;
 	'How much time can you dedicate to KiwiTech per week? (rough estimate)': string;
@@ -523,7 +519,7 @@ const applicationRequestBodyFields = [
 	'What languages do you speak?',
 	'How long have you been playing Minecraft?',
 	'What is your experience on other technical minecraft servers? (please specify)',
-	'What fields of TMC are you specialised in?',
+	'What fields of TMC are you specialised in? ',
 	'Where did you hear about KiwiTech?',
 	'Why do you want to apply on KiwiTech?',
 	'How much time can you dedicate to KiwiTech per week? (rough estimate)',
