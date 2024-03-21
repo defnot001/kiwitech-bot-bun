@@ -1,6 +1,6 @@
 import type { Snowflake, User } from 'discord.js';
 import { pgClient } from '../..';
-import type { ApplicationObject } from '../../util/application';
+import type { ApplicationObject } from '../../events/application';
 
 export type ApplicationInDatabase = {
 	id: number;
@@ -49,14 +49,14 @@ export default abstract class ApplicationModelController {
 		return query.rows[0] as ApplicationInDatabase;
 	}
 
-	static async addApplication(
-		application: ApplicationObject,
-		isOpen: boolean,
-		discordId: Snowflake | null,
-	) {
+	static async addApplication(options: {
+		applicationObject: ApplicationObject;
+		isOpen: boolean;
+		discordID: Snowflake | null;
+	}) {
 		const query = await pgClient.query(
 			'INSERT INTO applications (discord_id, is_open, content) VALUES ($1, $2, $3) RETURNING *',
-			[discordId, isOpen, application],
+			[options.discordID, options.isOpen, options.applicationObject],
 		);
 
 		return query.rows[0] as ApplicationInDatabase;
