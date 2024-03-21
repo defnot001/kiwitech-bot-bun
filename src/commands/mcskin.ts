@@ -3,6 +3,7 @@ import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
 import MojangAPI from '../util/mojang';
+import { escapeMarkdown } from '../util/helpers';
 
 const SKIN_RENDER_TYPES = {
 	default: ['full', 'bust', 'face'],
@@ -133,7 +134,7 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 
 		if (res.headers.get('content-type')?.includes('png')) {
 			const skinAttachment = new AttachmentBuilder(url, {
-				name: `${playerName}.png`,
+				name: 'skin.png',
 				description: `Minecraft Skin of the player ${playerName}`,
 			});
 
@@ -143,11 +144,14 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 
 		if (res.headers.get('content-type')?.includes('webp')) {
 			const skinAttachment = new AttachmentBuilder(url, {
-				name: `${playerName}.webp`,
+				name: 'skin.webp',
 				description: `Minecraft Skin of the player ${playerName}`,
 			});
 
-			await this.interaction.editReply({ files: [skinAttachment] });
+			await this.interaction.editReply({
+				content: `Skin render for ${escapeMarkdown(profile.name)}`,
+				files: [skinAttachment],
+			});
 			return;
 		}
 
