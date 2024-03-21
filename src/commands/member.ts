@@ -11,7 +11,7 @@ import { displayFormatted, displayTime } from '../util/format';
 import { Command } from '../util/handler/classes/Command';
 import { escapeMarkdown } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import MojangAPI from '../util/mojang';
+import mojangApi from '../util/mojang';
 
 export const member = new Command({
 	name: 'member',
@@ -107,11 +107,15 @@ export const member = new Command({
 			],
 		},
 	],
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: this is not that complex
 	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply();
 
 		const handler = new MemberCommandHandler({ interaction, client });
-		if (!(await handler.init())) return;
+
+		if (!(await handler.init())) {
+			return;
+		}
 
 		const subcommand = args.getSubcommand() as 'list' | 'info' | 'add' | 'update' | 'remove';
 
@@ -278,7 +282,7 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 
 		const profiles = await Promise.all(
 			dbMember.minecraft_uuids.map((uuid) => {
-				return MojangAPI.getProfile(uuid);
+				return mojangApi.getProfile(uuid);
 			}),
 		).catch(async (e) => {
 			await LOGGER.error(e, 'Failed to get profiles from Mojang API');
@@ -328,10 +332,16 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 		memberSince: string;
 	}) {
 		const memberSinceDate = await this.getDateFromString(args.memberSince);
-		if (!memberSinceDate) return;
+
+		if (!memberSinceDate) {
+			return;
+		}
 
 		const profiles = await this.getProfilesFromString(args.ign);
-		if (!profiles) return;
+
+		if (!profiles) {
+			return;
+		}
 
 		try {
 			await MemberModelController.addMember({
@@ -356,10 +366,16 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 		memberSince: string | null;
 	}) {
 		const memberSince = args.memberSince ? await this.getDateFromString(args.memberSince) : null;
-		if (args.memberSince && !memberSince) return;
+
+		if (args.memberSince && !memberSince) {
+			return;
+		}
 
 		const profiles = args.ign ? await this.getProfilesFromString(args.ign) : null;
-		if (args.ign && !profiles) return;
+
+		if (args.ign && !profiles) {
+			return;
+		}
 
 		try {
 			await MemberModelController.updateMember(args.targetUser.id, {
@@ -425,12 +441,12 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 		let profiles: { id: string; name: string }[] | null = null;
 
 		if (igns.length > 1) {
-			profiles = await MojangAPI.getUUIDs(igns).catch(async (e) => {
+			profiles = await mojangApi.getUUIDs(igns).catch(async (e) => {
 				await LOGGER.error(e, 'Failed to get profiles from Mojang API');
 				return null;
 			});
 		} else {
-			const profile = await MojangAPI.getUUID(igns[0]).catch(async (e) => {
+			const profile = await mojangApi.getUUID(igns[0]).catch(async (e) => {
 				await LOGGER.error(e, 'Failed to get profile from Mojang API');
 				return null;
 			});

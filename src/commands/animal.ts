@@ -26,7 +26,10 @@ export const animal = new Command({
 		const animalChoice = args.getString('animal', true) as AnimalChoice;
 
 		const handler = new AnimalCommandHandler({ interaction, client });
-		if (!(await handler.init())) return;
+
+		if (!(await handler.init())) {
+			return;
+		}
 
 		await handler.handleAnimal({ animalChoice });
 	},
@@ -36,13 +39,13 @@ class AnimalCommandHandler extends BaseKiwiCommandHandler {
 	public async handleAnimal(args: {
 		animalChoice: AnimalChoice;
 	}): Promise<void> {
-		const apiURL = {
+		const apiUrl = {
 			fox: 'https://randomfox.ca/floof/',
 			cat: 'https://api.thecatapi.com/v1/images/search',
 			dog: 'https://api.thedogapi.com/v1/images/search',
 		} as const;
 
-		const url = apiURL[args.animalChoice];
+		const url = apiUrl[args.animalChoice];
 		const jsonResponse = await this.fetchImage(url, args.animalChoice);
 
 		if (!jsonResponse) {
@@ -51,13 +54,13 @@ class AnimalCommandHandler extends BaseKiwiCommandHandler {
 
 		switch (args.animalChoice) {
 			case 'fox': {
-				const foxResponse = jsonResponse as FoxResponseJSON;
+				const foxResponse = jsonResponse as FoxResponseJson;
 				await this.interaction.editReply({ files: [foxResponse.image] });
 				break;
 			}
 			case 'cat':
 			case 'dog': {
-				const catDogResponse = jsonResponse as DogCatResponseJSON;
+				const catDogResponse = jsonResponse as DogCatResponseJson;
 
 				if (!catDogResponse[0]) {
 					await this.interaction.editReply(`Failed to get a ${args.animalChoice} image.`);
@@ -88,20 +91,20 @@ class AnimalCommandHandler extends BaseKiwiCommandHandler {
 		const jsonResponse = (await response.json().catch(async (e) => {
 			await LOGGER.error(e, `Failed to parse JSON for ${animalChoice} image`);
 			return null;
-		})) as FoxResponseJSON | DogCatResponseJSON | null;
+		})) as FoxResponseJson | DogCatResponseJson | null;
 
 		return jsonResponse;
 	}
 }
 
-type DogCatResponseJSON = {
+type DogCatResponseJson = {
 	id: string;
 	url: string;
 	width: number;
 	height: number;
 }[];
 
-type FoxResponseJSON = {
+type FoxResponseJson = {
 	image: string;
 	link: string;
 };

@@ -24,7 +24,7 @@ import { display, displayFormatted } from '../util/format';
 import { Command } from '../util/handler/classes/Command';
 import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import MojangAPI from '../util/mojang';
+import mojangApi from '../util/mojang';
 import { getTrialWelcomeMessage } from '../util/welcomeMessage';
 
 type ApplicationSubcommand =
@@ -198,7 +198,10 @@ export const application = new Command({
 		const subcommand = args.getSubcommand() as ApplicationSubcommand;
 
 		const handler = new ApplicationCommandHandler({ interaction, client });
-		if (!(await handler.init())) return;
+
+		if (!(await handler.init())) {
+			return;
+		}
 
 		if (subcommand === 'list') {
 			await handler.handleList({
@@ -298,7 +301,10 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleDisplayByID(args: { applicationID: number }) {
 		const application = await this.getApplicationFromID(args.applicationID);
-		if (!application) return;
+
+		if (!application) {
+			return;
+		}
 
 		const user = application.discord_id
 			? await fetchUser(application.discord_id, this.client)
@@ -344,10 +350,16 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		messageID: Snowflake;
 	}) {
 		const applicationChannel = await this.getApplicationChannel();
-		if (!applicationChannel) return;
+
+		if (!applicationChannel) {
+			return;
+		}
 
 		const oldMessage = await this.getApplicationMessage(args.messageID, applicationChannel);
-		if (!oldMessage) return;
+
+		if (!oldMessage) {
+			return;
+		}
 
 		const updatedApplication = await this.updateApplicationLink({
 			applicationID: args.applicationID,
@@ -414,14 +426,20 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		await this.interaction.editReply('Creating channel...');
 
 		const applicationChannel = await this.getApplicationChannel();
-		if (!applicationChannel) return;
+
+		if (!applicationChannel) {
+			return;
+		}
 
 		const applicationMessage = await this.getApplicationMessage(args.messageID, applicationChannel);
-		if (!applicationMessage) return;
 
-		const applicationID = this.getApplicationIDfromMessage(applicationMessage);
+		if (!applicationMessage) {
+			return;
+		}
 
-		if (!applicationID) {
+		const applicationId = this.getApplicationIDfromMessage(applicationMessage);
+
+		if (!applicationId) {
 			await this.interaction.editReply(
 				`Failed to find application ID in message with ID ${args.messageID} in ${displayFormatted(
 					applicationChannel,
@@ -430,12 +448,15 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		const application = await this.getApplicationFromID(applicationID);
-		if (!application) return;
+		const application = await this.getApplicationFromID(applicationId);
+
+		if (!application) {
+			return;
+		}
 
 		if (!application.discord_id) {
 			await this.interaction.editReply(
-				`Application with ID ${applicationID} does not have a linked user.`,
+				`Application with ID ${applicationId} does not have a linked user.`,
 			);
 			return;
 		}
@@ -444,7 +465,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 
 		if (!applicantUser) {
 			await this.interaction.editReply(
-				`Failed to find user with ID ${application.discord_id} for application ID ${applicationID}.`,
+				`Failed to find user with ID ${application.discord_id} for application ID ${applicationId}.`,
 			);
 			return;
 		}
@@ -530,7 +551,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			description: `Vote on the application from ${userMention(applicantUser.id)}!`,
 			color: config.embedColors.default,
 			footer: {
-				text: `Application ID: ${applicationID}`,
+				text: `Application ID: ${applicationId}`,
 				icon_url: applicantUser.displayAvatarURL(),
 			},
 			timestamp: new Date(),
@@ -550,14 +571,17 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		}
 
 		await this.interaction.editReply(
-			`Successfully created channel ${newChannel} for application ID ${applicationID}.`,
+			`Successfully created channel ${newChannel} for application ID ${applicationId}.`,
 		);
 	}
 	public async handleAccept(args: { applicationID: number }) {
 		await this.interaction.editReply('Accepting application...');
 
 		const application = await this.getApplicationFromID(args.applicationID);
-		if (!application) return;
+
+		if (!application) {
+			return;
+		}
 
 		if (!application.is_open) {
 			await this.interaction.editReply(`Application with ID ${args.applicationID} is not open.`);
@@ -624,12 +648,12 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			);
 		}
 
-		const minecraftProfile = await MojangAPI.getUUID(application.content.ign.trim()).catch(
-			async (e) => {
+		const minecraftProfile = await mojangApi
+			.getUUID(application.content.ign.trim())
+			.catch(async (e) => {
 				await LOGGER.error(e, `Failed to get UUID for ${application.content.ign}`);
 				return null;
-			},
-		);
+			});
 
 		if (!minecraftProfile) {
 			await this.interaction.followUp(
@@ -677,7 +701,10 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		await this.interaction.editReply('Denying Application...');
 
 		const application = await this.getApplicationFromID(args.applicationID);
-		if (!application) return;
+
+		if (!application) {
+			return;
+		}
 
 		if (!application.is_open) {
 			await this.interaction.editReply(`Application with ID ${args.applicationID} is not open.`);
@@ -766,16 +793,16 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 	 * @returns The application, or null if an error occurred.
 	 * @sideeffect Edits the interaction reply if an error occurs.
 	 */
-	private async getApplicationFromID(applicationID: number): Promise<ApplicationInDatabase | null> {
-		const application = await ApplicationModelController.getApplication(applicationID).catch(
+	private async getApplicationFromID(applicationId: number): Promise<ApplicationInDatabase | null> {
+		const application = await ApplicationModelController.getApplication(applicationId).catch(
 			async (e) => {
-				await LOGGER.error(e, `Failed to get application with ID ${applicationID}`);
+				await LOGGER.error(e, `Failed to get application with ID ${applicationId}`);
 				return null;
 			},
 		);
 
 		if (!application) {
-			await this.interaction.editReply(`Application with ID ${applicationID} not found.`);
+			await this.interaction.editReply(`Application with ID ${applicationId} not found.`);
 			return null;
 		}
 
@@ -823,7 +850,9 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			await LOGGER.error(e, 'Failed to get config emojis');
 		}
 
-		if (!emojis) return;
+		if (!emojis) {
+			return;
+		}
 
 		try {
 			await message.react(emojis.frogYes);
@@ -878,19 +907,34 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 	 * @returns The application ID, or null if an error occurred.
 	 */
 	private getApplicationIDfromMessage(message: Message): number | null {
-		if (!message.embeds || message.embeds.length !== 3) return null;
-		if (!message.embeds.every((e) => e instanceof Embed)) return null;
-		if (!message.embeds[0]?.title?.includes('Application')) return null;
-		if (!message.embeds[0].footer) return null;
+		if (!message.embeds || message.embeds.length !== 3) {
+			return null;
+		}
+
+		if (!message.embeds.every((e) => e instanceof Embed)) {
+			return null;
+		}
+
+		if (!message.embeds[0]?.title?.includes('Application')) {
+			return null;
+		}
+
+		if (!message.embeds[0].footer) {
+			return null;
+		}
 
 		const footer = message.embeds[0].footer.text;
 		const split = footer.split('|');
 
-		if (!split[1]) return null;
+		if (!split[1]) {
+			return null;
+		}
 
 		const replaced = split[1].replace(' ID: ', '');
 
-		if (!replaced) return null;
+		if (!replaced) {
+			return null;
+		}
 
 		let id: number | null;
 
@@ -947,7 +991,10 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		}
 
 		const memberGeneralChannel = await getTextChannelFromConfig(this.guild, 'memberGeneral');
-		if (!memberGeneralChannel) return false;
+
+		if (!memberGeneralChannel) {
+			return false;
+		}
 
 		if (!kiwiEmoji) {
 			await LOGGER.error(new Error('Failed to get guild emojis'));
@@ -963,7 +1010,9 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			return false;
 		}
 
-		if (!trialWelcomeMessage) return false;
+		if (!trialWelcomeMessage) {
+			return false;
+		}
 
 		const trialEmbed = new KoalaEmbedBuilder(this.interaction.user, {
 			title: `${kiwiEmoji}  Welcome to ${this.guild.name} ${targetUser.displayName}!  ${kiwiEmoji}`,
@@ -983,7 +1032,9 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				return null;
 			});
 
-		if (!message) return false;
+		if (!message) {
+			return false;
+		}
 
 		try {
 			await message.edit({ content: '\u200b' });
@@ -1042,7 +1093,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 	 * Deletes an application message from the application channel.
 	 * @sideeffect Logs the error and follows up to the interaction if something went wrong.
 	 */
-	private async deleteApplicationMessage(messageID: Snowflake): Promise<void> {
+	private async deleteApplicationMessage(messageId: Snowflake): Promise<void> {
 		const applicationChannel = await getTextChannelFromConfig(this.guild, 'application');
 
 		if (!applicationChannel) {
@@ -1052,17 +1103,17 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		const message = await applicationChannel.messages.fetch(messageID).catch(async (e) => {
+		const message = await applicationChannel.messages.fetch(messageId).catch(async (e) => {
 			await LOGGER.error(
 				e,
-				`Failed to fetch message with ID ${messageID} from ${display(applicationChannel)}`,
+				`Failed to fetch message with ID ${messageId} from ${display(applicationChannel)}`,
 			);
 			return null;
 		});
 
 		if (!message) {
 			await this.interaction.followUp(
-				`Failed to find application message with ID ${messageID} in ${display(
+				`Failed to find application message with ID ${messageId} in ${display(
 					applicationChannel,
 				)}. Please delete the message manually.`,
 			);
@@ -1075,12 +1126,12 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		} catch (e) {
 			await LOGGER.error(
 				e,
-				`Failed to delete application message with ID ${messageID} from ${display(
+				`Failed to delete application message with ID ${messageId} from ${display(
 					applicationChannel,
 				)}`,
 			);
 			await this.interaction.followUp(
-				`Failed to delete application message with ID ${messageID} from ${display(
+				`Failed to delete application message with ID ${messageId} from ${display(
 					applicationChannel,
 				)}. Please do so manually.`,
 			);

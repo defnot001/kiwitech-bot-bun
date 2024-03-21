@@ -3,7 +3,7 @@ import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
 import { escapeMarkdown } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import MojangAPI from '../util/mojang';
+import mojangApi from '../util/mojang';
 
 const SKIN_RENDER_TYPES = {
 	default: ['full', 'bust', 'face'],
@@ -64,8 +64,11 @@ export const mcskin = new Command({
 	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply();
 
-		const handler = new MCSkinCommandHandler({ interaction, client });
-		if (!(await handler.init())) return;
+		const handler = new McSkinCommandHandler({ interaction, client });
+
+		if (!(await handler.init())) {
+			return;
+		}
 
 		const playerName = args.getString('name', true);
 
@@ -77,7 +80,7 @@ export const mcskin = new Command({
 	},
 });
 
-class MCSkinCommandHandler extends BaseKiwiCommandHandler {
+class McSkinCommandHandler extends BaseKiwiCommandHandler {
 	public async handleMCSkin(args: {
 		playerName: string;
 		renderPosition: keyof typeof SKIN_RENDER_TYPES;
@@ -90,7 +93,7 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		const profile = await MojangAPI.getUUID(playerName).catch(async (e) => {
+		const profile = await mojangApi.getUUID(playerName).catch(async (e) => {
 			await LOGGER.error(e, `Failed to get the UUID of ${playerName}`);
 			return null;
 		});
@@ -103,7 +106,9 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 		const imageType =
 			args.imageType === null ? this.getDefaultImageType(renderPosition) : args.imageType;
 
-		if (!(await this.checkImageType(renderPosition, imageType))) return;
+		if (!(await this.checkImageType(renderPosition, imageType))) {
+			return;
+		}
 
 		const url = `https://starlightskins.lunareclipse.studio/render/${renderPosition}/${profile.id}/${imageType}`;
 

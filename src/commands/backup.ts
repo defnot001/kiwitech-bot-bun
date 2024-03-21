@@ -85,7 +85,9 @@ export const backup = new Command({
 			serverChoice: args.getString('server', true) as ServerChoice,
 		});
 
-		if (!(await handler.init())) return;
+		if (!(await handler.init())) {
+			return;
+		}
 
 		if (subcommand === 'list') {
 			await handler.handleList();
@@ -403,12 +405,12 @@ class BackupCommandHandler extends BaseKiwiCommandHandler {
 	 * Deletes the backup with the given ID.
 	 * @sideeffect Logs an error if an error occurred.
 	 */
-	private async deleteBackup(backupID: string): Promise<boolean> {
+	private async deleteBackup(backupId: string): Promise<boolean> {
 		try {
-			await ptero.backups.delete(this.serverID, backupID);
+			await ptero.backups.delete(this.serverID, backupId);
 			return true;
 		} catch (e) {
-			await LOGGER.error(e, `Failed to delete backup ${backupID} for ${this.serverChoice}`);
+			await LOGGER.error(e, `Failed to delete backup ${backupId} for ${this.serverChoice}`);
 			return false;
 		}
 	}

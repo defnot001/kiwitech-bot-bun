@@ -50,7 +50,9 @@ export const mods = new Command({
 			serverChoice: args.getString('server') as ServerChoice,
 		});
 
-		if (!(await handler.init())) return;
+		if (!(await handler.init())) {
+			return;
+		}
 
 		const subcommand = args.getSubcommand() as 'list' | 'enable' | 'disable';
 
@@ -127,7 +129,10 @@ class ModsCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleEnable(args: { modName: string }) {
 		const targetMod = await this.getTargetMod(args.modName);
-		if (!targetMod) return;
+
+		if (!targetMod) {
+			return;
+		}
 
 		if (targetMod.name.endsWith('.jar')) {
 			await this.interaction.editReply(`Mod: ${targetMod.name} is already enabled!`);
@@ -152,7 +157,10 @@ class ModsCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleDisable(args: { modNames: string }) {
 		const targetMod = await this.getTargetMod(args.modNames);
-		if (!targetMod) return;
+
+		if (!targetMod) {
+			return;
+		}
 
 		if (targetMod.name.endsWith('.disabled')) {
 			await this.interaction.editReply(`Mod: ${targetMod.name} is already disabled!`);

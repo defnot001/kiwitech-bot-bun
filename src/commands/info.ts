@@ -58,7 +58,10 @@ export const info = new Command({
 		const subcommand = args.getSubcommand() as 'server' | 'user' | 'members' | 'admins' | 'avatar';
 
 		const handler = new InfoCommandHandler({ interaction, client });
-		if (!(await handler.init())) return;
+
+		if (!(await handler.init())) {
+			return;
+		}
 
 		if (subcommand === 'server') {
 			await handler.handleServer();
@@ -197,7 +200,10 @@ class InfoCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleMembers() {
 		const membersRole = await this.getGuildRole('members');
-		if (!membersRole) return;
+
+		if (!membersRole) {
+			return;
+		}
 
 		const membersEntries = this.getEmbedEntriesForRoleMembers(membersRole);
 
@@ -223,7 +229,10 @@ class InfoCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleAdmins() {
 		const adminRole = await this.getGuildRole('admins');
-		if (!adminRole) return;
+
+		if (!adminRole) {
+			return;
+		}
 
 		const adminEntries = this.getEmbedEntriesForRoleMembers(adminRole);
 

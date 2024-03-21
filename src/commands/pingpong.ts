@@ -12,7 +12,10 @@ export const pingpong = new Command({
 		await interaction.deferReply({ ephemeral: true });
 
 		const handler = new PingPingCommandHandler({ interaction, client });
-		if (!(await handler.init())) return;
+
+		if (!(await handler.init())) {
+			return;
+		}
 
 		await handler.handlePingPong();
 	},

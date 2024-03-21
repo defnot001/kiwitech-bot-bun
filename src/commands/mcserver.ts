@@ -50,13 +50,15 @@ export const mcserver = new Command({
 
 		const subcommand = args.getSubcommand() as 'start' | 'stop' | 'restart' | 'kill' | 'stats';
 
-		const handler = new MCServerCommandHandler({
+		const handler = new McServerCommandHandler({
 			interaction,
 			client,
 			serverChoice: args.getString('server', true) as ServerChoice,
 		});
 
-		if (!(await handler.init())) return;
+		if (!(await handler.init())) {
+			return;
+		}
 
 		switch (subcommand) {
 			case 'start':
@@ -78,7 +80,7 @@ export const mcserver = new Command({
 	},
 });
 
-class MCServerCommandHandler extends BaseKiwiCommandHandler {
+class McServerCommandHandler extends BaseKiwiCommandHandler {
 	private readonly serverChoice: ServerChoice;
 	private readonly serverID: string;
 
@@ -95,7 +97,9 @@ class MCServerCommandHandler extends BaseKiwiCommandHandler {
 
 	public async handleStart() {
 		const serverStats = await this.getServerStats();
-		if (!serverStats) return;
+		if (!serverStats) {
+			return;
+		}
 
 		if (serverStats.current_state !== 'offline') {
 			await this.interaction.editReply(
@@ -117,7 +121,10 @@ class MCServerCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleStop() {
 		const serverStats = await this.getServerStats();
-		if (!serverStats) return;
+
+		if (!serverStats) {
+			return;
+		}
 
 		if (serverStats.current_state !== 'running') {
 			await this.interaction.editReply(
@@ -139,7 +146,10 @@ class MCServerCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleRestart() {
 		const serverStats = await this.getServerStats();
-		if (!serverStats) return;
+
+		if (!serverStats) {
+			return;
+		}
 
 		if (serverStats.current_state !== 'running') {
 			await this.interaction.editReply(
@@ -161,7 +171,10 @@ class MCServerCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleKill() {
 		const serverStats = await this.getServerStats();
-		if (!serverStats) return;
+
+		if (!serverStats) {
+			return;
+		}
 
 		if (serverStats.current_state !== 'stopping') {
 			await this.interaction.editReply(
@@ -183,7 +196,10 @@ class MCServerCommandHandler extends BaseKiwiCommandHandler {
 	}
 	public async handleStats() {
 		const serverStats = await this.getServerStats();
-		if (!serverStats) return;
+
+		if (!serverStats) {
+			return;
+		}
 
 		const statEmbed = new KoalaEmbedBuilder(this.interaction.user, {
 			title: `Server Stats ${this.guild.name} ${this.serverChoice}`,

@@ -1,9 +1,10 @@
-import { ApplicationCommandOptionType, codeBlock } from 'discord.js';
+import { ApplicationCommandOptionType, PermissionFlagsBits, codeBlock } from 'discord.js';
 import type { ServerChoice } from '../config';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
-import { getServerChoices, isAdmin } from '../util/helpers';
+import { getServerChoices } from '../util/helpers';
 import { LOGGER } from '../util/logger';
-import RCONUtil from '../util/rcon';
+import rconUtil from '../util/rcon';
 
 export const rcon = new Command({
 	name: 'run',
@@ -23,45 +24,81 @@ export const rcon = new Command({
 			required: true,
 		},
 	],
-	execute: async ({ interaction, args }) => {
+	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply();
 
-		const choice = args.getString('server', true) as ServerChoice;
+		const handler = new RconCommandHandler({ interaction, client });
 
-		if (choice === 'smp' && !isAdmin(interaction.member)) {
-			return interaction.editReply(
-				'You do not have the required permissions to run commands on this server.',
-			);
+		if (!(await handler.init())) {
+			return;
 		}
 
 		const command = args.getString('command');
 
-		if (!choice || !command) {
-			return interaction.editReply('Missing arguments for this command!');
-		}
-
-		if (!interaction.guild) {
-			return interaction.editReply('This command can only be used in a server!');
-		}
-
-		try {
-			const response =
-				(await RCONUtil.runSingleCommand(choice, command)) ||
-				'Command was executed successfully but there is no response.';
-
-			const maxMessageLength = 2000;
-
-			if (response.length > maxMessageLength) {
-				return interaction.editReply(
-					'The response from the server to this command exceeds the message character limit. Consider using the panel for this specific command next time.',
-				);
-			}
-
-			return interaction.editReply(codeBlock(response.toString()));
-		} catch (e) {
-			await LOGGER.error(e, `Failed to run command on server ${choice}`);
-			await interaction.editReply('Failed to run command on server !');
+		if (!command?.trim()) {
+			await interaction.editReply('You must provide a command to run!');
 			return;
 		}
+
+		await handler.handleRun({
+			serverChoice: args.getString('server') as ServerChoice,
+			command,
+		});
 	},
 });
+
+class RconCommandHandler extends BaseKiwiCommandHandler {
+	public async handleRun(args: { serverChoice: ServerChoice; command: string }) {
+		if (
+			args.serverChoice === 'smp' &&
+			!this.member.permissions.has(PermissionFlagsBits.Administrator)
+		) {
+			await this.interaction.editReply(
+				'You do not have the required permissions to run commands on this server.',
+			);
+			return;
+		}
+
+		const response = await rconUtil
+			.runSingleCommand(args.serverChoice, args.command)
+			.catch(async (e) => {
+				await LOGGER.error(
+					e,
+					`Failed to run command "${args.command}" on server ${args.serverChoice}`,
+				);
+				return null;
+			});
+
+		if (response === null) {
+			await this.interaction.editReply('Failed to run command on server!');
+			return;
+		}
+
+		if (response === '') {
+			await this.interaction.editReply(
+				'Command was executed successfully but there is no response.',
+			);
+			return;
+		}
+
+		const maxMessageLength = 2000;
+
+		if (response.length > maxMessageLength) {
+			await this.interaction.editReply(
+				'The response from the server to this command exceeds the message character limit. Consider using the panel for this specific command next time.',
+			);
+
+			return;
+		}
+
+		if (typeof response !== 'string') {
+			await this.interaction.editReply('Failed to run command on server!');
+			await LOGGER.error(
+				new Error(`Server response to rcon command "${args.command} is not a string"`),
+			);
+			return;
+		}
+
+		await this.interaction.editReply(codeBlock(response));
+	}
+}

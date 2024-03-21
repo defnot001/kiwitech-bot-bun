@@ -58,7 +58,10 @@ export const mirror = new Command({
 		await interaction.deferReply();
 
 		const handler = new MirrorCommandHandler({ interaction, client });
-		if (!(await handler.init())) return;
+
+		if (!(await handler.init())) {
+			return;
+		}
 
 		await handler.handleMirror({
 			serverType: args.getString('server', true) as ServerType,
@@ -268,14 +271,14 @@ class MirrorCommandHandler extends BaseKiwiCommandHandler {
 
 		await Promise.all(
 			files.map((file, index) => {
-				const serverID = config.mcConfig[targetServer].serverId;
+				const serverId = config.mcConfig[targetServer].serverId;
 				const filePath = filePaths[index];
 
 				if (!filePath) {
 					throw new Error(`Couldn't get the path for ${dimension} region: ${regionName}`);
 				}
 
-				return ptero.files.write(serverID, filePath, file);
+				return ptero.files.write(serverId, filePath, file);
 			}),
 		);
 	}
