@@ -13,7 +13,7 @@ import { member } from '../../../commands/member';
 import { mirror } from '../../../commands/mirror';
 import { mods } from '../../../commands/mods';
 import { pingpong } from '../../../commands/pingpong';
-// import { rcon } from '../../../commands/rcon';
+import { rcon } from '../../../commands/rcon';
 // import { scoreboard } from '../../../commands/scoreboard';
 // import { status } from '../../../commands/status';
 // import { todo } from '../../../commands/todo';
@@ -42,7 +42,7 @@ const COMMANDS = [
 	mirror,
 	mods,
 	pingpong,
-	// rcon,
+	rcon,
 	// scoreboard,
 	// status,
 	// todo,
