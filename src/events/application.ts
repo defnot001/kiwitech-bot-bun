@@ -83,6 +83,7 @@ async function handleApplication(req: Request, client: Client): Promise<Response
 	LOGGER.info(`Application recieved at ${new Date().toLocaleString()}.`);
 
 	if (!isApplication(authenticatedApplicationRequest)) {
+		console.log(json);
 		await LOGGER.error(new Error('Received wrong formatted application'));
 		return new Response('Invalid application', {
 			status: 400,
