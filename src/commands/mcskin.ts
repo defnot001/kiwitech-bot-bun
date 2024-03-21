@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType, AttachmentBuilder } from 'discord.js';
 import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
 import { LOGGER } from '../util/logger';
+import MojangAPI from '../util/mojang';
 
 const SKIN_RENDER_TYPES = {
 	default: ['full', 'bust', 'face'],
@@ -88,12 +89,22 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
+		const uuid = await MojangAPI.getUUID(playerName).catch(async (e) => {
+			await LOGGER.error(e, `Failed to get the UUID of ${playerName}`);
+			return null;
+		});
+
+		if (!uuid) {
+			await this.interaction.editReply('Failed to get the UUID of the player!');
+			return;
+		}
+
 		const imageType =
 			args.imageType === null ? this.getDefaultImageType(renderPosition) : args.imageType;
 
 		if (!(await this.checkImageType(renderPosition, imageType))) return;
 
-		const url = `https://starlightskins.lunareclipse.studio/render/${renderPosition}/${playerName}/${imageType}`;
+		const url = `https://starlightskins.lunareclipse.studio/render/${renderPosition}/${uuid}/${imageType}`;
 
 		const res = await fetch(url).catch(async (e) => {
 			await LOGGER.error(e, `Failed to get the skin of ${playerName} from the starlightskins API`);
