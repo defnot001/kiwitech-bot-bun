@@ -116,12 +116,20 @@ class MCSkinCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		if (!res.ok || !res.headers.get('content-type')?.includes('image')) {
+		if (!res.ok) {
 			await LOGGER.error(
 				new Error(`${res.status}: ${res.statusText}`),
 				`Failed to get the skin of ${playerName}`,
 			);
 			await this.interaction.editReply('Failed to get the skin of the player!');
+			return;
+		}
+
+		console.log(res);
+
+		if (!res.headers.get('content-type')) {
+			await this.interaction.editReply('Failed to get the skin of the player!');
+			await LOGGER.error(new Error('No content type in the response'));
 			return;
 		}
 
