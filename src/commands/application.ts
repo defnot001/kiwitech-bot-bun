@@ -10,6 +10,7 @@ import {
 	type User,
 	time,
 	userMention,
+	type Client,
 } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
@@ -17,7 +18,6 @@ import ApplicationModelController, {
 	type ApplicationInDatabase,
 } from '../database/model/applicationModelController';
 import MemberModelController from '../database/model/memberModelController';
-import { buildApplicationEmbeds, notifyUserApplicationRecieved } from '../util/application';
 import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { type ConfigEmojis, getEmojis } from '../util/components';
 import { display, displayFormatted } from '../util/format';
@@ -26,6 +26,7 @@ import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpe
 import { LOGGER } from '../util/logger';
 import mojangApi from '../util/mojang';
 import { getTrialWelcomeMessage } from '../util/welcomeMessage';
+import { buildApplicationEmbeds, notifyUserApplicationRecieved } from '../events/application';
 
 type ApplicationSubcommand =
 	| 'list'
@@ -406,7 +407,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		await this.reactYesNo(postedApp);
+		await reactYesNo({ client: this.client, message: postedApp });
 
 		if (!(await notifyUserApplicationRecieved(args.newUser))) {
 			await this.interaction.followUp(
@@ -567,7 +568,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		}
 
 		if (voteMessage) {
-			await this.reactYesNo(voteMessage);
+			await reactYesNo({ client: this.client, message: voteMessage });
 		}
 
 		await this.interaction.editReply(
@@ -834,31 +835,6 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			);
 
 			return null;
-		}
-	}
-
-	/**
-	 * Reacts to a message with yes and no emojis.
-	 * @sideeffect Logs the error if one occurs.
-	 */
-	private async reactYesNo(message: Message): Promise<void> {
-		let emojis: ConfigEmojis | null = null;
-
-		try {
-			emojis = getEmojis(this.client);
-		} catch (e) {
-			await LOGGER.error(e, 'Failed to get config emojis');
-		}
-
-		if (!emojis) {
-			return;
-		}
-
-		try {
-			await message.react(emojis.frogYes);
-			await message.react(emojis.frogNo);
-		} catch (e) {
-			await LOGGER.error(e, `Failed to react to message ${message.id}`);
 		}
 	}
 
@@ -1136,5 +1112,30 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 				)}. Please do so manually.`,
 			);
 		}
+	}
+}
+
+/**
+ * Reacts to a message with yes and no emojis.
+ * @sideeffect Logs the error if one occurs.
+ */
+export async function reactYesNo(options: { client: Client; message: Message }): Promise<void> {
+	let emojis: ConfigEmojis | null = null;
+
+	try {
+		emojis = getEmojis(options.client);
+	} catch (e) {
+		await LOGGER.error(e, 'Failed to get config emojis');
+	}
+
+	if (!emojis) {
+		return;
+	}
+
+	try {
+		await options.message.react(emojis.frogYes);
+		await options.message.react(emojis.frogNo);
+	} catch (e) {
+		await LOGGER.error(e, `Failed to react to message ${options.message.id}`);
 	}
 }
