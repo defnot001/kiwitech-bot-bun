@@ -14,7 +14,7 @@ import { mirror } from '../../../commands/mirror';
 import { mods } from '../../../commands/mods';
 import { pingpong } from '../../../commands/pingpong';
 import { rcon } from '../../../commands/rcon';
-// import { scoreboard } from '../../../commands/scoreboard';
+import { scoreboard } from '../../../commands/scoreboard';
 // import { status } from '../../../commands/status';
 // import { todo } from '../../../commands/todo';
 // import { trialinfo } from '../../../commands/trialinfo';
@@ -43,7 +43,7 @@ const COMMANDS = [
 	mods,
 	pingpong,
 	rcon,
-	// scoreboard,
+	scoreboard,
 	// status,
 	// todo,
 	// trialinfo,
