@@ -1,6 +1,7 @@
 import {
 	type APIEmbedField,
 	ApplicationCommandOptionType,
+	type Client,
 	Embed,
 	EmbedBuilder,
 	type Emoji,
@@ -10,7 +11,6 @@ import {
 	type User,
 	time,
 	userMention,
-	type Client,
 } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { config } from '../config';
@@ -18,6 +18,7 @@ import ApplicationModelController, {
 	type ApplicationInDatabase,
 } from '../database/model/applicationModelController';
 import MemberModelController from '../database/model/memberModelController';
+import { buildApplicationEmbeds, notifyUserApplicationRecieved } from '../events/application';
 import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { type ConfigEmojis, getEmojis } from '../util/components';
 import { display, displayFormatted } from '../util/format';
@@ -26,7 +27,6 @@ import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpe
 import { LOGGER } from '../util/logger';
 import mojangApi from '../util/mojang';
 import { getTrialWelcomeMessage } from '../util/welcomeMessage';
-import { buildApplicationEmbeds, notifyUserApplicationRecieved } from '../events/application';
 
 type ApplicationSubcommand =
 	| 'list'

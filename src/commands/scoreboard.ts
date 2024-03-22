@@ -2,14 +2,14 @@ import path from 'node:path';
 import { type Canvas, GlobalFonts, type SKRSContext2D, createCanvas } from '@napi-rs/canvas';
 import { ApplicationCommandOptionType, bold, inlineCode } from 'discord.js';
 import { projectPaths } from '../config';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
+import type { ExtendedClient } from '../util/handler/classes/ExtendedClient';
+import type { ExtendedInteraction } from '../util/handler/types';
+import { escapeMarkdown } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import rconUtil from '../util/rcon';
 import allScoreboards from '../util/scoreboards_1.19.2';
-import { BaseKiwiCommandHandler } from '../util/commandhandler';
-import type { ExtendedInteraction } from '../util/handler/types';
-import type { ExtendedClient } from '../util/handler/classes/ExtendedClient';
-import { escapeMarkdown } from '../util/helpers';
 
 const scoreboardMap = allScoreboards;
 export type Scoreboard = (typeof allScoreboards)[number]['stat'];

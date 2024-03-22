@@ -1,24 +1,24 @@
 import {
-	EmbedBuilder,
 	type Client,
+	EmbedBuilder,
 	type Guild,
 	type GuildMember,
+	type Message,
 	type User,
 	escapeMarkdown,
 	inlineCode,
 	userMention,
-	type Message,
 } from 'discord.js';
+import { client } from '..';
+import { reactYesNo } from '../commands/application';
 import { config } from '../config';
 import ApplicationModelController, {
 	type ApplicationInDatabase,
 } from '../database/model/applicationModelController';
-import { DiscordEvent } from '../util/handler/classes/Event';
-import { LOGGER } from '../util/logger';
-import { getTextChannelFromConfig } from '../util/helpers';
-import { client } from '..';
 import { displayFormatted } from '../util/format';
-import { reactYesNo } from '../commands/application';
+import { DiscordEvent } from '../util/handler/classes/Event';
+import { getTextChannelFromConfig } from '../util/helpers';
+import { LOGGER } from '../util/logger';
 
 export const application = new DiscordEvent('ready', async (client) => {
 	const guild = client.guilds.cache.get(config.bot.guildID);
