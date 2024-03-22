@@ -228,8 +228,8 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 				a.user.username.toLocaleLowerCase().localeCompare(b.user.username.toLocaleLowerCase()),
 			)
 			.map((member) => {
-				return `${escapeMarkdown(member.user.username)} (${escapeMarkdown(
-					member.user.displayName,
+				return `${escapeMarkdown(member.user.displayName)} (${escapeMarkdown(
+					member.user.username,
 				)})`;
 			})
 			.join('\n');
