@@ -225,14 +225,17 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 
 		const memberNames = memberUsers
 			.sort((a, b) =>
-				a.user.displayName.toLocaleLowerCase().localeCompare(b.user.username.toLocaleLowerCase()),
+				a.user.username.toLocaleLowerCase().localeCompare(b.user.username.toLocaleLowerCase()),
 			)
-			.map(
-				(member) =>
-					`${escapeMarkdown(member.nickname ?? member.user.username)} (${
-						member.user.globalName ?? member.user.username
-					})`,
-			)
+			.map((member) => {
+				const displayStr = `${escapeMarkdown(member.user.globalName ?? member.user.username)}`;
+
+				if (member.nickname) {
+					displayStr.concat(` (${escapeMarkdown(member.nickname)})`);
+				}
+
+				return displayStr;
+			})
 			.join('\n');
 
 		const embed = new KoalaEmbedBuilder(this.interaction.user, {
