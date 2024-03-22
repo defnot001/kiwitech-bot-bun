@@ -323,7 +323,7 @@ class McServerCommandHandler extends BaseKiwiCommandHandler {
 	}
 }
 
-type ServerUsage = {
+export type ServerUsage = {
 	is_suspended: boolean;
 	current_state: 'starting' | 'running' | 'stopping' | 'offline';
 	resources: {
