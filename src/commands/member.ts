@@ -229,7 +229,7 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 			)
 			.map(
 				(member) =>
-					`${escapeMarkdown(member.user.displayName)} (${
+					`${escapeMarkdown(member.nickname ?? member.user.username)} (${
 						member.user.globalName ?? member.user.username
 					})`,
 			)
@@ -365,23 +365,61 @@ class MemberCommandHandler extends BaseKiwiCommandHandler {
 		trial: boolean | null;
 		memberSince: string | null;
 	}) {
-		const memberSince = args.memberSince ? await this.getDateFromString(args.memberSince) : null;
+		const previousValues = await MemberModelController.getMember(args.targetUser.id).catch(
+			async (e) => {
+				await LOGGER.error(e, 'Failed to get member from the database');
+				return null;
+			},
+		);
 
-		if (args.memberSince && !memberSince) {
+		if (!previousValues) {
+			await this.interaction.editReply('Failed to get member from the database.');
 			return;
 		}
 
-		const profiles = args.ign ? await this.getProfilesFromString(args.ign) : null;
+		let updatedMemberSince: Date | null = null;
 
-		if (args.ign && !profiles) {
+		if (args.memberSince) {
+			updatedMemberSince = await this.getDateFromString(args.memberSince);
+		} else {
+			updatedMemberSince = previousValues.member_since;
+		}
+
+		if (!updatedMemberSince) {
 			return;
+		}
+
+		let updatedUUIDs: string[] | null = null;
+
+		if (args.ign) {
+			const profiles = await this.getProfilesFromString(args.ign);
+
+			if (!profiles) {
+				return;
+			}
+
+			updatedUUIDs = profiles.map((profile) => profile.id);
+		} else {
+			updatedUUIDs = previousValues.minecraft_uuids;
+		}
+
+		if (!updatedUUIDs) {
+			return;
+		}
+
+		let updatedTrialMember: boolean | null = null;
+
+		if (args.trial !== null) {
+			updatedTrialMember = args.trial;
+		} else {
+			updatedTrialMember = previousValues.trial_member;
 		}
 
 		try {
 			await MemberModelController.updateMember(args.targetUser.id, {
-				trialMember: args.trial,
-				memberSince: memberSince,
-				minecraftUUIDs: profiles?.map((profile) => profile.id),
+				trialMember: updatedTrialMember,
+				memberSince: updatedMemberSince,
+				minecraftUUIDs: updatedUUIDs,
 			});
 		} catch (e) {
 			await LOGGER.error(e, 'Failed to update member in the database');
