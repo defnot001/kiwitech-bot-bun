@@ -12,7 +12,7 @@ import { mcskin } from '../../../commands/mcskin';
 import { member } from '../../../commands/member';
 import { mirror } from '../../../commands/mirror';
 import { mods } from '../../../commands/mods';
-import { pingpong } from '../../../commands/pingpong';
+import { roletoggle } from '../../../commands/roletoggle';
 import { rcon } from '../../../commands/rcon';
 import { scoreboard } from '../../../commands/scoreboard';
 // import { status } from '../../../commands/status';
@@ -41,7 +41,7 @@ const COMMANDS = [
 	member,
 	mirror,
 	mods,
-	pingpong,
+	roletoggle,
 	rcon,
 	scoreboard,
 	// status,
