@@ -12,10 +12,10 @@ import { mcskin } from '../../../commands/mcskin';
 import { member } from '../../../commands/member';
 import { mirror } from '../../../commands/mirror';
 import { mods } from '../../../commands/mods';
-import { roletoggle } from '../../../commands/roletoggle';
 import { rcon } from '../../../commands/rcon';
+import { roletoggle } from '../../../commands/roletoggle';
 import { scoreboard } from '../../../commands/scoreboard';
-// import { status } from '../../../commands/status';
+import { status } from '../../../commands/status';
 // import { todo } from '../../../commands/todo';
 // import { trialinfo } from '../../../commands/trialinfo';
 // import { waypoint } from '../../../commands/waypoint';
@@ -44,7 +44,7 @@ const COMMANDS = [
 	roletoggle,
 	rcon,
 	scoreboard,
-	// status,
+	status,
 	// todo,
 	// trialinfo,
 	// waypoint,
