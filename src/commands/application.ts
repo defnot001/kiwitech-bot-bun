@@ -3,7 +3,6 @@ import {
 	type Client,
 	Embed,
 	EmbedBuilder,
-	type Emoji,
 	type Message,
 	type Snowflake,
 	TextChannel,
@@ -25,7 +24,7 @@ import { Command } from '../util/handler/classes/Command';
 import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import mojangApi from '../util/mojang';
-import { getTrialWelcomeMessage } from '../util/welcomeMessage';
+import { sendTrialWelcomeEmbed } from './trialinfo';
 
 type ApplicationSubcommand =
 	| 'list'
@@ -640,7 +639,11 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			);
 		}
 
-		const wasSent = await this.sendTrialInfo(targetUser);
+		const wasSent = await sendTrialWelcomeEmbed({
+			client: this.client,
+			guild: this.guild,
+			targetUser,
+		});
 
 		if (!wasSent) {
 			await this.interaction.followUp(
@@ -948,69 +951,6 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		}
 
 		return channel;
-	}
-
-	/**
-	 * Sends the trialinfo embed in the member-general channel.
-	 * @returns True if the message was sent successfully, false if an error occurred.
-	 * @sideeffect Logs the error if one occurs. Does NOT edit the interaction reply.
-	 */
-	private async sendTrialInfo(targetUser: User): Promise<boolean> {
-		let kiwiEmoji: Emoji | null = null;
-
-		try {
-			kiwiEmoji = getEmojis(this.interaction.client).kiwi;
-		} catch (e) {
-			await LOGGER.error(e, 'Failed to get guild emojis');
-			return false;
-		}
-
-		const memberGeneralChannel = await getTextChannelFromConfig(this.guild, 'memberGeneral');
-
-		if (!memberGeneralChannel) {
-			return false;
-		}
-
-		if (!kiwiEmoji) {
-			await LOGGER.error(new Error('Failed to get guild emojis'));
-			return false;
-		}
-
-		const trialWelcomeMessage = await getTrialWelcomeMessage(this.interaction.client);
-
-		if (!trialWelcomeMessage) {
-			return false;
-		}
-
-		const trialEmbed = new KoalaEmbedBuilder(this.interaction.user, {
-			title: `${kiwiEmoji}  Welcome to ${this.guild.name} ${targetUser.displayName}!  ${kiwiEmoji}`,
-			thumbnail: {
-				url: targetUser.displayAvatarURL(),
-			},
-			fields: trialWelcomeMessage,
-		});
-
-		const message = await memberGeneralChannel
-			.send({
-				content: userMention(targetUser.id),
-				embeds: [trialEmbed],
-			})
-			.catch(async (e) => {
-				await LOGGER.error(e, `Failed to send welcome message to ${display(memberGeneralChannel)}`);
-				return null;
-			});
-
-		if (!message) {
-			return false;
-		}
-
-		try {
-			await message.edit({ content: '\u200b' });
-		} catch (e) {
-			await LOGGER.error(e, 'Failed to edit welcome message');
-		}
-
-		return true;
 	}
 
 	/**
