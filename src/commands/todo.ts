@@ -193,6 +193,7 @@ class TodoCommandHandler extends BaseKiwiCommandHandler {
 
 		if (!todo) {
 			await this.interaction.editReply('Failed to add todo item!');
+			return;
 		}
 
 		await this.sendTodoLogEmbed(
@@ -241,7 +242,9 @@ class TodoCommandHandler extends BaseKiwiCommandHandler {
 		const result = await this.postUpdatedTodos();
 
 		if (!result) {
-			await this.interaction.editReply('Failed to update todo list!');
+			await this.interaction.editReply(
+				'Failed to update todo list! The todo item was updated in the database.',
+			);
 			return;
 		}
 
@@ -273,7 +276,9 @@ class TodoCommandHandler extends BaseKiwiCommandHandler {
 		const result = await this.postUpdatedTodos();
 
 		if (!result) {
-			await this.interaction.editReply('Failed to update todo list!');
+			await this.interaction.editReply(
+				'Failed to update todo list!s The todo item was completed in the database',
+			);
 			return;
 		}
 
