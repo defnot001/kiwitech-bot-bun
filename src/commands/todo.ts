@@ -143,6 +143,9 @@ class TodoCommandHandler extends BaseKiwiCommandHandler {
 			return false;
 		}
 
+		this._todoChannel = todoChannel;
+		this._todoLogChannel = todoLogChannel;
+
 		if (!this._webhookClient) {
 			await this.interaction.editReply('Failed to connect to the webhook!');
 			await LOGGER.error(new Error('Failed to connect to the todo webhook'));
