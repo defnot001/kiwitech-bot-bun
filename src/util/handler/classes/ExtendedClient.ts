@@ -16,7 +16,7 @@ import { rcon } from '../../../commands/rcon';
 import { roletoggle } from '../../../commands/roletoggle';
 import { scoreboard } from '../../../commands/scoreboard';
 import { status } from '../../../commands/status';
-// import { todo } from '../../../commands/todo';
+import { todo } from '../../../commands/todo';
 // import { trialinfo } from '../../../commands/trialinfo';
 // import { waypoint } from '../../../commands/waypoint';
 // import { whitelist } from '../../../commands/whitelist';
@@ -45,7 +45,7 @@ const COMMANDS = [
 	rcon,
 	scoreboard,
 	status,
-	// todo,
+	todo,
 	// trialinfo,
 	// waypoint,
 	// whitelist,
