@@ -24,7 +24,7 @@ import { Command } from '../util/handler/classes/Command';
 import { fetchMessage, fetchUser, getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import mojangApi from '../util/mojang';
-import { sendTrialWelcomeEmbed } from './trialinfo';
+import { sendTrialWelcomeEmbed } from './trialmember';
 
 type ApplicationSubcommand =
 	| 'list'

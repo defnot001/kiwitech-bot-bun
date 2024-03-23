@@ -17,7 +17,7 @@ import { roletoggle } from '../../../commands/roletoggle';
 import { scoreboard } from '../../../commands/scoreboard';
 import { status } from '../../../commands/status';
 import { todo } from '../../../commands/todo';
-// import { trialinfo } from '../../../commands/trialinfo';
+import { trialmember } from '../../../commands/trialmember';
 // import { waypoint } from '../../../commands/waypoint';
 // import { whitelist } from '../../../commands/whitelist';
 
@@ -46,7 +46,7 @@ const COMMANDS = [
 	scoreboard,
 	status,
 	todo,
-	// trialinfo,
+	trialmember,
 	// waypoint,
 	// whitelist,
 ];
