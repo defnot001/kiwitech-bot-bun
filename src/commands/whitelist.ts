@@ -1,9 +1,10 @@
-import { ApplicationCommandOptionType, inlineCode } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
 import { type ServerChoice, config } from '../config';
 import { Rcon } from '../rcon/rcon';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
-import { escapeMarkdown, getServerChoices } from '../util/helpers';
+import { getServerChoices } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import RCONUtil from '../util/rcon';
 
@@ -53,113 +54,321 @@ export const whitelist = new Command({
 			],
 		},
 	],
-	execute: async ({ interaction, args }) => {
+	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply();
 
-		const subcommand = args.getSubcommand();
+		const handler = new WhitelistCommandHandler({ interaction, client });
 
-		if (!subcommand) {
-			return interaction.editReply('This subcommand does not exist!');
+		if (!(await handler.init())) {
+			return;
 		}
 
-		if (!interaction.guild) {
-			return interaction.reply('This command can only be used in a server!');
+		const subcommand = args.getSubcommand() as 'add' | 'remove' | 'list';
+
+		if (subcommand === 'list') {
+			const serverChoice = args.getString('server', true) as ServerChoice;
+
+			await handler.handleList({ serverChoice });
+			return;
 		}
 
-		try {
-			if (subcommand === 'list') {
-				const choice = args.getString('server', true) as ServerChoice;
+		const ign = args.getString('ign', true);
 
-				if (!choice) {
-					return interaction.editReply('Please specify a server!');
-				}
-
-				const response = await getWhitelist(choice);
-
-				const whitelist = !response
-					? `There are no whitelisted players on ${choice}!`
-					: response.map((ign) => escapeMarkdown(ign)).join('\n');
-
-				const whitelistEmbed = new KoalaEmbedBuilder(interaction.user, {
-					title: `${choice.toUpperCase()} Whitelist`,
-					description: whitelist,
-				});
-
-				const iconURL = interaction.guild.iconURL();
-
-				if (iconURL) {
-					whitelistEmbed.setThumbnail(iconURL);
-				}
-
-				await interaction.editReply({ embeds: [whitelistEmbed] });
-				return;
-			}
-
-			const ign = args.getString('ign');
-
-			if (!ign) {
-				return interaction.editReply('Please provide an in-game name!');
-			}
-
-			const servers = Object.keys(config.mcConfig) as ServerChoice[];
-
-			const whitelistCheck: [ServerChoice, string][] = [];
-			const opCheck: [ServerChoice, string][] = [];
-
-			for await (const server of servers) {
-				const rconClient = await Rcon.connect({
-					host: config.mcConfig[server].host,
-					port: config.mcConfig[server].rconPort,
-					password: config.mcConfig[server].rconPasswd,
-				});
-
-				whitelistCheck.push([server, await rconClient.send(`whitelist ${subcommand} ${ign}`)]);
-
-				if (config.mcConfig[server].operator === true) {
-					const action = subcommand === 'add' ? 'op' : 'deop';
-					opCheck.push([server, await rconClient.send(`${action} ${ign}`)]);
-				}
-
-				await rconClient.end();
-			}
-
-			const successMessage =
-				subcommand === 'add'
-					? `Successfully added ${inlineCode(ign)} to the whitelist on ${
-							whitelistCheck.length
-					  } servers.\nSuccessfully made ${inlineCode(ign)} an operator on ${
-							opCheck.length
-					  } servers.`
-					: `Successfully removed ${inlineCode(ign)} from the whitelist on ${
-							whitelistCheck.length
-					  } servers.\nSuccessfully removed ${inlineCode(ign)} as an operator on ${
-							opCheck.length
-					  } servers.`;
-
-			await interaction.editReply(successMessage);
-		} catch (e) {
-			await interaction.editReply(
-				`There was an error trying to execute the whitlist ${subcommand} command!`,
-			);
-			await LOGGER.error(e, `Failed to execute the whitelist ${subcommand} command`);
+		if (!ign.trim()) {
+			await interaction.editReply('Please provide a valid ign!');
+			return;
 		}
 
-		return;
+		if (subcommand === 'add') {
+			await handler.handleAdd({ ign });
+			return;
+		}
+
+		if (subcommand === 'remove') {
+			await handler.handleRemove({ ign });
+			return;
+		}
 	},
 });
 
-export async function getWhitelist(server: ServerChoice) {
-	const response = await RCONUtil.runSingleCommand(server, 'whitelist list');
+type OperationResult = 'success' | 'already' | 'fail';
 
-	if (response === 'There are no whitelisted players') {
+class WhitelistCommandHandler extends BaseKiwiCommandHandler {
+	public async handleList(args: { serverChoice: ServerChoice }) {
+		const whitelist = await getWhitelistedPlayers(args.serverChoice);
+
+		if (whitelist === null) {
+			await this.interaction.editReply('Failed to fetch whitelist from the server!');
+			return;
+		}
+
+		if (!whitelist.length) {
+			await this.interaction.editReply(`There are no whitelisted players on ${args.serverChoice}!`);
+			return;
+		}
+
+		const whitelistEmbed = new KoalaEmbedBuilder(this.user, {
+			title: `${args.serverChoice.toUpperCase()} Whitelist`,
+			description: whitelist.join('\n'),
+		});
+
+		if (this.guild.iconURL()) {
+			whitelistEmbed.setThumbnail(this.guild.iconURL());
+		}
+
+		await this.interaction.editReply({ embeds: [whitelistEmbed] });
+	}
+
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <explanation>
+	public async handleAdd(args: { ign: string }) {
+		const configServers = Object.keys(config.mcConfig) as ServerChoice[];
+
+		const whitelistAddResults: [ServerChoice, OperationResult][] = [];
+		const opResults: [ServerChoice, OperationResult][] = [];
+
+		for (const server of configServers) {
+			const rconClient = await Rcon.connect({
+				host: config.mcConfig[server].host,
+				port: config.mcConfig[server].rconPort,
+				password: config.mcConfig[server].rconPasswd,
+			});
+
+			const whitelistResponse = await rconClient
+				.send(`whitelist add ${args.ign}`)
+				.catch(async () => {
+					await LOGGER.warn(`Failed to add ${args.ign} to the whitelist on ${server}`);
+					return null;
+				});
+
+			if (whitelistResponse === null) {
+				whitelistAddResults.push([server, 'fail']);
+			}
+
+			if (whitelistResponse === 'Player is already whitelisted') {
+				whitelistAddResults.push([server, 'already']);
+			}
+
+			if (whitelistResponse === `Added ${args.ign} to the whitelist`) {
+				whitelistAddResults.push([server, 'success']);
+			}
+
+			if (config.mcConfig[server].operator === true) {
+				const opResponse = await rconClient.send(`op ${args.ign}`).catch(async () => {
+					await LOGGER.warn(`Failed to make ${args.ign} an operator on ${server}`);
+					return null;
+				});
+
+				if (opResponse === null) {
+					opResults.push([server, 'fail']);
+				}
+
+				if (opResponse === 'Nothing changed. The player already is an operator') {
+					opResults.push([server, 'already']);
+				}
+
+				if (opResponse === `Made ${args.ign} a server operator`) {
+					opResults.push([server, 'success']);
+				}
+			}
+
+			await rconClient.end();
+		}
+
+		const whitelistSuccess = whitelistAddResults.every(([, result]) => result === 'success');
+		const opSuccess = opResults.every(([, result]) => result === 'success');
+
+		if (whitelistSuccess && opSuccess) {
+			await this.interaction.editReply(`Successfully whitelisted ${args.ign} on all servers!`);
+			return;
+		}
+
+		const transformed = this.transformRconResults({
+			whitelistResults: whitelistAddResults,
+			opResults,
+		});
+
+		const resultEmbed = this.buildResultEmbed(args.ign, transformed);
+		await this.interaction.editReply({ embeds: [resultEmbed] });
+	}
+
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <explanation>
+	public async handleRemove(args: { ign: string }) {
+		const servers = Object.keys(config.mcConfig) as ServerChoice[];
+
+		const whitelistRemoveResults: [ServerChoice, OperationResult][] = [];
+		const opResults: [ServerChoice, OperationResult][] = [];
+
+		for (const server of servers) {
+			const rconClient = await Rcon.connect({
+				host: config.mcConfig[server].host,
+				port: config.mcConfig[server].rconPort,
+				password: config.mcConfig[server].rconPasswd,
+			});
+
+			const whitelistResponse = await rconClient
+				.send(`whitelist remove ${args.ign}`)
+				.catch(async () => {
+					await LOGGER.warn(`Failed to remove ${args.ign} from the whitelist on ${server}`);
+					return null;
+				});
+
+			if (whitelistResponse === null) {
+				whitelistRemoveResults.push([server, 'fail']);
+			}
+
+			if (whitelistResponse === 'Player is not whitelisted') {
+				whitelistRemoveResults.push([server, 'already']);
+			}
+
+			if (whitelistResponse === `Removed ${args.ign} from the whitelist`) {
+				whitelistRemoveResults.push([server, 'success']);
+			}
+
+			if (config.mcConfig[server].operator === true) {
+				const opResponse = await rconClient.send(`deop ${args.ign}`).catch(async () => {
+					await LOGGER.warn(`Failed to remove ${args.ign} as an operator on ${server}`);
+					return null;
+				});
+
+				if (opResponse === null) {
+					opResults.push([server, 'fail']);
+				}
+
+				if (opResponse === 'Nothing changed. The player is not an operator') {
+					opResults.push([server, 'already']);
+				}
+
+				if (opResponse === `Made ${args.ign} no longer a server operator`) {
+					opResults.push([server, 'success']);
+				}
+			}
+
+			await rconClient.end();
+		}
+
+		const whitelistSuccess = whitelistRemoveResults.every(([, result]) => result === 'success');
+		const opSuccess = opResults.every(([, result]) => result === 'success');
+
+		if (whitelistSuccess && opSuccess) {
+			await this.interaction.editReply(`Successfully removed ${args.ign} from all servers!`);
+			return;
+		}
+
+		const transformed = this.transformRconResults({
+			whitelistResults: whitelistRemoveResults,
+			opResults,
+		});
+
+		const resultEmbed = this.buildResultEmbed(args.ign, transformed);
+		await this.interaction.editReply({ embeds: [resultEmbed] });
+	}
+
+	private transformRconResults(options: {
+		whitelistResults: [ServerChoice, OperationResult][];
+		opResults: [ServerChoice, OperationResult][];
+	}): {
+		success: ActionResult;
+		already: ActionResult;
+		fail: ActionResult;
+	} {
+		const { whitelistResults, opResults } = options;
+
+		const success: ActionResult = [];
+		const already: ActionResult = [];
+		const fail: ActionResult = [];
+
+		for (const [server, result] of whitelistResults) {
+			if (result === 'success') {
+				success.push(['whitelist', server]);
+			}
+
+			if (result === 'already') {
+				already.push(['whitelist', server]);
+			}
+
+			if (result === 'fail') {
+				fail.push(['whitelist', server]);
+			}
+		}
+
+		for (const [server, result] of opResults) {
+			if (result === 'success') {
+				success.push(['op', server]);
+			}
+
+			if (result === 'already') {
+				already.push(['op', server]);
+			}
+
+			if (result === 'fail') {
+				fail.push(['op', server]);
+			}
+		}
+
+		return { success, already, fail };
+	}
+
+	private buildResultEmbed(
+		ign: string,
+		transformed: {
+			success: ActionResult;
+			already: ActionResult;
+			fail: ActionResult;
+		},
+	) {
+		const { success, already, fail } = transformed;
+
+		return new KoalaEmbedBuilder(this.user, {
+			title: `Whitelist Results for ${ign}`,
+			fields: [
+				{
+					name: 'Successful',
+					value: success.map(([action, server]) => `${action}: ${server}`).join(', '),
+				},
+				{
+					name: 'Already Whitelisted',
+					value: already.map(([action, server]) => `${action}: ${server}`).join(', '),
+				},
+				{
+					name: 'Failed',
+					value: fail.map(([action, server]) => `${action}: ${server}`).join(', '),
+				},
+			],
+		});
+	}
+}
+
+type ActionResult = ['op' | 'whitelist', ServerChoice][];
+
+/**
+ * Gets the whitelisted players from the specified server sorted alphabetically.
+ * Returns null if there was an error.
+ * @sideeffect Logs errors.
+ */
+export async function getWhitelistedPlayers(server: ServerChoice): Promise<string[] | null> {
+	const rconResponse = await RCONUtil.runSingleCommand(server, 'whitelist list').catch(
+		async (e) => {
+			await LOGGER.error(e, `Failed to fetch whitelist for ${server}`);
+			return null;
+		},
+	);
+
+	if (!rconResponse) {
+		return null;
+	}
+
+	if (rconResponse === 'There are no whitelisted players') {
 		return [];
 	}
 
-	const splitResponse = response.split(': ')[1];
+	const splitResponse = rconResponse.split(': ')[1];
 
 	if (!splitResponse) {
-		throw new Error('Failed to parse the response correctly!');
+		await LOGGER.error(`Failed to parse whitelist response for ${server}`);
+		return null;
 	}
 
-	return splitResponse.split(', ').sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+	return splitResponse
+		.split(', ')
+		.sort((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()));
 }
