@@ -6,13 +6,13 @@ import {
 	userMention,
 } from 'discord.js';
 import { KoalaEmbedBuilder } from '../classes/KoalaEmbedBuilder';
-import { type ConfigEmojis, getEmojis } from '../util/components';
-import { Command } from '../util/handler/classes/Command';
-import { LOGGER } from '../util/logger';
-import { BaseKiwiCommandHandler } from '../util/commandhandler';
-import { displayFormatted } from '../util/format';
 import { config } from '../config';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
+import { type ConfigEmojis, getEmojis } from '../util/components';
+import { displayFormatted } from '../util/format';
+import { Command } from '../util/handler/classes/Command';
 import { getTextChannelFromConfig } from '../util/helpers';
+import { LOGGER } from '../util/logger';
 
 export const trialmember = new Command({
 	name: 'trialmember',
