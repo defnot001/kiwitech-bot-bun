@@ -23,12 +23,18 @@ export default abstract class TodoModelController {
 		return query.rows as Todo[];
 	}
 
-	static async addTodo(
-		title: string,
-		type: 'survival' | 'creative',
-		createdBy: Snowflake,
-		createdAt?: Date,
-	) {
+	static async addTodo(options: {
+		title: string;
+		type: 'survival' | 'creative';
+		createdBy: Snowflake;
+		createdAt?: Date;
+	}) {
+		const { title, type, createdBy, createdAt } = options;
+
+		if (type !== 'survival' && type !== 'creative') {
+			throw new Error('Invalid todo type');
+		}
+
 		const query = await pgClient.query(
 			'INSERT INTO todos (title, type, created_by, created_at) VALUES ($1, $2, $3, $4) RETURNING *',
 			[title, type, createdBy, createdAt ?? new Date()],
@@ -37,10 +43,10 @@ export default abstract class TodoModelController {
 		return query.rows[0] as Todo;
 	}
 
-	static async updateTodoTitle(oldTitle: string, newTitle: string) {
+	static async updateTodoTitle(options: { newTitle: string; oldTitle: string }) {
 		const query = await pgClient.query('UPDATE todos SET title = $1 WHERE title = $2 RETURNING *', [
-			newTitle,
-			oldTitle,
+			options.newTitle,
+			options.oldTitle,
 		]);
 
 		return query.rows[0] as Todo;
