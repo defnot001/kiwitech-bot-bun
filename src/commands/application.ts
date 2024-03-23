@@ -1,5 +1,4 @@
 import {
-	type APIEmbedField,
 	ApplicationCommandOptionType,
 	type Client,
 	Embed,
@@ -977,14 +976,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			return false;
 		}
 
-		let trialWelcomeMessage: APIEmbedField[] | null = [];
-
-		try {
-			trialWelcomeMessage = getTrialWelcomeMessage(this.interaction.client);
-		} catch (e) {
-			await LOGGER.error(e, 'Failed to get trial welcome message');
-			return false;
-		}
+		const trialWelcomeMessage = await getTrialWelcomeMessage(this.interaction.client);
 
 		if (!trialWelcomeMessage) {
 			return false;
