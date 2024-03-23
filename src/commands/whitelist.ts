@@ -323,15 +323,15 @@ class WhitelistCommandHandler extends BaseKiwiCommandHandler {
 			fields: [
 				{
 					name: 'Successful',
-					value: success.map(([action, server]) => `${action}: ${server}`).join(', '),
+					value: success.map(([action, server]) => `${server} (${action})`).join('\n'),
 				},
 				{
-					name: 'Already Whitelisted',
-					value: already.map(([action, server]) => `${action}: ${server}`).join(', '),
+					name: 'Already Done',
+					value: already.map(([action, server]) => `${server} (${action})`).join('\n'),
 				},
 				{
 					name: 'Failed',
-					value: fail.map(([action, server]) => `${action}: ${server}`).join(', '),
+					value: fail.map(([action, server]) => `${server} (${action})`).join('\n'),
 				},
 			],
 		});
