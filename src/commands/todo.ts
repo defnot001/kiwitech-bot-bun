@@ -1,7 +1,17 @@
-import { ApplicationCommandOptionType, EmbedBuilder, WebhookClient, inlineCode } from 'discord.js';
+import {
+	ApplicationCommandOptionType,
+	EmbedBuilder,
+	type TextChannel,
+	WebhookClient,
+	inlineCode,
+} from 'discord.js';
 import { config } from '../config';
 import TodoModelController, { type Todo } from '../database/model/todoModelController';
+import { BaseKiwiCommandHandler } from '../util/commandhandler';
+import { displayFormatted } from '../util/format';
 import { Command } from '../util/handler/classes/Command';
+import type { ExtendedClient } from '../util/handler/classes/ExtendedClient';
+import type { ExtendedInteraction } from '../util/handler/types';
 import { getTextChannelFromConfig } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 
@@ -67,118 +77,295 @@ export const todo = new Command({
 			],
 		},
 	],
-	execute: async ({ interaction, args }) => {
+	execute: async ({ interaction, client, args }) => {
 		await interaction.deferReply({ ephemeral: true });
 
-		if (!interaction.guild) {
-			return interaction.editReply('This command can only be used in a server!');
+		const handler = new TodoCommandHandler({ interaction, client });
+
+		if (!(await handler.init())) {
+			return;
 		}
 
 		const subcommand = args.getSubcommand() as 'add' | 'update' | 'complete';
-		const type = args.getString('type') as 'survival' | 'creative';
 
-		const title = args.getString('title');
+		if (subcommand === 'add') {
+			await handler.handleAdd({
+				todoType: args.getString('type') as 'survival' | 'creative',
+				title: args.getString('title', true),
+			});
 
-		if (!title) {
-			return interaction.editReply('Please provide a title.');
+			return;
 		}
 
-		const webhook = new WebhookClient({ url: config.webhooks.todo });
+		if (subcommand === 'update') {
+			await handler.handleUpdate({
+				oldTitle: args.getString('title', true),
+				newTitle: args.getString('newtitle', true),
+			});
 
-		if (!webhook) {
-			return interaction.editReply('Failed to connect to the webhook!');
+			return;
 		}
 
-		try {
-			const todoLogChannel = await getTextChannelFromID(interaction.guild, 'todoLog');
-
-			const todoLogEmbed = new EmbedBuilder({
-				title: `${interaction.guild.name} Todo Log`,
-				color: config.embedColors.default,
-				footer: {
-					text: interaction.user.username,
-					iconURL: interaction.user.displayAvatarURL(),
-				},
-				timestamp: new Date(),
-			});
-
-			if (subcommand === 'add') {
-				await TodoModelController.addTodo(title, type, interaction.user.id);
-
-				interaction.editReply('Successfully added todo item to the database.');
-
-				todoLogEmbed.setDescription(
-					`Created a new todo item for the ${type} list: ${inlineCode(title)}`,
-				);
-			} else if (subcommand === 'update') {
-				const newTitle = args.getString('newtitle');
-
-				if (!newTitle) {
-					return interaction.editReply('Please provide a new title.');
-				}
-
-				await TodoModelController.updateTodoTitle(title, newTitle);
-
-				interaction.editReply('Successfully updated todo item in the database.');
-
-				todoLogEmbed.setDescription(
-					`Updated a todo item: "${inlineCode(title)}" to "${inlineCode(newTitle)}".`,
-				);
-			} else {
-				await TodoModelController.completeTodo(title);
-
-				interaction.editReply('Successfully completed todo item.');
-
-				todoLogEmbed.setDescription(`Completed a todo item: ${inlineCode(title)}.`);
-			}
-
-			const todoChannel = await getTextChannelFromID(interaction.guild, 'todo');
-			const messages = await todoChannel.messages.fetch();
-
-			if (messages.size > 0) {
-				for (const message of messages.values()) {
-					await message.delete();
-				}
-			}
-
-			const transformTodo = (todo: Todo[]) => {
-				return todo.map((todo) => `• ${todo.title}`).join('\n');
-			};
-
-			const survivalTodo = await TodoModelController.getTodoByType('survival');
-			const creativeTodo = await TodoModelController.getTodoByType('creative');
-
-			const survivalEmbed = new EmbedBuilder({
-				title: 'Survival Todo List',
-				color: config.embedColors.darkpurple,
-				description: transformTodo(survivalTodo),
-				timestamp: new Date(),
-			});
-
-			const creativeEmbed = new EmbedBuilder({
-				title: 'Creative Todo List',
-				color: config.embedColors.purple,
-				description: transformTodo(creativeTodo),
-				timestamp: new Date(),
-			});
-
-			const guildIcon = interaction.guild.iconURL();
-
-			if (guildIcon) {
-				survivalEmbed.setThumbnail(guildIcon);
-				creativeEmbed.setThumbnail(guildIcon);
-			}
-
-			await webhook.send({
-				embeds: [survivalEmbed, creativeEmbed],
-			});
-
-			await todoLogChannel.send({ embeds: [todoLogEmbed] });
-		} catch (e) {
-			await interaction.editReply('Failed to update todo item.');
-			await LOGGER.error(e, 'Failed to update todo item');
+		if (subcommand === 'complete') {
+			await handler.handleComplete({ title: args.getString('title', true) });
+			return;
 		}
-
-		return;
 	},
 });
+
+class TodoCommandHandler extends BaseKiwiCommandHandler {
+	private readonly _webhookClient: WebhookClient | null = null;
+	private _todoChannel: TextChannel | null = null;
+	private _todoLogChannel: TextChannel | null = null;
+
+	public constructor(options: { interaction: ExtendedInteraction; client: ExtendedClient }) {
+		super({ client: options.client, interaction: options.interaction });
+
+		try {
+			this._webhookClient = new WebhookClient({ url: config.webhooks.todo });
+		} catch {
+			this._webhookClient = null;
+		}
+	}
+
+	public override async init() {
+		const baseInitSuccess = await super.init();
+
+		if (!baseInitSuccess) {
+			return false;
+		}
+
+		const todoChannel = await getTextChannelFromConfig(this.guild, 'todo');
+		const todoLogChannel = await getTextChannelFromConfig(this.guild, 'todoLog');
+
+		if (!todoChannel || !todoLogChannel) {
+			await this.interaction.editReply('Failed to find the todo channels!');
+			return false;
+		}
+
+		if (!this._webhookClient) {
+			await this.interaction.editReply('Failed to connect to the webhook!');
+			await LOGGER.error(new Error('Failed to connect to the todo webhook'));
+			return false;
+		}
+
+		return true;
+	}
+
+	private get webhookClient() {
+		if (!this._webhookClient) {
+			throw new Error('Webhook client is not available. Ensure init() is called.');
+		}
+
+		return this._webhookClient;
+	}
+
+	private get todoChannel() {
+		if (!this._todoChannel) {
+			throw new Error('Todo channel is not available. Ensure init() is called.');
+		}
+
+		return this._todoChannel;
+	}
+
+	private get todoLogChannel() {
+		if (!this._todoLogChannel) {
+			throw new Error('Todo log channel is not available. Ensure init() is called.');
+		}
+
+		return this._todoLogChannel;
+	}
+
+	public async handleAdd(args: { todoType: 'survival' | 'creative'; title: string }) {
+		const { todoType, title } = args;
+
+		const todo = await TodoModelController.addTodo({
+			title,
+			createdBy: this.user.id,
+			type: todoType,
+		}).catch(async (e) => {
+			await LOGGER.error(e, 'Failed to add todo item');
+			return null;
+		});
+
+		if (!todo) {
+			await this.interaction.editReply('Failed to add todo item!');
+		}
+
+		await this.sendTodoLogEmbed(
+			`${displayFormatted(this.user)} a new todo item for the ${todoType} list: ${inlineCode(
+				title,
+			)}`,
+		);
+
+		const result = await this.postUpdatedTodos();
+
+		if (!result) {
+			await this.interaction.editReply('Failed to update todo list!');
+			return;
+		}
+
+		await this.interaction.editReply('Successfully added todo item to the database.');
+	}
+
+	public async handleUpdate(args: { oldTitle: string; newTitle: string }) {
+		const newTitle = args.newTitle.trim();
+		const oldTitle = args.oldTitle.trim();
+
+		if (!newTitle || !oldTitle) {
+			await this.interaction.editReply('Please provide a valid new and old title.');
+			return;
+		}
+
+		const updated = await TodoModelController.updateTodoTitle({ newTitle, oldTitle }).catch(
+			async (e) => {
+				await LOGGER.error(e, 'Failed to update todo item');
+				return null;
+			},
+		);
+
+		if (!updated) {
+			await this.interaction.editReply('Failed to update todo item!');
+			return;
+		}
+
+		await this.sendTodoLogEmbed(
+			`${displayFormatted(this.user)} updated a todo item: "${inlineCode(
+				oldTitle,
+			)}" to "${inlineCode(newTitle)}".`,
+		);
+
+		const result = await this.postUpdatedTodos();
+
+		if (!result) {
+			await this.interaction.editReply('Failed to update todo list!');
+			return;
+		}
+
+		await this.interaction.editReply('Successfully updated todo item in the database.');
+	}
+
+	public async handleComplete(args: { title: string }) {
+		const title = args.title.trim();
+
+		if (!title) {
+			await this.interaction.editReply('Please provide a valid title.');
+			return;
+		}
+
+		const completed = await TodoModelController.completeTodo(title).catch(async (e) => {
+			await LOGGER.error(e, 'Failed to complete todo item');
+			return null;
+		});
+
+		if (!completed) {
+			await this.interaction.editReply('Failed to complete todo item!');
+			return;
+		}
+
+		await this.sendTodoLogEmbed(
+			`${displayFormatted(this.user)} completed a todo item: ${inlineCode(title)}.`,
+		);
+
+		const result = await this.postUpdatedTodos();
+
+		if (!result) {
+			await this.interaction.editReply('Failed to update todo list!');
+			return;
+		}
+
+		await this.interaction.editReply('Successfully completed todo item.');
+	}
+
+	private buildTodoLogEmbed(description: string): EmbedBuilder {
+		return new EmbedBuilder({
+			description,
+			title: `${this.guild.name} Todo Log`,
+			color: config.embedColors.default,
+			footer: {
+				text: this.user.username,
+				iconURL: this.user.displayAvatarURL(),
+			},
+			timestamp: new Date(),
+		});
+	}
+
+	/**
+	 * Creates a todo log embed and sends it to the todo log channel.
+	 * @sideeffect Sends a message to the todo log channel.
+	 * @sideeffect Logs an error if the message fails to send.
+	 */
+	private async sendTodoLogEmbed(description: string) {
+		const embed = this.buildTodoLogEmbed(description);
+
+		try {
+			await this.todoLogChannel.send({ embeds: [embed] });
+		} catch (e) {
+			await LOGGER.error(e, 'Failed to send todo log embed');
+		}
+	}
+
+	/**
+	 * Removes all messages from the todo channel and post new embeds from querying the database.
+	 * @sideeffect Removes all messages in the todo channel.
+	 * @sideeffect Logs an error if any operations fail.
+	 */
+	private async postUpdatedTodos(): Promise<boolean> {
+		const survivalTodos = await TodoModelController.getTodoByType('survival').catch(async (e) => {
+			await LOGGER.error(e, 'Failed to get survival todos');
+			return null;
+		});
+
+		const creativeTodos = await TodoModelController.getTodoByType('creative').catch(async (e) => {
+			await LOGGER.error(e, 'Failed to get creative todos');
+			return null;
+		});
+
+		if (!survivalTodos || !creativeTodos) {
+			return false;
+		}
+
+		const survivalEmbed = new EmbedBuilder({
+			title: 'Survival Todo List',
+			color: config.embedColors.darkpurple,
+			description: this.displayTodos(survivalTodos),
+			timestamp: new Date(),
+		});
+
+		const creativeEmbed = new EmbedBuilder({
+			title: 'Creative Todo List',
+			color: config.embedColors.purple,
+			description: this.displayTodos(creativeTodos),
+			timestamp: new Date(),
+		});
+
+		await this.clearTodoChannel();
+
+		await this.webhookClient.send({
+			embeds: [survivalEmbed, creativeEmbed],
+		});
+
+		return true;
+	}
+
+	private async clearTodoChannel() {
+		const messages = await this.todoChannel.messages.fetch().catch(async (e) => {
+			await LOGGER.error(e, 'Failed to fetch messages in todo channel');
+			return null;
+		});
+
+		if (!messages) {
+			return;
+		}
+
+		if (messages.size > 0) {
+			await Promise.all(messages.map((message) => message.delete())).catch(async (e) => {
+				await LOGGER.error(e, 'Failed to delete messages in todo channel');
+			});
+		}
+	}
+
+	private displayTodos(todos: Todo[]) {
+		return todos.map((todo) => `• ${todo.title}`).join('\n');
+	}
+}
