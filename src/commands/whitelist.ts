@@ -4,7 +4,7 @@ import { type ServerChoice, config } from '../config';
 import { Rcon } from '../rcon/rcon';
 import { BaseKiwiCommandHandler } from '../util/commandhandler';
 import { Command } from '../util/handler/classes/Command';
-import { getServerChoices } from '../util/helpers';
+import { escapeMarkdown, getServerChoices } from '../util/helpers';
 import { LOGGER } from '../util/logger';
 import RCONUtil from '../util/rcon';
 
@@ -109,7 +109,7 @@ class WhitelistCommandHandler extends BaseKiwiCommandHandler {
 
 		const whitelistEmbed = new KoalaEmbedBuilder(this.user, {
 			title: `${args.serverChoice.toUpperCase()} Whitelist`,
-			description: whitelist.join('\n'),
+			description: whitelist.map((player) => escapeMarkdown(player)).join('\n'),
 		});
 
 		if (this.guild.iconURL()) {
