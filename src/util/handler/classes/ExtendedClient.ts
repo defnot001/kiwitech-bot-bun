@@ -18,7 +18,7 @@ import { scoreboard } from '../../../commands/scoreboard';
 import { status } from '../../../commands/status';
 import { todo } from '../../../commands/todo';
 import { trialmember } from '../../../commands/trialmember';
-// import { waypoint } from '../../../commands/waypoint';
+import { waypoint } from '../../../commands/waypoint';
 // import { whitelist } from '../../../commands/whitelist';
 
 import { application as applicationEvent } from '../../../events/application';
@@ -47,7 +47,7 @@ const COMMANDS = [
 	status,
 	todo,
 	trialmember,
-	// waypoint,
+	waypoint,
 	// whitelist,
 ];
 
