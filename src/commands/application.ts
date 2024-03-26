@@ -902,6 +902,9 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		}
 
 		const footer = message.embeds[0].footer.text;
+
+		console.debug(footer);
+
 		const split = footer.split('|');
 
 		if (!split[1]) {
