@@ -133,7 +133,7 @@ async function handleTodoAutocomplete(options: {
 	try {
 		const { interaction, focused } = options;
 
-		if (interaction.options.getSubcommand() !== 'add') {
+		if (interaction.options.getSubcommand() === 'add') {
 			return;
 		}
 
