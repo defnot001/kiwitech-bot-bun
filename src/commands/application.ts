@@ -1,7 +1,6 @@
 import {
 	ApplicationCommandOptionType,
 	type Client,
-	Embed,
 	EmbedBuilder,
 	type Message,
 	type Snowflake,
@@ -436,7 +435,7 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 			return;
 		}
 
-		const applicationId = this.getApplicationIDfromMessage(applicationMessage);
+		const applicationId = await this.getApplicationIDfromMessage(applicationMessage);
 
 		if (!applicationId) {
 			await this.interaction.editReply(
@@ -884,34 +883,32 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 	 * Fetches the application ID from a message.
 	 * @returns The application ID, or null if an error occurred.
 	 */
-	private getApplicationIDfromMessage(message: Message): number | null {
-		if (!message.embeds || message.embeds.length !== 3) {
+	private async getApplicationIDfromMessage(message: Message): Promise<number | null> {
+		if (!message.embeds || !message.embeds[0] || !message.embeds[1] || !message.embeds[2]) {
+			await LOGGER.error(new Error(`Failed to find embeds in message ${message.id}`));
 			return null;
 		}
 
-		if (!message.embeds.every((e) => e instanceof Embed)) {
+		const footerText = message.embeds[0].footer?.text;
+
+		if (!footerText) {
+			await LOGGER.error(new Error(`Failed to find footer text in message ${message.id}`));
 			return null;
 		}
 
-		if (!message.embeds[0]?.title?.includes('Application')) {
-			return null;
-		}
+		LOGGER.debug(`Parsing footer text: ${footerText}`);
 
-		if (!message.embeds[0].footer) {
-			return null;
-		}
-
-		const footer = message.embeds[0].footer.text;
-
-		const split = footer.split('|');
+		const split = footerText.split('|');
 
 		if (!split[1]) {
+			await LOGGER.error(new Error(`Failed to find application ID in footer text ${footerText}`));
 			return null;
 		}
 
 		const replaced = split[1].replace(' ID: ', '');
 
 		if (!replaced) {
+			await LOGGER.error(new Error(`Failed to find application ID in footer text ${footerText}`));
 			return null;
 		}
 
@@ -920,6 +917,9 @@ class ApplicationCommandHandler extends BaseKiwiCommandHandler {
 		try {
 			id = Number.parseInt(replaced, 10);
 		} catch {
+			await LOGGER.error(
+				new Error(`Failed to parseInt() application ID in footer text ${footerText}`),
+			);
 			return null;
 		}
 
