@@ -134,7 +134,7 @@ export async function fetchMessage(options: {
 
 	try {
 		LOGGER.debug(`Fetching message with ID: ${messageID} from channel ${display(channel)}`);
-		return await channel.messages.fetch(messageID);
+		return await channel.messages.fetch({ message: messageID, force: true });
 	} catch (e) {
 		await LOGGER.error(
 			e,
