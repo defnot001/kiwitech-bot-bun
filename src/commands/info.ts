@@ -149,7 +149,7 @@ class InfoCommandHandler extends BaseKiwiCommandHandler {
 		await this.interaction.editReply({ embeds: [serverEmbed] });
 	}
 	public async handleUser(args: { targetUser: User }) {
-		const targetUser = args.targetUser;
+		const { targetUser } = args;
 
 		const targetMember = await this.guild.members.fetch(args.targetUser.id).catch(() => {
 			LOGGER.debug(
@@ -197,6 +197,8 @@ class InfoCommandHandler extends BaseKiwiCommandHandler {
 				inline: false,
 			});
 		}
+
+		await this.interaction.editReply({ embeds: [userEmbed] });
 	}
 	public async handleMembers() {
 		const membersRole = await this.getGuildRole('members');
